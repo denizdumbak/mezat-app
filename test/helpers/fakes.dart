@@ -189,12 +189,19 @@ class FakeAuctionFeedRepository implements AuctionFeedRepository {
     }
   }
 
+  /// How many times a screen subscribed to the discover list (pull to
+  /// refresh and invalidation subscribe again).
+  var discoverCalls = 0;
+
   @override
-  Stream<List<AuctionSummary>> watchDiscover() => _watch(() {
-    final error = discoverError;
-    if (error != null) throw error;
-    return discover;
-  });
+  Stream<List<AuctionSummary>> watchDiscover() {
+    discoverCalls++;
+    return _watch(() {
+      final error = discoverError;
+      if (error != null) throw error;
+      return discover;
+    });
+  }
 
   @override
   Stream<List<AuctionSummary>> watchMyScheduled() => _watch(() => myScheduled);

@@ -4,20 +4,22 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Open work
 
-- **Anti-sniping numbers to confirm with the developer.** The design brief says "a bid in the
-  last minute extends by 15 s"; CLAUDE.md's non-negotiable server rule says "last 30 s extends
-  by 30 s". The UI reads both values from `lib/core/auction_rules.dart` and currently follows
-  CLAUDE.md. Whichever is chosen, `place_bid` (M3) and that file must match.
-
 - Android licenses are not accepted on the dev machine (`flutter doctor --android-licenses`,
   interactive). Not needed for tests; needed before the first Android build.
 
 ## Technical debt
 
-- **The live screens run on mock data.** `AuctionFeedRepository` has only
-  `MockAuctionFeedRepository` (in-memory, simulated bidders). Supabase implementation: lists
-  and start in M2 (c), bids and realtime in M3. Auctions created with the real form do not
-  appear in the mock lists until then.
+- **End-to-end test files must run one at a time on Windows.** `flutter test integration_test
+  -d windows` passes the first file, then fails to launch the app for the second ("Error
+  waiting for a debug connection: The log reader stopped unexpectedly"); each file passes on
+  its own. Looks like a desktop tooling issue; revisit on a Flutter upgrade or on Android.
+- **The live room is read-only on real auctions until M3.** `SupabaseAuctionFeedRepository`
+  serves the lists, start and the room's auction data, but no bids, bid feed, today's total or
+  realtime (lists refresh by pulling down). The room shows "Teklif verme henüz açık değil."
+- **Auctions whose time is up stay `live` in the database until M5** (`finalize_ended_auctions`
+  with pg_cron). The client hides them by `ends_at`; the server rule comes with M5.
+- **Pull to refresh uses Material's `RefreshIndicator` spinner** (gold on stageRaised), the one
+  place the stock progress indicator remains; a custom one is not worth it before M6.
 - **Bid safety is client-side only.** The daily limit lives in memory
   (`InMemorySpendingLimitRepository`, lost on restart) and is checked in the screen. M3: store
   it in `profiles` and enforce it in `place_bid`, or a modified client can ignore it.
@@ -55,6 +57,28 @@ Decisions and technical debt. Newest on top within each section.
   `flutter_riverpod` 3.4 are already out; upgrade deliberately, one at a time.
 
 ## Decisions
+
+- **M2 (c): real lists behind the same interface (2026-10-24).** `SupabaseAuctionFeedRepository`
+  implements `AuctionFeedRepository`, so the screens did not change. One query per list
+  (amounts as `::text`, seller via `profiles!auctions_seller_id_fkey`, photo URL built from
+  `image_path`); Keşfet shows live auctions and other sellers' upcoming ones, Yayın aç your
+  own planned ones. Without realtime each list is one snapshot; creating or starting an
+  auction invalidates them, and pulling down reloads. The room reads the auction once and
+  emits again at `ends_at` so "time is up" appears without a server push.
+- **Chips respect the seller's minimum step:** with a minimum above ₺10 the chips are 1×, 5×
+  and 10× of it (the server will refuse smaller steps), until sellers can set their own (M3).
+- **Viewer count hidden while unknown** (0 before presence arrives with the video in M4):
+  a "0" next to a live auction would look broken and discouraging.
+- **Demo mode kept:** `--dart-define=MOCK_FEED=true` runs everything on the in-memory mock with
+  simulated bidders, to show the bidding UI before M3.
+- **No separate auction detail screen in M2.** The lists and the live room cover "live and
+  upcoming auctions on the home screen"; a detail page for upcoming auctions can come with M5
+  or M6 if needed.
+
+- **Anti-sniping stays at CLAUDE.md's rule: a bid in the last 30 s extends by 30 s
+  (2026-10-24).** The design brief had "last minute, +15 s"; the developer chose to keep the
+  server rule for now and revisit later. Values live in `lib/core/auction_rules.dart`;
+  `place_bid` (M3) must use the same numbers.
 
 - **Design language "Lacivert + altın", dark only (2026-10-24).** Decided by the developer's
   design brief; written down in `DESIGN.md` (look, tokens, motion) and `PRODUCT.md` (tabs,

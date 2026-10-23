@@ -5,7 +5,15 @@
 A live-streamed auction app. A seller goes live and shows an item on camera; viewers place
 bids in real time, and the highest bidder wins when the timer runs out.
 
-> Status: **M0 – project setup.** Features land milestone by milestone (see below).
+> Status: **M2 – auctions.** Sign-up, profiles, creating auctions with a photo, and the
+> lists of live and upcoming auctions work against Supabase. Live bidding arrives in M3; until
+> then the live room is read-only (a demo mode with simulated bidding is available, see below).
+
+## Design
+
+Dark "navy and gold" look, Fraunces for headings and Manrope for text, built for one-handed
+use in Turkish. The visual language and its tokens are in [DESIGN.md](DESIGN.md), the product
+rules (tabs, live room, bidding, spending limits) in [PRODUCT.md](PRODUCT.md).
 
 ## Stack
 
@@ -61,6 +69,7 @@ to every `flutter run` (F5, the Run/Debug links above `main()`). Android Studio 
 | Task | Command |
 | --- | --- |
 | Run the app | `flutter run --dart-define-from-file=.env` |
+| Run in demo mode (simulated auctions and bidders) | `flutter run --dart-define-from-file=.env --dart-define=MOCK_FEED=true` |
 | Static analysis | `flutter analyze` |
 | Tests | `flutter test` |
 | Start / stop local Supabase | `npx supabase start` / `npx supabase stop` |
@@ -68,32 +77,36 @@ to every `flutter run` (F5, the Run/Debug links above `main()`). Android Studio 
 | Rebuild DB from migrations | `npx supabase db reset` |
 | SQL tests (pgTAP) | `npx supabase test db` |
 | Repository tests against local Supabase | `flutter test test_supabase --dart-define-from-file=.env` |
-| End-to-end UI test (real app + local Supabase) | `flutter test integration_test -d <device> --dart-define-from-file=.env` |
+| End-to-end UI test (real app + local Supabase), one file at a time on Windows | `flutter test integration_test/auth_flow_test.dart -d windows --dart-define-from-file=.env` (same for `auction_flow_test.dart`) |
+| Screenshots of every screen for design review | `flutter test test_screenshots --update-goldens` (PNGs in `test_screenshots/goldens/`) |
 
 ## Development workflow
 
-GitHub Flow: `main` is always green and protected. Work happens on short-lived branches
-(`feat/…`, `fix/…`, `docs/…`, `chore/…`, `test/…`), each merged through a pull request after
-CI passes, using squash merge. Commit messages follow
-[Conventional Commits](https://www.conventionalcommits.org/).
+Trunk-based: a single developer commits straight to `main`, which stays green because
+`flutter analyze` and `flutter test` (plus SQL tests when the schema changes) run locally
+before every commit. Commit messages are one short sentence.
 
 ## Project structure
 
 ```
 lib/
-  app/          # App widget, router, theme
-  core/         # env config, Supabase client provider, shared widgets
-  data/         # repositories (all Supabase access)
-  features/     # auth, auctions, live_room
-supabase/       # config.toml, migrations, SQL tests (Edge Functions from M4)
-test/
+  app/              # App widget, router, tab shell, theme, design tokens
+  core/             # env, Supabase client, Money, failures, shared widgets
+  data/             # repositories (all Supabase access) and the demo mock
+  features/         # auth, auctions, live_room, profile
+assets/fonts/       # Fraunces and Manrope (SIL OFL)
+supabase/           # config.toml, migrations, SQL tests (Edge Functions from M4)
+test/               # unit and widget tests (run in CI)
+test_supabase/      # repositories against local Supabase
+integration_test/   # the real app, end to end
+test_screenshots/   # renders every screen to PNG for design review
 ```
 
 ## Roadmap
 
-- [ ] M0 Setup
-- [ ] M1 Auth and profile
-- [ ] M2 Create and list auctions
+- [x] M0 Setup
+- [x] M1 Auth and profile
+- [x] M2 Create and list auctions
 - [ ] M3 Live bidding (without video)
 - [ ] M4 Live video
 - [ ] M5 Ending and results

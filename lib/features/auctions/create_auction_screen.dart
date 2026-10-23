@@ -12,6 +12,7 @@ import '../../core/widgets/states.dart';
 import '../../data/auction_repository.dart';
 import 'auction_validators.dart';
 import 'create_auction_controller.dart';
+import 'feed_providers.dart';
 
 class CreateAuctionScreen extends ConsumerStatefulWidget {
   const CreateAuctionScreen({super.key});
@@ -125,6 +126,7 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
           'Mezat oluşturuldu.',
           tone: AppMessageTone.success,
         );
+        refreshAuctionLists(ref);
         context.pop();
       }
     });

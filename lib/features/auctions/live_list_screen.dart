@@ -28,6 +28,7 @@ class LiveListScreen extends ConsumerWidget {
           Expanded(
             child: switch (auctions) {
               AsyncData(:final value) => _List(
+                onRefresh: () => ref.refresh(discoverProvider.future),
                 live: [
                   for (final a in value)
                     if (a.isLive) a,
@@ -47,29 +48,38 @@ class LiveListScreen extends ConsumerWidget {
 }
 
 class _List extends StatelessWidget {
-  const _List({required this.live});
+  const _List({required this.onRefresh, required this.live});
 
+  final Future<void> Function() onRefresh;
   final List<AuctionSummary> live;
 
   @override
   Widget build(BuildContext context) {
     if (live.isEmpty) {
-      return const EmptyView(
-        icon: Icons.sensors_off_outlined,
-        title: 'Şu an canlı yayın yok',
-        message: 'Yaklaşan mezatlar Keşfet’te.',
+      return PullToRefresh(
+        onRefresh: onRefresh,
+        child: const EmptyView(
+          icon: Icons.sensors_off_outlined,
+          title: 'Şu an canlı yayın yok',
+          message: 'Yaklaşan mezatlar Keşfet’te.',
+        ),
       );
     }
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpace.edge,
-        0,
-        AppSpace.edge,
-        AppSpace.xl,
+    return PullToRefresh(
+      onRefresh: onRefresh,
+      scrollable: true,
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.edge,
+          0,
+          AppSpace.edge,
+          AppSpace.xl,
+        ),
+        itemCount: live.length,
+        separatorBuilder: (_, _) => const Divider(height: AppSpace.xl),
+        itemBuilder: (context, i) => _LiveRow(auction: live[i]),
       ),
-      itemCount: live.length,
-      separatorBuilder: (_, _) => const Divider(height: AppSpace.xl),
-      itemBuilder: (context, i) => _LiveRow(auction: live[i]),
     );
   }
 }

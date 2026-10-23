@@ -98,7 +98,7 @@ Her milestone çalışır, test edilmiş ve commit'lenmiş biter. Bir sonrakine 
 - Yeni migration uygulama: `npx supabase migration up`; şemayı sıfırdan kurma: `npx supabase db reset`
 - SQL testleri: `npx supabase test db`
 - Repository'leri gerçek local Supabase'e karşı test etme: `flutter test test_supabase --dart-define-from-file=.env` (`flutter test` bunları çalıştırmaz)
-- Uçtan uca UI testi (gerçek uygulama + local Supabase): `flutter test integration_test -d windows --dart-define-from-file=.env`
+- Uçtan uca UI testi (gerçek uygulama + local Supabase), Windows'ta dosya dosya çalıştırılır (birlikte çalıştırınca ikinci uygulama açılamıyor): `flutter test integration_test/auth_flow_test.dart -d windows --dart-define-from-file=.env`, aynısı `auction_flow_test.dart` için
 - VS Code'da Run/F5 `.env`'i otomatik geçirir (`.vscode/settings.json` → `dart.flutterRunAdditionalArgs`). Masaüstünde denemek için `windows/` lokal olarak üretilir ve git'e girmez.
 - Edge Function deploy: M4'te eklenecek.
 

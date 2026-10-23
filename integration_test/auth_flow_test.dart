@@ -8,22 +8,8 @@ import 'package:integration_test/integration_test.dart';
 import 'package:mezat_app/core/auth_failure.dart';
 import 'package:mezat_app/features/auctions/discover_screen.dart';
 import 'package:mezat_app/main.dart' as app;
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Pumps frames until [finder] matches; real network calls do not finish
-/// inside a single pumpAndSettle.
-Future<void> pumpUntilFound(
-  WidgetTester tester,
-  Finder finder, {
-  Duration timeout = const Duration(seconds: 15),
-}) async {
-  final end = DateTime.now().add(timeout);
-  while (DateTime.now().isBefore(end)) {
-    await tester.pump(const Duration(milliseconds: 100));
-    if (finder.evaluate().isNotEmpty) return;
-  }
-  fail('Timed out waiting for $finder');
-}
+import 'helpers.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -37,24 +23,7 @@ void main() {
     const password = 'Passw0rd!x';
 
     await app.main();
-    // A session saved by an earlier run opens home or choose-username instead
-    // of sign-in. Wait for the first real screen before signing out: Supabase
-    // restores the saved session in the background, and a sign-out sent
-    // before that finishes is undone by the restore.
-    final signInEmail = find.byKey(const Key('signIn.email'));
-    await pumpUntilFound(
-      tester,
-      find.byWidgetPredicate(
-        (w) =>
-            w.key == const Key('signIn.email') ||
-            w.key == const Key('chooseUsername.username') ||
-            w is DiscoverScreen,
-      ),
-    );
-    if (signInEmail.evaluate().isEmpty) {
-      await Supabase.instance.client.auth.signOut();
-    }
-    await pumpUntilFound(tester, signInEmail);
+    await startSignedOut(tester);
 
     // Wrong password for an unknown account: friendly message, no crash.
     await tester.enterText(find.byKey(const Key('signIn.email')), email);

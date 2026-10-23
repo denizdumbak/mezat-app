@@ -23,6 +23,8 @@ class DiscoverScreen extends ConsumerWidget {
     final auctions = ref.watch(discoverProvider);
     final username = ref.watch(currentProfileProvider).value?.username;
 
+    Future<void> reload() => ref.refresh(discoverProvider.future);
+
     final header = ScreenHeader(
       title: 'Keşfet',
       trailing: username == null
@@ -40,28 +42,35 @@ class DiscoverScreen extends ConsumerWidget {
           children: [
             header,
             Expanded(
-              child: EmptyView(
-                icon: Icons.storefront_outlined,
-                title: 'Şu an mezat yok',
-                message: 'Yeni mezatlar planlandığında burada görünecek.',
-                action: OutlinedButton(
-                  onPressed: () => context.go(AppRoutes.sell),
-                  child: const Text('Yayın aç'),
+              child: PullToRefresh(
+                onRefresh: reload,
+                child: EmptyView(
+                  icon: Icons.storefront_outlined,
+                  title: 'Şu an mezat yok',
+                  message: 'Yeni mezatlar planlandığında burada görünecek.',
+                  action: OutlinedButton(
+                    onPressed: () => context.go(AppRoutes.sell),
+                    child: const Text('Yayın aç'),
+                  ),
                 ),
               ),
             ),
           ],
         ),
-        AsyncData(:final value) => _DiscoverList(
-          header: header,
-          live: [
-            for (final a in value)
-              if (a.isLive) a,
-          ],
-          upcoming: [
-            for (final a in value)
-              if (!a.isLive) a,
-          ],
+        AsyncData(:final value) => PullToRefresh(
+          onRefresh: reload,
+          scrollable: true,
+          child: _DiscoverList(
+            header: header,
+            live: [
+              for (final a in value)
+                if (a.isLive) a,
+            ],
+            upcoming: [
+              for (final a in value)
+                if (!a.isLive) a,
+            ],
+          ),
         ),
         AsyncError(:final error) => Column(
           children: [
@@ -100,6 +109,7 @@ class _DiscoverList extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
         SliverToBoxAdapter(child: header),
         if (live.isNotEmpty) SliverToBoxAdapter(child: _LiveStrip(live: live)),

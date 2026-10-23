@@ -103,6 +103,9 @@ class ViewerCount extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // No count yet (presence arrives with the video in M4): show nothing
+    // rather than a discouraging "0".
+    if (count <= 0) return const SizedBox.shrink();
     return Semantics(
       label: '$count izleyici',
       excludeSemantics: true,

@@ -25,53 +25,60 @@ class SellScreen extends ConsumerWidget {
 
     return SafeArea(
       bottom: false,
-      child: ListView(
-        padding: const EdgeInsets.only(bottom: AppSpace.xl),
-        children: [
-          const ScreenHeader(title: 'Yayın aç'),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpace.edge),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Ürününü ekle; hazır olduğunda yayını başlat.',
+      child: PullToRefresh(
+        onRefresh: () => ref.refresh(myScheduledProvider.future),
+        scrollable: true,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: AppSpace.xl),
+          children: [
+            const ScreenHeader(title: 'Yayın aç'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.edge),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Ürününü ekle; hazır olduğunda yayını başlat.',
+                    style: text.bodyMedium!.copyWith(
+                      color: AppColors.onStageMuted,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpace.l),
+                  PrimaryButton(
+                    label: 'Mezat oluştur',
+                    onPressed: () => context.push(AppRoutes.createAuction),
+                  ),
+                ],
+              ),
+            ),
+            const SectionLabel('Planlanmış mezatların'),
+            switch (scheduled) {
+              AsyncData(:final value) when value.isEmpty => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpace.edge),
+                child: Text(
+                  'Henüz planlanmış mezatın yok.',
                   style: text.bodyMedium!.copyWith(
                     color: AppColors.onStageMuted,
                   ),
                 ),
-                const SizedBox(height: AppSpace.l),
-                PrimaryButton(
-                  label: 'Mezat oluştur',
-                  onPressed: () => context.push(AppRoutes.createAuction),
-                ),
-              ],
-            ),
-          ),
-          const SectionLabel('Planlanmış mezatların'),
-          switch (scheduled) {
-            AsyncData(:final value) when value.isEmpty => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpace.edge),
-              child: Text(
-                'Henüz planlanmış mezatın yok.',
-                style: text.bodyMedium!.copyWith(color: AppColors.onStageMuted),
               ),
-            ),
-            AsyncData(:final value) => Column(
-              children: [
-                for (final auction in value) _ScheduledRow(auction: auction),
-              ],
-            ),
-            AsyncError(:final error) => ErrorView(
-              message: failureMessage(error),
-              onRetry: () => ref.invalidate(myScheduledProvider),
-            ),
-            _ => const Padding(
-              padding: EdgeInsets.all(AppSpace.xl),
-              child: LoadingView(),
-            ),
-          },
-        ],
+              AsyncData(:final value) => Column(
+                children: [
+                  for (final auction in value) _ScheduledRow(auction: auction),
+                ],
+              ),
+              AsyncError(:final error) => ErrorView(
+                message: failureMessage(error),
+                onRetry: () => ref.invalidate(myScheduledProvider),
+              ),
+              _ => const Padding(
+                padding: EdgeInsets.all(AppSpace.xl),
+                child: LoadingView(),
+              ),
+            },
+          ],
+        ),
       ),
     );
   }
@@ -85,6 +92,7 @@ class _ScheduledRow extends ConsumerWidget {
   Future<void> _start(BuildContext context, WidgetRef ref) async {
     try {
       await ref.read(auctionFeedRepositoryProvider).startAuction(auction.id);
+      refreshAuctionLists(ref);
       if (context.mounted) {
         unawaited(context.push(AppRoutes.liveRoom(auction.id)));
       }

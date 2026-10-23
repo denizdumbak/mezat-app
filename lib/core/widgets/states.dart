@@ -193,3 +193,45 @@ void showAppMessage(
       ),
     );
 }
+
+/// Pull down to reload. A non-scrollable [child] (an empty or error view) is
+/// made scrollable and stretched to the screen so the gesture works there
+/// too; pass [scrollable] for lists, which must then use
+/// `AlwaysScrollableScrollPhysics` so short lists can be pulled.
+class PullToRefresh extends StatelessWidget {
+  const PullToRefresh({
+    super.key,
+    required this.onRefresh,
+    required this.child,
+    this.scrollable = false,
+  });
+
+  final Future<void> Function() onRefresh;
+  final Widget child;
+  final bool scrollable;
+
+  @override
+  Widget build(BuildContext context) {
+    return RefreshIndicator(
+      color: AppColors.gold,
+      backgroundColor: AppColors.stageRaised,
+      // A failed reload shows its own error view; the gesture just ends.
+      onRefresh: () async {
+        try {
+          await onRefresh();
+        } catch (_) {}
+      },
+      child: scrollable
+          ? child
+          : LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: child,
+                ),
+              ),
+            ),
+    );
+  }
+}

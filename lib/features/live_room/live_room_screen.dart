@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/design_tokens.dart';
 import '../../core/app_failure.dart';
+import '../../core/auction_failure.dart';
 import '../../core/auction_rules.dart';
 import '../../core/money.dart';
 import '../../core/widgets/bid_feed_row.dart';
@@ -110,6 +111,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       _ when room.ended => null,
       _ when !room.connected => 'Bağlantı bekleniyor.',
       _ when isSeller => 'Kendi mezatına teklif veremezsin.',
+      _ when !room.biddingOpen => AuctionFailure.biddingNotOpen.message,
       BidBlocked(:final reason) => reason,
       BidAllowed() => null,
     };

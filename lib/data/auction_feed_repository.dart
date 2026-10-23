@@ -71,6 +71,7 @@ class LiveRoom {
     this.ended = false,
     this.sold,
     this.connected = true,
+    this.biddingOpen = true,
   });
 
   final String auctionId;
@@ -102,6 +103,10 @@ class LiveRoom {
   /// False while the realtime connection is down; bidding is paused.
   final bool connected;
 
+  /// False where bids cannot be placed yet (real auctions until M3 adds
+  /// place_bid).
+  final bool biddingOpen;
+
   Bid? get leadingBid => bids.isEmpty ? null : bids.first;
 
   LiveRoom copyWith({
@@ -113,6 +118,7 @@ class LiveRoom {
     bool? ended,
     SoldResult? sold,
     bool? connected,
+    bool? biddingOpen,
   }) => LiveRoom(
     auctionId: auctionId,
     title: title,
@@ -128,12 +134,14 @@ class LiveRoom {
     ended: ended ?? this.ended,
     sold: sold ?? this.sold,
     connected: connected ?? this.connected,
+    biddingOpen: biddingOpen ?? this.biddingOpen,
   );
 }
 
 /// Read side of auctions for the discover, live and room screens, plus
-/// bidding. The app currently runs on [MockAuctionFeedRepository]; the
-/// Supabase implementation follows with M2 (lists) and M3 (bids, realtime).
+/// bidding. [SupabaseAuctionFeedRepository] serves real auctions (lists and start
+/// now; bids and realtime with M3); [MockAuctionFeedRepository] is the demo
+/// mode with simulated bidders.
 ///
 /// Every method throws [AuctionFailure] on error.
 abstract interface class AuctionFeedRepository {
