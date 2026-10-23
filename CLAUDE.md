@@ -79,9 +79,11 @@ Her milestone çalışır, test edilmiş ve commit'lenmiş biter. Bir sonrakine 
 
 ## Çalışma kuralları
 
+- **Oturum başında `STATUS.md`'yi oku** (projenin güncel durumu ve sıradaki adımlar); oturum sonunda güncelle. Kararların gerekçeleri `NOTES.md`'de.
 - Önce plan (5–10 madde), sonra kod. Tek seferde tek milestone/özellik.
 - Her adımdan sonra `flutter analyze` ve `flutter test` çalıştır; kırmızı test varken "bitti" deme. Test etmediğin şeye "çalışıyor" deme.
 - Güvenlik içeren her özellikte saldırgan testi: token'sız istek, başkasının kaynağı, client'tan `current_price`/`status` güncelleme denemesi, anon key ile `bids`'e doğrudan yazma.
+- **Commit'leri Claude atmaz.** Her adım sonunda commit mesajını ve çalıştırılacak git komutlarını (PowerShell'e yapıştırılabilir) verir; commit ve push'u Deniz yapar.
 - Conventional Commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`). Force push, veri silme, production'a deploy öncesi onay al.
 - Kararları ve teknik borcu `NOTES.md`'ye yaz.
 - Yeni bağımlılık eklemeden önce gerçekten gerekli mi düşün; pubspec sürümleri sabit.
