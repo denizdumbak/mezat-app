@@ -60,7 +60,7 @@ Decisions and technical debt. Newest on top within each section.
   let a sign-in error show up on the sign-up form. Controllers ignore a second submit while
   one is running (double-tap protection), and buttons are disabled meanwhile.
 - **Email is trimmed and lowercased before every auth call; sign-up asks for the password
-  twice.** Both target "I signed up but cannot log in" (cf. the Socia login issue).
+  twice.** Both target "I signed up but cannot log in", one of the most common auth complaints.
   Passwords are never trimmed.
 - **Minimum password length 8**, in `config.toml` and the form (`minPasswordLength`).
 - **`http` declared as a direct dependency (1.6.0, same as resolved).** Network failures
