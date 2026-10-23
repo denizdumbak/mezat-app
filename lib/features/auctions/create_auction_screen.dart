@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
 import '../../core/app_failure.dart';
 import '../../core/money.dart';
 import '../../core/photo_picker.dart';
 import '../../core/widgets/form_layout.dart';
+import '../../core/widgets/primary_button.dart';
+import '../../core/widgets/states.dart';
 import '../../data/auction_repository.dart';
 import 'auction_validators.dart';
 import 'create_auction_controller.dart';
@@ -46,14 +49,12 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
       if (photo != null && mounted) setState(() => _photo = photo);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            error is AppFailure
-                ? error.message
-                : 'Fotoğraf seçilemedi. Tekrar dene.',
-          ),
-        ),
+      showAppMessage(
+        context,
+        error is AppFailure
+            ? error.message
+            : 'Fotoğraf seçilemedi. Tekrar dene.',
+        tone: AppMessageTone.error,
       );
     }
   }
@@ -119,15 +120,16 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
 
     ref.listen(createAuctionControllerProvider, (_, next) {
       if (next case AsyncData(value: _?)) {
-        ScaffoldMessenger.of(
+        showAppMessage(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Mezat oluşturuldu.')));
+          'Mezat oluşturuldu.',
+          tone: AppMessageTone.success,
+        );
         context.pop();
       }
     });
 
     final textTheme = Theme.of(context).textTheme;
-    final colors = Theme.of(context).colorScheme;
 
     return FormLayout(
       title: 'Mezat oluştur',
@@ -138,7 +140,7 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
           onPick: _pickPhoto,
           onRemove: () => setState(() => _photo = null),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpace.l),
         Form(
           key: _formKey,
           child: Column(
@@ -153,7 +155,7 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
                 textInputAction: TextInputAction.next,
                 validator: validateTitle,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpace.s),
               TextFormField(
                 key: const Key('createAuction.description'),
                 controller: _description,
@@ -167,7 +169,7 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
                 maxLength: maxDescriptionLength,
                 validator: validateDescription,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpace.s),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -179,7 +181,7 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
                       enabled: !busy,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpace.m),
                   Expanded(
                     child: _AmountField(
                       fieldKey: const Key('createAuction.minIncrement'),
@@ -190,7 +192,7 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpace.l),
               DropdownButtonFormField<int>(
                 key: const Key('createAuction.duration'),
                 initialValue: _durationMinutes,
@@ -209,9 +211,9 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpace.xl),
         Text('Başlangıç', style: textTheme.titleSmall),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpace.s),
         SegmentedButton<bool>(
           key: const Key('createAuction.startMode'),
           segments: const [
@@ -227,7 +229,7 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
                 }),
         ),
         if (!_startNow) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpace.s),
           OutlinedButton.icon(
             key: const Key('createAuction.startAt'),
             icon: const Icon(Icons.event),
@@ -241,18 +243,21 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
         ],
         if (_startError != null)
           Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(_startError!, style: TextStyle(color: colors.error)),
+            padding: const EdgeInsets.only(top: AppSpace.s),
+            child: Text(
+              _startError!,
+              style: textTheme.bodySmall!.copyWith(color: AppColors.urgent),
+            ),
           ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpace.s),
         Text(
           'Mezat, sen yayını başlattığında açılır ve seçtiğin süre boyunca '
           'sürer. Planlanan zaman izleyicilere gösterilir.',
           style: textTheme.bodySmall,
         ),
         FailureMessage(state: state),
-        const SizedBox(height: 24),
-        SubmitButton(label: 'Mezatı oluştur', busy: busy, onPressed: _submit),
+        const SizedBox(height: AppSpace.xl),
+        PrimaryButton(label: 'Mezatı oluştur', busy: busy, onPressed: _submit),
       ],
     );
   }
@@ -285,7 +290,7 @@ class _AmountField extends StatelessWidget {
       key: fieldKey,
       controller: controller,
       enabled: enabled,
-      decoration: InputDecoration(labelText: label, suffixText: '₺'),
+      decoration: InputDecoration(labelText: label, prefixText: '₺ '),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       textInputAction: TextInputAction.next,
       validator: validateAmount,
@@ -308,13 +313,15 @@ class _PhotoField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     final photo = this.photo;
     return AspectRatio(
       aspectRatio: 4 / 3,
       child: Material(
-        color: colors.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.stageRaised,
+        shape: const RoundedRectangleBorder(
+          borderRadius: AppRadius.largeAll,
+          side: BorderSide(color: AppColors.line, width: AppSize.line),
+        ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           key: const Key('createAuction.photo'),
@@ -323,8 +330,11 @@ class _PhotoField extends StatelessWidget {
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.add_a_photo_outlined, color: colors.primary),
-                    const SizedBox(height: 8),
+                    const Icon(
+                      Icons.add_a_photo_outlined,
+                      color: AppColors.gold,
+                    ),
+                    const SizedBox(height: AppSpace.s),
                     const Text('Fotoğraf ekle (isteğe bağlı)'),
                   ],
                 )

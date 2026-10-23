@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mezat_app/core/auth_failure.dart';
+import 'package:mezat_app/core/widgets/app_loader.dart';
 import 'package:mezat_app/data/profile_repository.dart';
+import 'package:mezat_app/features/auctions/discover_screen.dart';
 
 import '../../helpers/fakes.dart';
 
@@ -18,6 +20,13 @@ Future<void> _signIn(
   await tester.enterText(find.byKey(const Key('signIn.password')), password);
   await tester.tap(find.widgetWithText(FilledButton, 'Giriş yap'));
   await tester.pumpAndSettle();
+}
+
+/// Sign-out lives on the Profil tab.
+Future<void> _signOutFromProfile(WidgetTester tester) async {
+  await tester.tap(find.byKey(const Key('tab.3')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Çıkış yap'));
 }
 
 void main() {
@@ -85,7 +94,7 @@ void main() {
       // The button now shows a spinner and is disabled.
       final button = tester.widget<FilledButton>(find.byType(FilledButton));
       expect(button.onPressed, isNull);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(AppLoader), findsOneWidget);
       await tester.tap(find.byType(FilledButton), warnIfMissed: false);
       await tester.testTextInput.receiveAction(TextInputAction.done);
 
@@ -111,7 +120,7 @@ void main() {
 
       await _signIn(tester);
 
-      expect(find.text('Canlı mezatlar yakında burada.'), findsOneWidget);
+      expect(find.byType(DiscoverScreen), findsOneWidget);
       expect(find.text('@deniz'), findsOneWidget);
     });
   });
@@ -279,20 +288,22 @@ void main() {
       expect(find.text('@deniz'), findsOneWidget);
     });
 
-    testWidgets('sign out from home returns to sign-in', (tester) async {
+    testWidgets('sign out from the profile tab returns to sign-in', (
+      tester,
+    ) async {
       final auth = FakeAuthRepository(signedInAs: _userId);
       final profiles = FakeProfileRepository()
         ..profiles[_userId] = const Profile(id: _userId, username: 'deniz');
       await pumpApp(tester, auth: auth, profiles: profiles);
 
-      await tester.tap(find.byTooltip('Çıkış yap'));
+      await _signOutFromProfile(tester);
       await tester.pumpAndSettle();
 
       expect(auth.calls, ['signOut']);
       expect(find.byKey(const Key('signIn.email')), findsOneWidget);
     });
 
-    testWidgets('a failed sign out keeps the user home and says why', (
+    testWidgets('a failed sign out keeps the user signed in and says why', (
       tester,
     ) async {
       final auth = FakeAuthRepository(signedInAs: _userId)
@@ -301,7 +312,7 @@ void main() {
         ..profiles[_userId] = const Profile(id: _userId, username: 'deniz');
       await pumpApp(tester, auth: auth, profiles: profiles);
 
-      await tester.tap(find.byTooltip('Çıkış yap'));
+      await _signOutFromProfile(tester);
       await tester.pumpAndSettle();
 
       expect(find.text(AuthFailure.network.message), findsOneWidget);

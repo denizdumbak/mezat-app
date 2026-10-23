@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/routes.dart';
 import '../../core/widgets/form_layout.dart';
+import '../../core/widgets/primary_button.dart';
 import 'auth_controller.dart';
 import 'validators.dart';
 
@@ -110,7 +111,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         ),
         FailureMessage(state: state),
         const SizedBox(height: 24),
-        SubmitButton(label: 'Kayıt ol', busy: busy, onPressed: _submit),
+        PrimaryButton(label: 'Kayıt ol', busy: busy, onPressed: _submit),
         const SizedBox(height: 8),
         TextButton(
           onPressed: busy ? null : () => context.go(AppRoutes.signIn),

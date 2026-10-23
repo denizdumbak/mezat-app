@@ -5,8 +5,16 @@ abstract final class AppRoutes {
   static const signIn = '/sign-in';
   static const signUp = '/sign-up';
   static const chooseUsername = '/choose-username';
+
+  // The four tabs. Keşfet is home.
   static const home = '/';
+  static const live = '/live';
+  static const sell = '/sell';
+  static const profile = '/profile';
+
   static const createAuction = '/auctions/new';
+  static const liveRoomPattern = '/auctions/:id/live';
+  static String liveRoom(String auctionId) => '/auctions/$auctionId/live';
 }
 
 const _signedOutRoutes = {AppRoutes.signIn, AppRoutes.signUp};

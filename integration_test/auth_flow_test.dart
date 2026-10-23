@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mezat_app/core/auth_failure.dart';
+import 'package:mezat_app/features/auctions/discover_screen.dart';
 import 'package:mezat_app/main.dart' as app;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -47,7 +48,7 @@ void main() {
         (w) =>
             w.key == const Key('signIn.email') ||
             w.key == const Key('chooseUsername.username') ||
-            (w is Tooltip && w.message == 'Çıkış yap'),
+            w is DiscoverScreen,
       ),
     );
     if (signInEmail.evaluate().isEmpty) {
@@ -90,8 +91,10 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Devam et'));
     await pumpUntilFound(tester, find.text('@$username'));
 
-    // Sign out.
-    await tester.tap(find.byTooltip('Çıkış yap'));
+    // Sign out, from the Profil tab.
+    await tester.tap(find.byKey(const Key('tab.3')));
+    await pumpUntilFound(tester, find.text('Çıkış yap'));
+    await tester.tap(find.text('Çıkış yap'));
     await pumpUntilFound(tester, find.byKey(const Key('signIn.email')));
 
     // Sign in again with the address as typed at sign-up: straight home.
@@ -102,6 +105,6 @@ void main() {
     await tester.enterText(find.byKey(const Key('signIn.password')), password);
     await tester.tap(find.widgetWithText(FilledButton, 'Giriş yap'));
     await pumpUntilFound(tester, find.text('@$username'));
-    expect(find.text('Canlı mezatlar yakında burada.'), findsOneWidget);
+    expect(find.byType(DiscoverScreen), findsOneWidget);
   });
 }

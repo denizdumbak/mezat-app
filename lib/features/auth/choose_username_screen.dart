@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/widgets/form_layout.dart';
+import '../../core/widgets/primary_button.dart';
 import 'auth_controller.dart';
 import 'validators.dart';
 
@@ -64,7 +65,7 @@ class _ChooseUsernameScreenState extends ConsumerState<ChooseUsernameScreen> {
         FailureMessage(state: state),
         FailureMessage(state: signOutState),
         const SizedBox(height: 24),
-        SubmitButton(label: 'Devam et', busy: busy, onPressed: _submit),
+        PrimaryButton(label: 'Devam et', busy: busy, onPressed: _submit),
         const SizedBox(height: 8),
         TextButton(
           onPressed: busy

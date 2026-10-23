@@ -3,11 +3,16 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mezat_app/app/app.dart';
+import 'package:mezat_app/core/auction_failure.dart';
 import 'package:mezat_app/core/auth_failure.dart';
+import 'package:mezat_app/core/money.dart';
 import 'package:mezat_app/core/photo_picker.dart';
+import 'package:mezat_app/data/auction_feed_repository.dart';
 import 'package:mezat_app/data/auction_repository.dart';
 import 'package:mezat_app/data/auth_repository.dart';
 import 'package:mezat_app/data/profile_repository.dart';
+import 'package:mezat_app/features/auctions/feed_providers.dart';
+import 'package:mezat_app/features/live_room/bid_safety.dart';
 
 /// In-memory stand-in for Supabase Auth.
 class FakeAuthRepository implements AuthRepository {
@@ -152,6 +157,72 @@ class FakePhotoPicker implements PhotoPicker {
   }
 }
 
+/// Controllable stand-in for the auction feed: tests set the lists and rooms,
+/// then call [emit] to push the change to listening screens.
+class FakeAuctionFeedRepository implements AuctionFeedRepository {
+  List<AuctionSummary> discover = [];
+  List<AuctionSummary> myScheduled = [];
+  final rooms = <String, LiveRoom>{};
+  Money committed = Money.zero;
+
+  /// Makes the discover stream fail while set.
+  Object? discoverError;
+
+  /// Thrown (once) by the next bid instead of succeeding.
+  Object? nextBidError;
+
+  /// When set, bids wait for it; lets a test see the sending state.
+  Completer<void>? bidGate;
+
+  final placed = <({String auctionId, Money amount})>[];
+  final maxBids = <({String auctionId, Money max})>[];
+  final started = <String>[];
+
+  final _changes = StreamController<void>.broadcast();
+
+  void emit() => _changes.add(null);
+
+  Stream<T> _watch<T>(T Function() read) async* {
+    yield read();
+    await for (final _ in _changes.stream) {
+      yield read();
+    }
+  }
+
+  @override
+  Stream<List<AuctionSummary>> watchDiscover() => _watch(() {
+    final error = discoverError;
+    if (error != null) throw error;
+    return discover;
+  });
+
+  @override
+  Stream<List<AuctionSummary>> watchMyScheduled() => _watch(() => myScheduled);
+
+  @override
+  Stream<LiveRoom> watchRoom(String auctionId) =>
+      _watch(() => rooms[auctionId] ?? (throw AuctionFailure.notFound));
+
+  @override
+  Stream<Money> watchCommittedToday() => _watch(() => committed);
+
+  @override
+  Future<void> startAuction(String auctionId) async => started.add(auctionId);
+
+  @override
+  Future<void> placeBid(String auctionId, Money amount) async {
+    await bidGate?.future;
+    final error = nextBidError;
+    nextBidError = null;
+    if (error != null) throw error;
+    placed.add((auctionId: auctionId, amount: amount));
+  }
+
+  @override
+  Future<void> setMaxBid(String auctionId, Money max) async =>
+      maxBids.add((auctionId: auctionId, max: max));
+}
+
 /// Pumps the whole app on top of the fakes and waits for the first screen.
 Future<void> pumpApp(
   WidgetTester tester, {
@@ -159,6 +230,8 @@ Future<void> pumpApp(
   FakeProfileRepository? profiles,
   FakeAuctionRepository? auctions,
   FakePhotoPicker? photoPicker,
+  FakeAuctionFeedRepository? feed,
+  SpendingLimitRepository? spendingLimit,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -171,6 +244,12 @@ Future<void> pumpApp(
           auctions ?? FakeAuctionRepository(),
         ),
         photoPickerProvider.overrideWithValue(photoPicker ?? FakePhotoPicker()),
+        auctionFeedRepositoryProvider.overrideWithValue(
+          feed ?? FakeAuctionFeedRepository(),
+        ),
+        spendingLimitRepositoryProvider.overrideWithValue(
+          spendingLimit ?? InMemorySpendingLimitRepository(),
+        ),
       ],
       // Riverpod retries failed providers by default; tests want the failure.
       retry: (retryCount, error) => null,

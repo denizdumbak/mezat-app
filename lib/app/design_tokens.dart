@@ -35,8 +35,11 @@ abstract final class AppColors {
   /// 1 dp separators and outlines instead of shadows: onStage at 14 %.
   static const line = Color(0x24EEF1F7);
 
-  /// Dims what sits behind a sheet or the "sold" stamp.
+  /// Dims what sits behind a sheet; also the backing of text on video.
   static const scrim = Color(0xB30C1424);
+
+  /// Nearly hides what is behind: the "sold" and "time is up" moments.
+  static const scrimStrong = Color(0xEB0C1424);
 }
 
 /// Only two corner radii exist.
@@ -80,6 +83,25 @@ abstract final class AppSize {
 
   /// Thumbnail of the seller next to their name.
   static const avatar = 32.0;
+
+  /// The user's own avatar on the profile screen.
+  static const avatarLarge = 56.0;
+
+  /// Frame of the "SATILDI" stamp: heavier than a separator on purpose.
+  static const stampBorder = 3.0;
+
+  /// Square photo in the live list.
+  static const thumbnail = 88.0;
+
+  /// Width of a card in the "live now" strip.
+  static const liveCardWidth = 168.0;
+
+  /// Room under a live card's photo for its title and price (before text
+  /// scaling).
+  static const liveCardInfo = 72.0;
+
+  /// Height of an item in the tab bar.
+  static const tabBar = 64.0;
 
   /// Width of the bid feed on the live screen.
   static const bidFeedWidth = 220.0;

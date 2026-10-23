@@ -82,6 +82,9 @@ void main() {
       'NOT_AUCTION_SELLER': AuctionFailure.notSeller,
       'AUCTION_NOT_SCHEDULED': AuctionFailure.notScheduled,
       'AUCTION_NOT_FOUND': AuctionFailure.notFound,
+      'BID_TOO_LOW': AuctionFailure.bidTooLow,
+      'AUCTION_NOT_LIVE': AuctionFailure.auctionNotLive,
+      'SELLER_CANNOT_BID': AuctionFailure.sellerCannotBid,
       'SOME_NEW_CODE': AuctionFailure.unknown,
     };
     for (final MapEntry(key: code, value: failure) in domainCodes.entries) {

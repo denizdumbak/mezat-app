@@ -38,6 +38,10 @@ AuctionFailure toAuctionFailure(Object error) => switch (error) {
     'NOT_AUCTION_SELLER' => AuctionFailure.notSeller,
     'AUCTION_NOT_SCHEDULED' => AuctionFailure.notScheduled,
     'AUCTION_NOT_FOUND' => AuctionFailure.notFound,
+    // Raised by place_bid (M3).
+    'BID_TOO_LOW' => AuctionFailure.bidTooLow,
+    'AUCTION_NOT_LIVE' => AuctionFailure.auctionNotLive,
+    'SELLER_CANNOT_BID' => AuctionFailure.sellerCannotBid,
     _ => AuctionFailure.unknown,
   },
   PostgrestException(code: '23514') => AuctionFailure.invalidInput,

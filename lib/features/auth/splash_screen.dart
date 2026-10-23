@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/design_tokens.dart';
 import '../../core/app_failure.dart';
+import '../../core/widgets/app_loader.dart';
+import '../../core/widgets/form_layout.dart';
+import '../../core/widgets/primary_button.dart';
 import 'auth_controller.dart';
 import 'session.dart';
 
@@ -21,28 +25,43 @@ class SplashScreen extends ConsumerWidget {
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: error == null || profile.isLoading
-                ? const CircularProgressIndicator()
-                : Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(failureMessage(error), textAlign: TextAlign.center),
-                      const SizedBox(height: 16),
-                      FilledButton(
-                        onPressed: () => ref.invalidate(currentProfileProvider),
-                        child: const Text('Tekrar dene'),
-                      ),
-                      TextButton(
-                        onPressed: () => ref
-                            .read(
-                              authControllerProvider(AuthForm.signOut).notifier,
-                            )
-                            .signOut(),
-                        child: const Text('Çıkış yap'),
-                      ),
-                    ],
-                  ),
+            padding: const EdgeInsets.all(AppSpace.xl),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: AppSize.contentMaxWidth,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Center(child: Wordmark()),
+                  const SizedBox(height: AppSpace.xl),
+                  if (error == null || profile.isLoading)
+                    const Center(child: AppLoader())
+                  else ...[
+                    Text(
+                      failureMessage(error),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: AppSpace.xl),
+                    PrimaryButton(
+                      label: 'Tekrar dene',
+                      onPressed: () => ref.invalidate(currentProfileProvider),
+                    ),
+                    const SizedBox(height: AppSpace.s),
+                    TextButton(
+                      onPressed: () => ref
+                          .read(
+                            authControllerProvider(AuthForm.signOut).notifier,
+                          )
+                          .signOut(),
+                      child: const Text('Çıkış yap'),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
         ),
       ),

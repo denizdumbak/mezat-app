@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/design_tokens.dart';
 import '../app_failure.dart';
 
-/// Shared frame for the app's forms: centered, scrollable (so the keyboard
-/// never hides the button) and narrow on wide screens.
+/// Shared frame for the app's forms: a big heading, scrollable content (so
+/// the keyboard never hides the button), narrow on wide screens.
+///
+/// Pushed forms get a back button; entry screens (sign in, sign up) show the
+/// "mezat" wordmark instead.
 class FormLayout extends StatelessWidget {
   const FormLayout({super.key, required this.title, required this.children});
 
@@ -13,19 +17,58 @@ class FormLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final canPop = Navigator.of(context).canPop();
+    final text = Theme.of(context).textTheme;
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.edge,
+              AppSpace.s,
+              AppSpace.edge,
+              AppSpace.xl,
+            ),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints: const BoxConstraints(
+                maxWidth: AppSize.contentMaxWidth,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: children,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: canPop ? const BackButton() : const Wordmark(),
+                  ),
+                  const SizedBox(height: AppSpace.l),
+                  Text(title, style: text.headlineLarge),
+                  const SizedBox(height: AppSpace.xl),
+                  ...children,
+                ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The app's name set in the display face, in gold. Stands in for a logo.
+class Wordmark extends StatelessWidget {
+  const Wordmark({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: AppSize.touch,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          'mezat',
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(
+            color: AppColors.gold,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -43,41 +86,15 @@ class FailureMessage extends StatelessWidget {
   Widget build(BuildContext context) {
     final error = state.error;
     if (error == null || state.isLoading) return const SizedBox.shrink();
-    final colors = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.only(top: AppSpace.l),
       child: Text(
         failureMessage(error),
-        style: TextStyle(color: colors.error),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium!.copyWith(color: AppColors.urgent),
         textAlign: TextAlign.center,
       ),
-    );
-  }
-}
-
-/// Primary button that shows a spinner and ignores taps while [busy].
-class SubmitButton extends StatelessWidget {
-  const SubmitButton({
-    super.key,
-    required this.label,
-    required this.busy,
-    required this.onPressed,
-  });
-
-  final String label;
-  final bool busy;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return FilledButton(
-      onPressed: busy ? null : onPressed,
-      child: busy
-          ? const SizedBox.square(
-              dimension: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Text(label),
     );
   }
 }

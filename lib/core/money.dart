@@ -80,6 +80,12 @@ class Money implements Comparable<Money> {
 
   Money operator +(Money other) => Money.kurus(kurus + other.kurus);
 
+  Money operator -(Money other) => Money.kurus(kurus - other.kurus);
+
+  bool operator >(Money other) => kurus > other.kurus;
+
+  bool operator >=(Money other) => kurus >= other.kurus;
+
   @override
   int compareTo(Money other) => kurus.compareTo(other.kurus);
 

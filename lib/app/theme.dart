@@ -136,7 +136,16 @@ ThemeData _buildTheme() {
         vertical: AppSpace.m,
       ),
       labelStyle: text.bodyLarge!.copyWith(color: AppColors.onStageMuted),
-      floatingLabelStyle: text.bodyMedium!.copyWith(color: AppColors.gold),
+      // Gold only while the field has focus.
+      floatingLabelStyle: WidgetStateTextStyle.resolveWith(
+        (states) => text.bodyMedium!.copyWith(
+          color: states.contains(WidgetState.error)
+              ? AppColors.urgent
+              : states.contains(WidgetState.focused)
+              ? AppColors.gold
+              : AppColors.onStageMuted,
+        ),
+      ),
       helperStyle: text.bodySmall,
       hintStyle: text.bodyLarge!.copyWith(color: AppColors.onStageMuted),
       errorStyle: text.bodySmall!.copyWith(color: AppColors.urgent),
@@ -172,7 +181,8 @@ ThemeData _buildTheme() {
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.gold,
         foregroundColor: AppColors.onGold,
-        disabledBackgroundColor: AppColors.stageRaised,
+        // The line colour: still reads as a button on raised panels.
+        disabledBackgroundColor: AppColors.line,
         disabledForegroundColor: AppColors.onStageMuted,
         minimumSize: buttonSize,
         padding: buttonPadding,
@@ -212,8 +222,9 @@ ThemeData _buildTheme() {
     segmentedButtonTheme: SegmentedButtonThemeData(
       style: SegmentedButton.styleFrom(
         foregroundColor: AppColors.onStageMuted,
-        selectedForegroundColor: AppColors.onGold,
-        selectedBackgroundColor: AppColors.gold,
+        // Gold text, not a gold fill: the fill belongs to the primary button.
+        selectedForegroundColor: AppColors.gold,
+        selectedBackgroundColor: AppColors.line,
         side: _lineSide,
         minimumSize: buttonSize,
         shape: buttonShape,

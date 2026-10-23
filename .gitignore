@@ -58,3 +58,6 @@ node_modules/
 
 # Desktop runner, local only: target platforms are android + ios (see NOTES).
 /windows/
+
+# Screenshots for design review; rendering differs per machine.
+test_screenshots/goldens/

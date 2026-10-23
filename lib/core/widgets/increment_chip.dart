@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../app/design_tokens.dart';
 import '../money.dart';
 
-/// One of the seller's bid increments ("+₺50"). Selected: gold fill.
+/// One of the seller's bid increments ("+₺50"). Selected: gold outline and
+/// text on a darker ground. Not a gold fill, which belongs to the bid button
+/// right below, the screen's one primary action.
 class IncrementChip extends StatelessWidget {
   const IncrementChip({
     super.key,
@@ -21,14 +23,11 @@ class IncrementChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final enabled = onSelected != null;
-    final foreground = selected
-        ? AppColors.onGold
-        : enabled
-        ? AppColors.onStage
-        : AppColors.onStageMuted;
+    final highlighted = selected && enabled;
     return Semantics(
       selected: selected,
       button: true,
+      enabled: enabled,
       label: '${increment.format()} artış',
       excludeSemantics: true,
       child: AnimatedContainer(
@@ -39,10 +38,10 @@ class IncrementChip extends StatelessWidget {
           minWidth: AppSize.touch,
         ),
         decoration: BoxDecoration(
-          color: selected ? AppColors.gold : AppColors.stageRaised,
+          color: highlighted ? AppColors.stage : AppColors.stageRaised,
           borderRadius: AppRadius.smallAll,
           border: Border.all(
-            color: selected ? AppColors.gold : AppColors.line,
+            color: highlighted ? AppColors.gold : AppColors.line,
             width: AppSize.line,
           ),
         ),
@@ -58,7 +57,11 @@ class IncrementChip extends StatelessWidget {
                 child: Text(
                   '+${increment.format()}',
                   style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                    color: foreground,
+                    color: highlighted
+                        ? AppColors.gold
+                        : enabled
+                        ? AppColors.onStage
+                        : AppColors.onStageMuted,
                     fontFeatures: AppFonts.tabular,
                   ),
                 ),

@@ -37,7 +37,10 @@ Future<void> _openForm(
     auctions: auctions,
     photoPicker: photoPicker,
   );
-  await tester.tap(find.text('Mezat oluştur'));
+  // "Mezat oluştur" is on the Yayın aç tab.
+  await tester.tap(find.byKey(const Key('tab.2')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.widgetWithText(FilledButton, 'Mezat oluştur'));
   await tester.pumpAndSettle();
 }
 
@@ -70,7 +73,7 @@ Future<void> _submit(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('home has a button that opens the create form', (tester) async {
+  testWidgets('the Yayın aç tab opens the create form', (tester) async {
     await _openForm(tester, auctions: FakeAuctionRepository());
 
     expect(find.byKey(const Key('createAuction.title')), findsOneWidget);
@@ -89,9 +92,7 @@ void main() {
     expect(auctions.created, isEmpty);
   });
 
-  testWidgets('a valid form creates the auction and goes back home', (
-    tester,
-  ) async {
+  testWidgets('a valid form creates the auction and goes back', (tester) async {
     final auctions = FakeAuctionRepository();
     await _openForm(tester, auctions: auctions);
     final before = DateTime.now();

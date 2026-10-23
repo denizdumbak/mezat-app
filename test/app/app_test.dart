@@ -10,7 +10,8 @@ void main() {
   ) async {
     await pumpApp(tester, auth: FakeAuthRepository());
 
-    expect(find.widgetWithText(AppBar, 'Giriş yap'), findsOneWidget);
+    expect(find.byKey(const Key('signIn.email')), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Giriş yap'), findsOneWidget);
   });
 
   testWidgets('config error screen shows the problem', (tester) async {
