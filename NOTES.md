@@ -9,6 +9,16 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Technical debt
 
+- **Orphan photos:** a photo uploaded for an auction that is never created stays in the
+  bucket. The app deletes it when the insert fails, but a crash in between leaves it.
+  A periodic cleanup (objects not referenced by any `auctions.image_path`) can come later.
+- **Image type is trusted from the upload's `Content-Type`.** Storage checks the declared
+  type against `allowed_mime_types`, not the bytes; a non-image declared as `image/jpeg` is
+  accepted (seen in the attacker run). Low risk: the bucket only serves files back with that
+  type. Revisit if uploads are ever processed server-side.
+- **Sellers cannot edit or cancel an auction yet** (no client update/delete on `auctions`).
+  A `cancel_auction` RPC for `scheduled` auctions is the natural next step after the MVP.
+
 - `test_supabase/` (real repositories vs. local Supabase) is not run in CI, same reason as
   the SQL tests. Revisit together at M3.
 - The hosted Supabase project must get the same auth settings as `config.toml`
@@ -20,6 +30,40 @@ Decisions and technical debt. Newest on top within each section.
   `flutter_riverpod` 3.4 are already out; upgrade deliberately, one at a time.
 
 ## Decisions
+
+- **The seller starts the auction; it does not start by the clock (2026-10-24).** In a live
+  stream the auction should begin when the seller is on camera, not at a time they may miss.
+  An auction opens as `scheduled` with a planned `starts_at` and a `duration_minutes`;
+  `start_auction(id)` (seller only, row locked with `FOR UPDATE` against double taps) sets
+  `live`, `starts_at = now()`, `ends_at = now() + duration`. `duration_minutes` is a column
+  the first data model draft did not have. Rejected: pg_cron flipping `scheduled` to `live`
+  at `starts_at` (simpler, but starts auctions with nobody streaming).
+- **No seller role in the MVP (2026-10-24).** Any user with a username may create auctions.
+  Ownership per auction (`seller_id`) already answers who may start it and who may not bid;
+  a role would only mean something with a seller approval process (identity, payouts),
+  which is out of scope. Adding one later is a `profiles` column plus one policy condition.
+- **`image_path` instead of `image_url` (2026-10-24).** The column stores the object path in
+  the `auction-images` bucket (`<seller_id>/<file>`); the app builds the public URL. A stored
+  URL would bake in the host, which differs between local (`127.0.0.1`), the Android emulator
+  (`10.0.2.2`) and hosted. The insert policy requires the path to be in the seller's own
+  folder, so an auction cannot show someone else's photo.
+- **Server-owned auction fields are set by a `before insert` trigger** (status `scheduled`,
+  `current_price = start_price`, no winner, no end), on top of column grants that let clients
+  insert only the form columns. The start-time window (5 minutes in the past to 30 days
+  ahead) is checked there too, not in a check constraint: check constraints run again on
+  every update, when `now()` has moved on and a valid row would suddenly fail.
+- **Domain errors are raised as a code in the message** (`raise exception 'NOT_AUCTION_SELLER'`,
+  SQLSTATE `P0001`). The app matches the code and shows Turkish text; `place_bid` (M3) uses
+  the same convention.
+- **Bucket created in a migration, not `config.toml`.** `config.toml` buckets exist only
+  locally; the migration gives the hosted project the same bucket, limits and policies.
+- **Attacker checks for auctions and storage (2026-10-24)**, against the local REST and
+  Storage APIs: no token, anon key only, forged JWT, setting status/seller/price/winner,
+  someone else's photo path, update/delete, starting someone else's auction, calling the
+  trigger function, anon upload, upload into another user's folder, wrong type, over 5 MB,
+  deleting another user's photo. All rejected; the legitimate paths worked.
+- **pgTAP storage tests set `storage.allow_delete_query`.** Storage blocks plain SQL deletes
+  on its tables unless that setting is on (the Storage API turns it on for its own queries).
 
 - **Commit straight to `main`, no branches or PRs (2026-10-24).** Replaces the GitHub Flow
   decision of 2026-10-23. With one developer and no reviewer, a branch + PR per change was
