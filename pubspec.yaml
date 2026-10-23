@@ -1,0 +1,23 @@
+name: mezat_app
+description: "Live-streamed auction app built with Flutter, Supabase and LiveKit."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.11.1
+
+# Versions are pinned exactly (no caret) so builds are reproducible.
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: 3.3.2
+  go_router: 17.5.0
+  supabase_flutter: 2.18.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: 6.0.0
+
+flutter:
+  uses-material-design: true
