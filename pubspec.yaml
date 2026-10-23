@@ -10,6 +10,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # Material and Cupertino texts (date pickers, tooltips) in Turkish.
+  flutter_localizations:
+    sdk: flutter
   flutter_riverpod: 3.3.2
   go_router: 17.5.0
   # Already pulled in by supabase_flutter; declared because supabase_errors.dart

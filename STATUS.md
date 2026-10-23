@@ -12,7 +12,7 @@ _Last updated: 2026-10-24_
 | --- | --- |
 | M0 Setup | Done |
 | M1 Auth + profile | Done (manual run from VS Code on 2026-10-23: sign-up → username → home) |
-| M2 Create/list auctions | In progress: (a) schema and (b) create form done 2026-10-24; (c) list + detail next |
+| M2 Create/list auctions | In progress: (a) schema and (b) create form done and tried by hand 2026-10-24; (c) list + detail next |
 | M3–M6 | Not started |
 
 ## What exists
@@ -31,8 +31,8 @@ _Last updated: 2026-10-24_
   Create auction (`/auctions/new`, button on home): photo via `image_picker`, title,
   description, start price, min increment, duration, start now / later. `Money` (int kuruş,
   Turkish input), `AuctionRepository` (create, upload/delete photo), `AuctionFailure`.
-  Home is still a placeholder.
-- **Tests**: 109 unit/widget tests (`test/`), 63 pgTAP tests (`supabase/tests/`), 19 tests of
+  Locale fixed to Turkish (`flutter_localizations`). Home is still a placeholder.
+- **Tests**: 110 unit/widget tests (`test/`), 63 pgTAP tests (`supabase/tests/`), 19 tests of
   the real repositories against local Supabase (`test_supabase/`), 1 end-to-end UI test on
   the Windows desktop (`integration_test/`). Only `test/` runs in CI.
 
@@ -47,7 +47,8 @@ _Last updated: 2026-10-24_
 - Docker Desktop's disk image is on `D:\Docker` (moved 2026-10-23; data kept). The first
   `supabase start` after the move hit a health-check timeout; a second start worked.
 - Git: commits go straight to `main` after local `flutter analyze` + `flutter test` (see
-  CLAUDE.md). The developer runs all git commands; Claude supplies them.
+  CLAUDE.md). Claude commits and pushes after each step; messages are one short sentence
+  with no prefix.
 - No Android emulator yet (licenses not accepted).
 
 ## Next steps
@@ -58,10 +59,13 @@ _Last updated: 2026-10-24_
    (`/auctions/:id`) with "start" for the seller (`start_auction`), create form goes to the
    detail screen instead of back home, end-to-end test (sign up → create → see in list),
    README.
-3. The create form has not been tried by hand in the running app yet (only widget and
-   repository tests). Try it from VS Code (F5) on Windows.
+3. Design pass (see Open items): choose a design language and apply it to every screen.
 
 ## Open items
+
+- **Design is plain default Material 3; the developer wants a modern look soon** (asked
+  2026-10-24). Pick a design language (colours, type, spacing, components) and apply it
+  before the screen count grows, rather than leaving it all to M6.
 
 - **GitHub Actions does not run:** the GitHub account is locked for a billing reason unrelated
   to this repo (public repos are free). Branch protection on `main` is removed (no PRs since

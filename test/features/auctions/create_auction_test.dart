@@ -211,6 +211,22 @@ void main() {
     expect(auctions.created, isEmpty);
   });
 
+  testWidgets('the date picker is in Turkish', (tester) async {
+    await _openForm(tester, auctions: FakeAuctionRepository());
+
+    final later = find.text('İleri tarih');
+    await tester.ensureVisible(later);
+    await tester.tap(later);
+    await tester.pumpAndSettle();
+    final pick = find.byKey(const Key('createAuction.startAt'));
+    await tester.ensureVisible(pick);
+    await tester.tap(pick);
+    await tester.pumpAndSettle();
+
+    expect(find.text('İptal'), findsOneWidget);
+    expect(find.text('Tamam'), findsOneWidget);
+  });
+
   testWidgets('a second tap while creating is ignored', (tester) async {
     final auctions = FakeAuctionRepository()..gate = Completer<void>();
     await _openForm(tester, auctions: auctions);

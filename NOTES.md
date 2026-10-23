@@ -4,14 +4,15 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Open work
 
+- **Design (asked for on 2026-10-24):** the UI is plain default Material 3. Pick a design
+  language (colours, type, spacing, components) and apply it across the app before the
+  screen count grows, instead of waiting for M6.
+
 - Android licenses are not accepted on the dev machine (`flutter doctor --android-licenses`,
   interactive). Not needed for tests; needed before the first Android build.
 
 ## Technical debt
 
-- **Date/time pickers are in English.** The app has no `flutter_localizations`, so Material's
-  built-in texts (pickers, tooltips) use the default English locale. Add it with a `tr`
-  locale in M6 (theme and polish).
 - **On desktop the photo is not scaled down** (`image_picker` ignores `maxWidth` there), so a
   large original hits the 5 MB bucket limit and shows the "too large" message. Phones are
   the target; fine for local trying.
@@ -37,6 +38,11 @@ Decisions and technical debt. Newest on top within each section.
   `flutter_riverpod` 3.4 are already out; upgrade deliberately, one at a time.
 
 ## Decisions
+
+- **Locale fixed to Turkish (2026-10-24).** `flutter_localizations` (part of the Flutter SDK,
+  no version to pin) with `locale: tr` and only `tr` supported. Every app text is Turkish, so
+  following the device locale would give an English phone English date pickers and
+  tooltips inside a Turkish app.
 
 - **Money is whole kuruş in an `int` (`Money`), sent and read as text (2026-10-24).** Dart
   has no decimal type and doubles cannot hold 0.10 exactly. PostgREST returns `numeric` as a

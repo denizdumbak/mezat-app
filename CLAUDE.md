@@ -84,8 +84,8 @@ Her milestone çalışır, test edilmiş ve commit'lenmiş biter. Bir sonrakine 
 - Her adımdan sonra `flutter analyze` ve `flutter test` çalıştır; kırmızı test varken "bitti" deme. Test etmediğin şeye "çalışıyor" deme.
 - Güvenlik içeren her özellikte saldırgan testi: token'sız istek, başkasının kaynağı, client'tan `current_price`/`status` güncelleme denemesi, anon key ile `bids`'e doğrudan yazma.
 - **Git akışı (trunk-based, tek geliştirici):** doğrudan `main`'e commit ve push; branch/PR yok. `main` yine her zaman çalışır: her commit'ten önce `flutter analyze` ve `flutter test` yerelde yeşil olmalı (veritabanı değiştiyse `npx supabase test db` de). Commit'ler küçük ve tek konulu olur; bir milestone birden fazla commit olabilir. Riskli bir deneme gerekirse geçici bir yerel branch açılabilir.
-- **Commit'leri Claude atmaz.** Her adım sonunda commit mesajını ve çalıştırılacak git komutlarını (PowerShell'e yapıştırılabilir) verir; commit ve push'u Deniz yapar.
-- Conventional Commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`). Force push, veri silme, production'a deploy öncesi onay al.
+- **Commit ve push'u Claude yapar.** Her adım bitip kontroller yeşil olunca commit'ler ve `main`'e push'lar.
+- Commit mesajı tek, kısa bir İngilizce cümledir: `feat:`/`fix:` gibi önek, gövde veya ek satır yok (ör. `Fix the app locale to Turkish`). Force push, veri silme, production'a deploy öncesi onay al.
 - Kararları ve teknik borcu `NOTES.md`'ye yaz.
 - Yeni bağımlılık eklemeden önce gerçekten gerekli mi düşün; pubspec sürümleri sabit.
 
