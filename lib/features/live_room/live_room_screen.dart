@@ -191,26 +191,34 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   alignment: Alignment.bottomLeft,
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpace.edge),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxWidth: AppSize.bidFeedWidth,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          for (final bid in feed)
-                            Padding(
-                              key: ValueKey(bid.id),
-                              padding: const EdgeInsets.only(top: AppSpace.xs),
-                              child: BidFeedRow(
-                                username: bid.username,
-                                amount: bid.amount,
-                                isMine: bid.bidderId == userId,
-                                isLeading: bid.id == leading?.id,
+                    // On short screens the oldest rows are clipped at the top
+                    // instead of overflowing.
+                    child: SingleChildScrollView(
+                      reverse: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: AppSize.bidFeedWidth,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (final bid in feed)
+                              Padding(
+                                key: ValueKey(bid.id),
+                                padding: const EdgeInsets.only(
+                                  top: AppSpace.xs,
+                                ),
+                                child: BidFeedRow(
+                                  username: bid.username,
+                                  amount: bid.amount,
+                                  isMine: bid.bidderId == userId,
+                                  isLeading: bid.id == leading?.id,
+                                ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

@@ -186,12 +186,25 @@ class _LiveCard extends StatelessWidget {
               aspectRatio: 4 / 5,
               overlay: Padding(
                 padding: const EdgeInsets.all(AppSpace.s),
+                // Both pills shrink rather than overflow on narrow cards or
+                // with large system text.
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const LiveBadge(),
-                    const Spacer(),
-                    ViewerCount(count: auction.viewerCount),
+                    const Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: LiveBadge(),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpace.xs),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: ViewerCount(count: auction.viewerCount),
+                      ),
+                    ),
                   ],
                 ),
               ),

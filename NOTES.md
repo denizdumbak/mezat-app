@@ -4,14 +4,31 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Open work
 
-- **Design (asked for on 2026-10-24):** the UI is plain default Material 3. Pick a design
-  language (colours, type, spacing, components) and apply it across the app before the
-  screen count grows, instead of waiting for M6.
+- **Anti-sniping numbers to confirm with the developer.** The design brief says "a bid in the
+  last minute extends by 15 s"; CLAUDE.md's non-negotiable server rule says "last 30 s extends
+  by 30 s". The UI reads both values from `lib/core/auction_rules.dart` and currently follows
+  CLAUDE.md. Whichever is chosen, `place_bid` (M3) and that file must match.
 
 - Android licenses are not accepted on the dev machine (`flutter doctor --android-licenses`,
   interactive). Not needed for tests; needed before the first Android build.
 
 ## Technical debt
+
+- **The live screens run on mock data.** `AuctionFeedRepository` has only
+  `MockAuctionFeedRepository` (in-memory, simulated bidders). Supabase implementation: lists
+  and start in M2 (c), bids and realtime in M3. Auctions created with the real form do not
+  appear in the mock lists until then.
+- **Bid safety is client-side only.** The daily limit lives in memory
+  (`InMemorySpendingLimitRepository`, lost on restart) and is checked in the screen. M3: store
+  it in `profiles` and enforce it in `place_bid`, or a modified client can ignore it.
+- **Seller-set increment chips have no column yet.** The room shows `defaultIncrements`
+  (+₺10/+₺50/+₺100); the create form does not ask for them. M3: `bid_increments numeric[]`
+  on `auctions` (each >= `min_increment`) and a field in the form.
+- **Maximum (proxy) bids exist only in the mock.** `place_bid` needs the server-side version
+  in M3 (store the max, answer outbids one step at a time inside the same transaction).
+- **Screenshots are rendered in the test engine, not on a device** (`test_screenshots/`), since
+  no Android emulator is set up. Real fonts and layout, but no platform chrome, keyboard or
+  real video. Check on a phone before M6.
 
 - **On desktop the photo is not scaled down** (`image_picker` ignores `maxWidth` there), so a
   large original hits the 5 MB bucket limit and shows the "too large" message. Phones are
@@ -38,6 +55,36 @@ Decisions and technical debt. Newest on top within each section.
   `flutter_riverpod` 3.4 are already out; upgrade deliberately, one at a time.
 
 ## Decisions
+
+- **Design language "Lacivert + altın", dark only (2026-10-24).** Decided by the developer's
+  design brief; written down in `DESIGN.md` (look, tokens, motion) and `PRODUCT.md` (tabs,
+  live room, bidding, safety layer). All values come from `lib/app/design_tokens.dart`; the
+  theme maps them onto a hand-built `ColorScheme` instead of `fromSeed`. Token names are
+  English in code (`gold`, `urgent`, `success` for altın, zaman, onay) per the
+  English-identifiers rule; DESIGN.md lists both.
+- **Fonts bundled in `assets/fonts`, not `google_fonts`.** The brief allowed `google_fonts`
+  for the MVP, but it downloads fonts on first launch (a request to Google, nothing offline)
+  and needs workarounds in tests. Static TTFs (Fraunces 600/700, Manrope 400–800, SIL OFL)
+  cost ~600 KB, need no dependency, and let `fonts_test.dart` read the files and prove every
+  Turkish letter, ₺ and Manrope's tabular figures are there.
+- **Review findings applied after the first screenshots:** gold fill only on the primary
+  button (selected chip and segment use gold outline/text instead), disabled primary button
+  filled with `line` so it still reads as a button on panels, usernames always in Manrope
+  (Fraunces' "@" is ornamental), a stronger scrim for "sold"/"time is up", the video
+  placeholder moved out from behind the bid feed, live-card pills and section labels allowed
+  to shrink/wrap (found by the 360 px tests).
+- **Safety thresholds, as interpreted:** "over the threshold" means at or above ₺1.000; the
+  total-based confirmation fires when a bid takes today's total across the threshold, not on
+  every bid afterwards. "Today's total" is the sum of auctions the user leads or won today; a
+  new bid in the same auction replaces the old one. Threshold override:
+  `--dart-define=BID_CONFIRM_THRESHOLD_TRY=1500`.
+- **No live chat in the room.** The brief's layout mentions chat, but CLAUDE.md keeps live chat
+  out of the MVP; the left column shows the bid feed instead.
+- **Amounts display with a leading lira sign** ("₺1.250"), as the brief writes them.
+- **Tests adapted to the new layout, flows unchanged:** sign-out moved from the home app bar to
+  the Profil tab, the home placeholder text is now `DiscoverScreen`, the busy spinner is
+  `AppLoader`, the create form opens from the Yayın aç tab. The end-to-end test was updated
+  the same way and passed on Windows against local Supabase.
 
 - **Locale fixed to Turkish (2026-10-24).** `flutter_localizations` (part of the Flutter SDK,
   no version to pin) with `locale: tr` and only `tr` supported. Every app text is Turkish, so

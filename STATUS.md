@@ -12,7 +12,8 @@ _Last updated: 2026-10-24_
 | --- | --- |
 | M0 Setup | Done |
 | M1 Auth + profile | Done (manual run from VS Code on 2026-10-23: sign-up → username → home) |
-| M2 Create/list auctions | In progress: (a) schema and (b) create form done and tried by hand 2026-10-24; (c) list + detail next |
+| M2 Create/list auctions | In progress: (a) schema, (b) create form done 2026-10-24; (c) Supabase lists next |
+| Design foundation | Done 2026-10-24: tokens, dark theme, fonts, shared widgets, 4-tab shell, live room on mock data |
 | M3–M6 | Not started |
 
 ## What exists
@@ -28,13 +29,23 @@ _Last updated: 2026-10-24_
 - **App** (`lib/`): email/password sign-up and sign-in, choose-username, sign-out.
   `AuthFailure` maps every Supabase error to a Turkish message. Navigation is one pure
   function, `redirectFor` in `lib/app/routes.dart`, driven by `sessionStatusProvider`.
-  Create auction (`/auctions/new`, button on home): photo via `image_picker`, title,
+  Create auction (`/auctions/new`, from the Yayın aç tab): photo via `image_picker`, title,
   description, start price, min increment, duration, start now / later. `Money` (int kuruş,
-  Turkish input), `AuctionRepository` (create, upload/delete photo), `AuctionFailure`.
-  Locale fixed to Turkish (`flutter_localizations`). Home is still a placeholder.
-- **Tests**: 110 unit/widget tests (`test/`), 63 pgTAP tests (`supabase/tests/`), 19 tests of
-  the real repositories against local Supabase (`test_supabase/`), 1 end-to-end UI test on
-  the Windows desktop (`integration_test/`). Only `test/` runs in CI.
+  Turkish input, "₺1.250"), `AuctionRepository` (create, upload/delete photo), `AuctionFailure`.
+  Locale fixed to Turkish (`flutter_localizations`).
+- **Design** (`DESIGN.md`, `PRODUCT.md`, `lib/app/design_tokens.dart`, `lib/app/theme.dart`):
+  dark "Lacivert + altın" theme, Fraunces + Manrope bundled, shared widgets in
+  `lib/core/widgets` (primary button, increment chip, rolling price, countdown with
+  extension chip, bid feed row, sold stamp, loader, empty/error/connection states, app
+  message). Tabs: Keşfet, Canlı, Yayın aç, Profil (`lib/app/app_shell.dart`). Live room
+  (`/auctions/:id/live`) with bid panel, high-bid confirmation, maximum bid, daily limit
+  (Profil). Lists and room run on `MockAuctionFeedRepository` behind
+  `AuctionFeedRepository`; bid safety rules in `lib/features/live_room/bid_safety.dart`.
+- **Tests**: 211 unit/widget tests (`test/`, screens also at 360×640), 63 pgTAP tests
+  (`supabase/tests/`), 19 tests of the real repositories against local Supabase
+  (`test_supabase/`), 1 end-to-end UI test on the Windows desktop (`integration_test/`),
+  14 screenshots for design review (`flutter test test_screenshots --update-goldens`, PNGs in
+  `test_screenshots/goldens/`, git-ignored). Only `test/` runs in CI.
 
 ## Environment
 
@@ -54,18 +65,15 @@ _Last updated: 2026-10-24_
 ## Next steps
 
 1. Delete the old copy `C:\Users\USER\projects\mezat-app` once no session uses it.
-2. M2 (c): home list (live / upcoming; seller username via the `seller_id` foreign key;
-   amounts selected as `::text`; photo URL built from `image_path`), detail screen
-   (`/auctions/:id`) with "start" for the seller (`start_auction`), create form goes to the
-   detail screen instead of back home, end-to-end test (sign up → create → see in list),
-   README.
-3. Design pass (see Open items): choose a design language and apply it to every screen.
+2. Developer decides the anti-sniping numbers (brief: last minute / +15 s; CLAUDE.md: last
+   30 s / +30 s; UI follows CLAUDE.md for now). See NOTES.md "Open work".
+3. M2 (c): `SupabaseAuctionFeedRepository` for `watchDiscover`, `watchMyScheduled`,
+   `startAuction` (seller username via the `seller_id` foreign key; amounts selected as
+   `::text`; photo URL from `image_path`), so created auctions appear in Keşfet and Yayın
+   aç; end-to-end test (sign up → create → see in list); README. The room stays on the mock
+   until M3 (bids, realtime, server-side limit and proxy bids).
 
 ## Open items
-
-- **Design is plain default Material 3; the developer wants a modern look soon** (asked
-  2026-10-24). Pick a design language (colours, type, spacing, components) and apply it
-  before the screen count grows, rather than leaving it all to M6.
 
 - **GitHub Actions does not run:** the GitHub account is locked for a billing reason unrelated
   to this repo (public repos are free). Branch protection on `main` is removed (no PRs since

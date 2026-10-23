@@ -15,44 +15,49 @@ Future<bool> confirmHighBid(
 }) async {
   final confirmed = await showModalBottomSheet<bool>(
     context: context,
+    // Grows to its content (and scrolls on short screens or with large
+    // text) instead of the default 9/16 cap.
+    isScrollControlled: true,
     builder: (context) {
       final text = Theme.of(context).textTheme;
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpace.edge,
-          0,
-          AppSpace.edge,
-          AppSpace.l,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Yüksek tutarlı teklif', style: text.titleLarge),
-            const SizedBox(height: AppSpace.m),
-            Text(
-              isMaxBid
-                  ? '${amount.format()} tutarına kadar senin adına teklif '
-                        'verilecek.'
-                  : '${amount.format()} teklif vermek üzeresin.',
-              style: text.bodyLarge,
-            ),
-            const SizedBox(height: AppSpace.xs),
-            Text(
-              'Kazanırsan bugünkü toplamın ${committedAfter.format()} olur.',
-              style: text.bodySmall!.copyWith(fontFeatures: AppFonts.tabular),
-            ),
-            const SizedBox(height: AppSpace.xl),
-            PrimaryButton(
-              label: 'Onaylıyorum',
-              onPressed: () => Navigator.of(context).pop(true),
-            ),
-            const SizedBox(height: AppSpace.s),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Vazgeç'),
-            ),
-          ],
+      return SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpace.edge,
+            0,
+            AppSpace.edge,
+            AppSpace.l,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Yüksek tutarlı teklif', style: text.titleLarge),
+              const SizedBox(height: AppSpace.m),
+              Text(
+                isMaxBid
+                    ? '${amount.format()} tutarına kadar senin adına teklif '
+                          'verilecek.'
+                    : '${amount.format()} teklif vermek üzeresin.',
+                style: text.bodyLarge,
+              ),
+              const SizedBox(height: AppSpace.xs),
+              Text(
+                'Kazanırsan bugünkü toplamın ${committedAfter.format()} olur.',
+                style: text.bodySmall!.copyWith(fontFeatures: AppFonts.tabular),
+              ),
+              const SizedBox(height: AppSpace.xl),
+              PrimaryButton(
+                label: 'Onaylıyorum',
+                onPressed: () => Navigator.of(context).pop(true),
+              ),
+              const SizedBox(height: AppSpace.s),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Vazgeç'),
+              ),
+            ],
+          ),
         ),
       );
     },
@@ -128,45 +133,47 @@ class _MaxBidSheetState extends State<_MaxBidSheet> {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpace.edge,
-        0,
-        AppSpace.edge,
-        AppSpace.l + MediaQuery.viewInsetsOf(context).bottom,
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Maksimum teklif', style: text.titleLarge),
-            const SizedBox(height: AppSpace.s),
-            Text(
-              'Teklifin geçildikçe ${widget.step.format()} artışla senin '
-              'adına teklif verilir; bu tutarı aşmaz.',
-              style: text.bodySmall,
-            ),
-            const SizedBox(height: AppSpace.l),
-            TextFormField(
-              key: const Key('maxBid.amount'),
-              controller: _amount,
-              autofocus: true,
-              decoration: InputDecoration(
-                labelText: 'En fazla',
-                prefixText: '₺ ',
-                helperText: 'En az ${widget.minimum.format()}',
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          AppSpace.edge,
+          0,
+          AppSpace.edge,
+          AppSpace.l + MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Maksimum teklif', style: text.titleLarge),
+              const SizedBox(height: AppSpace.s),
+              Text(
+                'Teklifin geçildikçe ${widget.step.format()} artışla senin '
+                'adına teklif verilir; bu tutarı aşmaz.',
+                style: text.bodySmall,
               ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+              const SizedBox(height: AppSpace.l),
+              TextFormField(
+                key: const Key('maxBid.amount'),
+                controller: _amount,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: 'En fazla',
+                  prefixText: '₺ ',
+                  helperText: 'En az ${widget.minimum.format()}',
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                validator: _validator,
+                onFieldSubmitted: (_) => _save(),
               ),
-              validator: _validator,
-              onFieldSubmitted: (_) => _save(),
-            ),
-            const SizedBox(height: AppSpace.xl),
-            PrimaryButton(label: 'Maksimum teklifi kaydet', onPressed: _save),
-          ],
+              const SizedBox(height: AppSpace.xl),
+              PrimaryButton(label: 'Maksimum teklifi kaydet', onPressed: _save),
+            ],
+          ),
         ),
       ),
     );

@@ -165,44 +165,46 @@ class _LimitSheetState extends State<_LimitSheet> {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpace.edge,
-        0,
-        AppSpace.edge,
-        AppSpace.l + MediaQuery.viewInsetsOf(context).bottom,
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Günlük harcama limiti', style: text.titleLarge),
-            const SizedBox(height: AppSpace.s),
-            Text(
-              'Bir günde önde olduğun ve kazandığın tekliflerin toplamı bu '
-              'tutarı geçemez.',
-              style: text.bodySmall,
-            ),
-            const SizedBox(height: AppSpace.l),
-            TextFormField(
-              key: const Key('profile.limitField'),
-              controller: _amount,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Limit',
-                prefixText: '₺ ',
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          AppSpace.edge,
+          0,
+          AppSpace.edge,
+          AppSpace.l + MediaQuery.viewInsetsOf(context).bottom,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Günlük harcama limiti', style: text.titleLarge),
+              const SizedBox(height: AppSpace.s),
+              Text(
+                'Bir günde önde olduğun ve kazandığın tekliflerin toplamı bu '
+                'tutarı geçemez.',
+                style: text.bodySmall,
               ),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+              const SizedBox(height: AppSpace.l),
+              TextFormField(
+                key: const Key('profile.limitField'),
+                controller: _amount,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  labelText: 'Limit',
+                  prefixText: '₺ ',
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                validator: validateAmount,
+                onFieldSubmitted: (_) => _save(),
               ),
-              validator: validateAmount,
-              onFieldSubmitted: (_) => _save(),
-            ),
-            const SizedBox(height: AppSpace.xl),
-            PrimaryButton(label: 'Kaydet', onPressed: _save),
-          ],
+              const SizedBox(height: AppSpace.xl),
+              PrimaryButton(label: 'Kaydet', onPressed: _save),
+            ],
+          ),
         ),
       ),
     );

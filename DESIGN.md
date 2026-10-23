@@ -27,13 +27,16 @@ canlı satış desenidir, ama renk, logo ve ikon dili bizimdir.
 | zaman | `urgent` | #FF6B5B | Son saniyeler, hata, limit uyarısı | 6.6:1 zeminde, 5.8:1 yüzeyde |
 | onay | `success` | #4CC38A | Kazandın, başarı | 8.3:1 zeminde |
 | çizgi | `line` | onStage %14 | 1 dp ayırıcı ve kenar | — |
+| örtü | `scrim` | stage %70 | Sheet arkası; video üstündeki yazının zemini | — |
+| koyu örtü | `scrimStrong` | stage %92 | "Satıldı" ve "Süre doldu" anları | — |
 
 Kontrast oranları `test/app/theme_test.dart` ile doğrulanır.
 
 ## Yazı
 
 - **Fraunces** (600/700): başlıklar, "SATILDI" damgası.
-- **Manrope** (400–800): gövde, buton, etiket, fiyat.
+- **Manrope** (400–800): gövde, buton, etiket, fiyat. **Kullanıcı adları her yerde Manrope**
+  (Fraunces'ın "@" işareti süslü ve okunmuyor).
 - Fiyat ve sayaçta `FontFeature.tabularFigures()`: rakamlar eşit genişlikte, değişirken
   zıplamaz. Canlı odada güncel fiyat 40 sp.
 - Fontlar `assets/fonts` içinde gömülü (SIL OFL). Türkçe karakter testi:
@@ -67,8 +70,10 @@ akışı satırı, ekran geçişleri. Dekoratif, sürekli dönen animasyon yok.
 ## Bileşenler (`lib/core/widgets`)
 
 - **Birincil buton:** altın dolgu, 8 dp, en az 48 dp (teklif butonu 56 dp). Ekranda tek
-  birincil eylem.
-- **Artış çipi:** seçilebilir, 8 dp, seçiliyken altın dolgu.
+  birincil eylem; **altın dolgu yalnızca onda**. Devre dışıyken `line` dolgu (yüzeyde de
+  buton olarak okunur) ve nedeni altında yazılı.
+- **Artış çipi:** seçilebilir, 8 dp; seçiliyken altın çerçeve + altın yazı, koyu zemin (dolgu
+  değil: hemen altındaki teklif butonuyla yarışmasın). Segment seçimi de aynı mantıkla altın yazı.
 - **Fiyat göstergesi:** değişen rakamlar dikey kayar.
 - **Geri sayım:** son 10 saniyede `urgent` rengi; süre uzayınca "+30 sn" çipi belirir.
 - **Teklif akışı satırı:** kullanıcı adı + tutar, girişte kayarak belirir.

@@ -59,7 +59,9 @@ class SectionLabel extends StatelessWidget {
       child: Row(
         children: [
           if (leading != null) ...[leading, const SizedBox(width: AppSpace.s)],
-          Text(text, style: Theme.of(context).textTheme.titleMedium),
+          Flexible(
+            child: Text(text, style: Theme.of(context).textTheme.titleMedium),
+          ),
         ],
       ),
     );
