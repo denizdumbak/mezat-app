@@ -35,14 +35,19 @@ _Last updated: 2026-10-23_
 - Run on Windows desktop (targets are still android + ios; `windows/` is local only):
   VS Code Run/F5 passes `.env` via `.vscode/settings.json`, or
   `flutter run -d windows --dart-define-from-file=.env`.
-- No Android emulator yet (licenses not accepted, C: nearly full).
+- Docker Desktop's disk image is on `D:\Docker` (moved 2026-10-23; data kept). The first
+  `supabase start` after the move hit a health-check timeout; a second start worked.
+- Git: GitHub Flow, see CLAUDE.md. The developer runs all git commands; Claude supplies them.
+- No Android emulator yet (licenses not accepted).
 
 ## Next steps
 
-1. Run the app from VS Code with `D:\Flutter\mezat-app` open; if sign-in appears, tick M1
-   in CLAUDE.md.
-2. Move Docker Desktop's disk image to D: (C: has ~9 GB free; Docker uses ~11 GB).
-3. Start M2: plan first (CLAUDE.md working rules), then auctions table + RLS + Storage.
+1. Run the app from VS Code with `D:\Flutter\mezat-app` open (start Docker and
+   `npx supabase start` first); if sign-in appears, tick M1 in CLAUDE.md.
+2. Protect `main` on GitHub (PR + passing `flutter` check required).
+3. Delete the old copy `C:\Users\USER\projects\mezat-app` once no session uses it.
+4. Start M2 on a `feat/` branch: plan first (CLAUDE.md working rules), then auctions table +
+   RLS + Storage.
 
 ## Open items
 

@@ -68,7 +68,7 @@ Para değerleri `numeric(12,2)`, para birimi TRY. Float kullanılmaz.
 Her milestone çalışır, test edilmiş ve commit'lenmiş biter. Bir sonrakine geçmeden önce kullanıcıya özet ver ve onay al.
 
 - [x] **M0 — Kurulum:** Flutter projesi, klasör yapısı, Riverpod/go_router, Supabase CLI ve local Supabase, `.env.example`, README iskeleti, GitHub Actions (`flutter analyze` + `flutter test`).
-- [ ] **M1 — Auth + profil:** e-posta + şifre ile kayıt/giriş (Supabase Auth), kullanıcı adı seçme, çıkış. Hata mesajları kullanıcı dostu. (Not: Socia uygulamasında giriş yapılamaması sorunu var; bu akış özellikle sağlam ve test edilmiş olsun.)
+- [ ] **M1 — Auth + profil:** e-posta + şifre ile kayıt/giriş (Supabase Auth), kullanıcı adı seçme, çıkış. Hata mesajları kullanıcı dostu. Bu akış özellikle sağlam ve test edilmiş olsun: \"kayıt oldum ama giriş yapamıyorum\" en sık şikâyetlerden biridir.
 - [ ] **M2 — Mezat oluşturma ve listeleme:** satıcı başlık, açıklama, fotoğraf (Storage), başlangıç fiyatı, minimum artış, süre girer. Ana ekranda canlı ve yaklaşan mezatlar.
 - [ ] **M3 — Canlı teklif (videosuz):** mezat odası ekranı; güncel fiyat, son teklifler listesi, geri sayım, "teklif ver" (hızlı artış butonları: +min, +2×min). Realtime ile tüm izleyicilerde anlık güncellenir. `place_bid` için SQL testleri: düşük teklif, satıcı teklifi, bitmiş mezat, eşzamanlı teklifler, anti-sniping uzaması.
 - [ ] **M4 — Canlı video:** `livekit-token` Edge Function; satıcı kamerasını yayınlar, izleyiciler M3 ekranının üstünde videoyu izler. Yetki testi: izleyici token'ı ile yayın yapılamıyor.
@@ -83,6 +83,7 @@ Her milestone çalışır, test edilmiş ve commit'lenmiş biter. Bir sonrakine 
 - Önce plan (5–10 madde), sonra kod. Tek seferde tek milestone/özellik.
 - Her adımdan sonra `flutter analyze` ve `flutter test` çalıştır; kırmızı test varken "bitti" deme. Test etmediğin şeye "çalışıyor" deme.
 - Güvenlik içeren her özellikte saldırgan testi: token'sız istek, başkasının kaynağı, client'tan `current_price`/`status` güncelleme denemesi, anon key ile `bids`'e doğrudan yazma.
+- **Git akışı (GitHub Flow):** `main` her zaman çalışır ve korumalıdır; doğrudan commit/push yok. Her iş kısa ömürlü bir branch'te yapılır (`feat/m2-auction-list`, `fix/…`, `docs/…`, `chore/…`, `test/…`), GitHub'da PR açılır, CI yeşilse "Squash and merge" ile `main`'e alınır ve branch silinir. Bir milestone birden fazla PR olabilir.
 - **Commit'leri Claude atmaz.** Her adım sonunda commit mesajını ve çalıştırılacak git komutlarını (PowerShell'e yapıştırılabilir) verir; commit ve push'u Deniz yapar.
 - Conventional Commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`). Force push, veri silme, production'a deploy öncesi onay al.
 - Kararları ve teknik borcu `NOTES.md`'ye yaz.
