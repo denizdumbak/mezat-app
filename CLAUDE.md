@@ -91,4 +91,7 @@ Her milestone çalışır, test edilmiş ve commit'lenmiş biter. Bir sonrakine 
 - Çalıştırma: `flutter run --dart-define-from-file=.env` (önce `cp .env.example .env`)
 - Analiz: `flutter analyze`
 - Test: `flutter test`
-- Local Supabase başlatma, migration uygulama, SQL testleri, Edge Function deploy: Docker kurulunca eklenecek (bkz. NOTES.md "Open work").
+- Local Supabase (Docker açık olmalı): `npx supabase start` / `npx supabase stop`
+- Yeni migration uygulama: `npx supabase migration up`; şemayı sıfırdan kurma: `npx supabase db reset`
+- SQL testleri: `npx supabase test db`
+- Edge Function deploy: M4'te eklenecek.

@@ -32,15 +32,21 @@ for every table. The LiveKit secret never reaches the app; tokens come from an E
 
 - Flutter **3.41.4** (stable). CI uses the same version.
 - Android SDK (for running on Android)
-- Docker Desktop + Supabase CLI (for the local backend, not set up yet)
+- Docker Desktop (running) and Node.js. The Supabase CLI is a pinned npm devDependency,
+  so `npm install` is enough; use it through `npx supabase`.
 
 ### Run
 
 ```sh
-cp .env.example .env          # fill in the values
+npm install                   # installs the pinned Supabase CLI
+npx supabase start            # local backend; prints the API URL and publishable key
+cp .env.example .env          # put the publishable key into SUPABASE_ANON_KEY
 flutter pub get
 flutter run --dart-define-from-file=.env
 ```
+
+Local ports are in the 553xx range (API `55321`, DB `55322`, Studio `55323`) instead of
+Supabase's default 543xx, which Windows often reserves for Hyper-V/WSL.
 
 If `.env` is missing or invalid, the app starts on a configuration error screen that lists
 what is wrong.
@@ -52,7 +58,10 @@ what is wrong.
 | Run the app | `flutter run --dart-define-from-file=.env` |
 | Static analysis | `flutter analyze` |
 | Tests | `flutter test` |
-| Local Supabase | _coming with the local backend setup_ |
+| Start / stop local Supabase | `npx supabase start` / `npx supabase stop` |
+| Apply new migrations | `npx supabase migration up` |
+| Rebuild DB from migrations | `npx supabase db reset` |
+| SQL tests (pgTAP) | `npx supabase test db` |
 
 ## Project structure
 
@@ -62,7 +71,7 @@ lib/
   core/         # env config, Supabase client provider, shared widgets
   data/         # repositories (all Supabase access)
   features/     # auth, auctions, live_room
-supabase/       # migrations, Edge Functions, SQL tests (coming)
+supabase/       # config.toml, migrations, SQL tests (Edge Functions from M4)
 test/
 ```
 

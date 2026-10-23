@@ -4,11 +4,6 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Open work
 
-- **M0 step 6, local Supabase (blocked on Docker):** install Docker Desktop (WSL2) and the
-  Supabase CLI, then: `supabase init` (creates `supabase/config.toml`), `supabase start`,
-  put the printed API URL and anon/publishable key into `.env`, add the first migration
-  enabling pgTAP, and a smoke test under `supabase/tests/` run with `supabase test db`.
-  Also fill in the Supabase commands in README and CLAUDE.md.
 - Android licenses are not accepted on the dev machine (`flutter doctor --android-licenses`,
   interactive). Not needed for tests; needed before the first Android build.
 
@@ -21,6 +16,18 @@ Decisions and technical debt. Newest on top within each section.
   `flutter_riverpod` 3.4 are already out; upgrade deliberately, one at a time.
 
 ## Decisions
+
+- **Local Supabase ports moved from 543xx to 553xx.** On the dev machine Windows reserves
+  54145–54819 (`netsh interface ipv4 show excludedportrange protocol=tcp`), so
+  `supabase start` failed to bind 54322. Moving the ports in `config.toml` is permanent and
+  needs no admin rights; restarting `winnat` would only help until the next reboot.
+- **Supabase CLI as a pinned npm devDependency (`supabase` 2.122.0).** The CLI version is
+  recorded in the repo, so CI and every machine run the same one; no global install.
+  Cost: a root `package.json`. Use it via `npx supabase`.
+- **Email confirmation off locally** (`enable_confirmations = false`, Supabase's local
+  default): sign-up logs the user in immediately. The "email not confirmed" error still gets
+  its own message and test, so turning confirmation on later needs no app change.
+- **pgTAP in the `extensions` schema**, enabled by the first migration.
 
 - **Config via `--dart-define-from-file=.env` (no dotenv package).** Flutter reads the
   `KEY=value` file at build time and compiles the values in as constants. No extra
