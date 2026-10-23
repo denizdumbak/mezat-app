@@ -80,5 +80,6 @@ _Last updated: 2026-10-24_
 - **GitHub Actions does not run:** the GitHub account is locked for a billing reason unrelated
   to this repo (public repos are free). Branch protection on `main` is removed (no PRs since
   2026-10-24); once CI runs again it reports on every push instead of gating merges.
-- `test_supabase/`, `integration_test/` and SQL tests are not in CI (need Docker). Revisit at M3.
+- `test_supabase/`, `integration_test/` and SQL tests are not in CI (need Docker) and will
+  not be added; they run locally before commits (see NOTES.md).
 - Hosted Supabase project not created yet; copy auth settings from `config.toml` when it is.

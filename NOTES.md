@@ -46,18 +46,18 @@ Decisions and technical debt. Newest on top within each section.
 - **Sellers cannot edit or cancel an auction yet** (no client update/delete on `auctions`).
   A `cancel_auction` RPC for `scheduled` auctions is the natural next step after the MVP.
 
-- `test_supabase/` (real repositories vs. local Supabase) is not run in CI, same reason as
-  the SQL tests. Revisit together at M3.
 - The hosted Supabase project must get the same auth settings as `config.toml`
   (minimum password length 8). Dashboard settings are not migrations; check on first deploy.
-- SQL tests (`supabase test db`) are not run in CI. That would need Docker + `supabase start`
-  in the workflow (slow). Revisit at M3 when `place_bid` tests exist; they are the most
-  important tests in the repo and should gate merges.
 - Dependencies are pinned to versions resolved on 2026-10-23. `go_router` 18 and
   `flutter_riverpod` 3.4 are already out; upgrade deliberately, one at a time.
 
 ## Decisions
 
+- **Docker-based tests stay out of CI (2026-10-24).** SQL tests (`supabase test db`),
+  `test_supabase/` and `integration_test/` need Docker and a running local Supabase; adding
+  them to the workflow is slow, and GitHub Actions is blocked anyway. The developer decided
+  not to extend the workflow: they run locally before every commit that touches the
+  database (CLAUDE.md), including the `place_bid` tests in M3.
 - **M2 (c): real lists behind the same interface (2026-10-24).** `SupabaseAuctionFeedRepository`
   implements `AuctionFeedRepository`, so the screens did not change. One query per list
   (amounts as `::text`, seller via `profiles!auctions_seller_id_fkey`, photo URL built from
