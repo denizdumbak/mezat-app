@@ -88,4 +88,7 @@ Her milestone çalışır, test edilmiş ve commit'lenmiş biter. Bir sonrakine 
 
 ## Komutlar
 
-(M0'da doldurulacak: çalıştırma, test, local Supabase başlatma, migration uygulama, Edge Function deploy.)
+- Çalıştırma: `flutter run --dart-define-from-file=.env` (önce `cp .env.example .env`)
+- Analiz: `flutter analyze`
+- Test: `flutter test`
+- Local Supabase başlatma, migration uygulama, SQL testleri, Edge Function deploy: Docker kurulunca eklenecek (bkz. NOTES.md "Open work").
