@@ -67,7 +67,7 @@ Para değerleri `numeric(12,2)`, para birimi TRY. Float kullanılmaz.
 
 Her milestone çalışır, test edilmiş ve commit'lenmiş biter. Bir sonrakine geçmeden önce kullanıcıya özet ver ve onay al.
 
-- [ ] **M0 — Kurulum:** Flutter projesi, klasör yapısı, Riverpod/go_router, Supabase CLI ve local Supabase, `.env.example`, README iskeleti, GitHub Actions (`flutter analyze` + `flutter test`).
+- [x] **M0 — Kurulum:** Flutter projesi, klasör yapısı, Riverpod/go_router, Supabase CLI ve local Supabase, `.env.example`, README iskeleti, GitHub Actions (`flutter analyze` + `flutter test`).
 - [ ] **M1 — Auth + profil:** e-posta + şifre ile kayıt/giriş (Supabase Auth), kullanıcı adı seçme, çıkış. Hata mesajları kullanıcı dostu. (Not: Socia uygulamasında giriş yapılamaması sorunu var; bu akış özellikle sağlam ve test edilmiş olsun.)
 - [ ] **M2 — Mezat oluşturma ve listeleme:** satıcı başlık, açıklama, fotoğraf (Storage), başlangıç fiyatı, minimum artış, süre girer. Ana ekranda canlı ve yaklaşan mezatlar.
 - [ ] **M3 — Canlı teklif (videosuz):** mezat odası ekranı; güncel fiyat, son teklifler listesi, geri sayım, "teklif ver" (hızlı artış butonları: +min, +2×min). Realtime ile tüm izleyicilerde anlık güncellenir. `place_bid` için SQL testleri: düşük teklif, satıcı teklifi, bitmiş mezat, eşzamanlı teklifler, anti-sniping uzaması.
@@ -94,4 +94,5 @@ Her milestone çalışır, test edilmiş ve commit'lenmiş biter. Bir sonrakine 
 - Local Supabase (Docker açık olmalı): `npx supabase start` / `npx supabase stop`
 - Yeni migration uygulama: `npx supabase migration up`; şemayı sıfırdan kurma: `npx supabase db reset`
 - SQL testleri: `npx supabase test db`
+- Repository'leri gerçek local Supabase'e karşı test etme: `flutter test test_supabase --dart-define-from-file=.env` (`flutter test` bunları çalıştırmaz)
 - Edge Function deploy: M4'te eklenecek.

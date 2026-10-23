@@ -62,6 +62,7 @@ what is wrong.
 | Apply new migrations | `npx supabase migration up` |
 | Rebuild DB from migrations | `npx supabase db reset` |
 | SQL tests (pgTAP) | `npx supabase test db` |
+| Repository tests against local Supabase | `flutter test test_supabase --dart-define-from-file=.env` |
 
 ## Project structure
 

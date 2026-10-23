@@ -43,7 +43,13 @@ select is(
 
 -- Anonymous visitor ---------------------------------------------------------
 select pg_temp.act_as_anon();
-select is((select count(*)::int from public.profiles), 2, 'anon can read profiles');
+-- Count only this test's users: the local DB may hold others (dev sign-ups).
+select is(
+  (select count(*)::int from public.profiles
+   where id in ('11111111-1111-1111-1111-111111111111', '22222222-2222-2222-2222-222222222222')),
+  2,
+  'anon can read profiles'
+);
 select throws_ok(
   $$ update public.profiles set username = 'hacked' $$,
   '42501', null,

@@ -1,15 +1,16 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mezat_app/app/app.dart';
 import 'package:mezat_app/core/widgets/config_error_app.dart';
 
-void main() {
-  testWidgets('app starts on the home screen', (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: App()));
-    await tester.pumpAndSettle();
+import '../helpers/fakes.dart';
 
-    expect(find.text('Mezat'), findsOneWidget);
-    expect(find.text('Canlı mezatlar yakında burada.'), findsOneWidget);
+void main() {
+  testWidgets('app starts on the sign-in screen when signed out', (
+    tester,
+  ) async {
+    await pumpApp(tester, auth: FakeAuthRepository());
+
+    expect(find.widgetWithText(AppBar, 'Giriş yap'), findsOneWidget);
   });
 
   testWidgets('config error screen shows the problem', (tester) async {

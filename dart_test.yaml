@@ -1,0 +1,3 @@
+tags:
+  # Tests in test_supabase/ that need `npx supabase start`.
+  supabase:

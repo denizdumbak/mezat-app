@@ -4,11 +4,19 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Open work
 
+- **M1 has not been clicked through on a device.** No emulator/device is set up (see
+  Android licenses below) and the project has no desktop/web target. The flow is covered by
+  widget tests on fakes and by `test_supabase/` running the real repositories against local
+  Supabase, but the screens have not been seen running. Do this before starting M2's UI.
 - Android licenses are not accepted on the dev machine (`flutter doctor --android-licenses`,
   interactive). Not needed for tests; needed before the first Android build.
 
 ## Technical debt
 
+- `test_supabase/` (real repositories vs. local Supabase) is not run in CI, same reason as
+  the SQL tests. Revisit together at M3.
+- The hosted Supabase project must get the same auth settings as `config.toml`
+  (minimum password length 8). Dashboard settings are not migrations; check on first deploy.
 - SQL tests (`supabase test db`) are not run in CI. That would need Docker + `supabase start`
   in the workflow (slow). Revisit at M3 when `place_bid` tests exist; they are the most
   important tests in the repo and should gate merges.
@@ -16,6 +24,25 @@ Decisions and technical debt. Newest on top within each section.
   `flutter_riverpod` 3.4 are already out; upgrade deliberately, one at a time.
 
 ## Decisions
+
+- **`AuthFailure` enum carries the user-facing message.** Repositories translate every
+  Supabase error (auth `error_code`, Postgres SQLSTATE, connection errors) into it via
+  `toAuthFailure`; anything unrecognised becomes `unknown`, so raw technical text never
+  reaches the screen. The codes were checked against the local Auth server, not guessed.
+- **Navigation is one pure function, `redirectFor(SessionStatus, location)`.** Screens never
+  navigate after sign-in/sign-out; they change the session and go_router's redirect moves
+  the user. Fewer places to get it wrong, and every case is unit tested.
+- **One controller instance per form (`authControllerProvider(AuthForm.x)`).** A shared one
+  let a sign-in error show up on the sign-up form. Controllers ignore a second submit while
+  one is running (double-tap protection), and buttons are disabled meanwhile.
+- **Email is trimmed and lowercased before every auth call; sign-up asks for the password
+  twice.** Both target "I signed up but cannot log in" (cf. the Socia login issue).
+  Passwords are never trimmed.
+- **Minimum password length 8**, in `config.toml` and the form (`minPasswordLength`).
+- **`http` declared as a direct dependency (1.6.0, same as resolved).** Network failures
+  surface as its `ClientException`, which `supabase_errors.dart` must match by type.
+- **`test_supabase/` for tests that need the local stack.** Kept out of `test/` so plain
+  `flutter test` (and CI) stays fast and offline.
 
 - **profiles: RLS for rows, column grants for columns.** RLS only limits *which rows* an
   update may touch; it cannot stop a user changing `id` or `created_at` on their own row.
