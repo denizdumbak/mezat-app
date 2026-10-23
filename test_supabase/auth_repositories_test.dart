@@ -10,27 +10,16 @@ import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mezat_app/core/auth_failure.dart';
-import 'package:mezat_app/core/env.dart';
 import 'package:mezat_app/data/auth_repository.dart';
 import 'package:mezat_app/data/profile_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'helpers.dart';
+
 void main() {
-  final env = Env.fromDefines();
   // Unique per run, so the test never collides with earlier data.
   final run = Random().nextInt(1 << 32).toRadixString(36);
   const password = 'Passw0rd!x';
-
-  // Supabase.initialize gives the app a persistent storage for the PKCE flow;
-  // a bare client in a test needs one passed in.
-  SupabaseClient newClient() => SupabaseClient(
-    env.supabaseUrl,
-    env.supabaseAnonKey,
-    authOptions: AuthClientOptions(
-      autoRefreshToken: false,
-      pkceAsyncStorage: _MemoryStorage(),
-    ),
-  );
 
   late SupabaseClient alice;
   late SupabaseClient bob;
@@ -110,11 +99,7 @@ void main() {
     });
 
     test('an unreachable server is a network failure', () async {
-      final client = SupabaseClient(
-        'http://127.0.0.1:1',
-        env.supabaseAnonKey,
-        authOptions: AuthClientOptions(pkceAsyncStorage: _MemoryStorage()),
-      );
+      final client = newClient(url: 'http://127.0.0.1:1');
       addTearDown(client.dispose);
       await expectLater(
         AuthRepository(
@@ -167,18 +152,4 @@ void main() {
       expect(profile?.username, 'a_$run');
     });
   });
-}
-
-class _MemoryStorage extends GotrueAsyncStorage {
-  final _values = <String, String>{};
-
-  @override
-  Future<String?> getItem({required String key}) async => _values[key];
-
-  @override
-  Future<void> setItem({required String key, required String value}) async =>
-      _values[key] = value;
-
-  @override
-  Future<void> removeItem({required String key}) async => _values.remove(key);
 }

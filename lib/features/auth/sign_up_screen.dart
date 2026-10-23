@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/routes.dart';
+import '../../core/widgets/form_layout.dart';
 import 'auth_controller.dart';
 import 'validators.dart';
-import 'widgets/auth_form_layout.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
@@ -42,7 +42,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     final state = ref.watch(authControllerProvider(AuthForm.signUp));
     final busy = state.isLoading;
 
-    return AuthFormLayout(
+    return FormLayout(
       title: 'Kayıt ol',
       children: [
         Form(
@@ -108,7 +108,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             ),
           ),
         ),
-        AuthErrorMessage(state: state),
+        FailureMessage(state: state),
         const SizedBox(height: 24),
         SubmitButton(label: 'Kayıt ol', busy: busy, onPressed: _submit),
         const SizedBox(height: 8),

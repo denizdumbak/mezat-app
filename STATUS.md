@@ -12,7 +12,7 @@ _Last updated: 2026-10-24_
 | --- | --- |
 | M0 Setup | Done |
 | M1 Auth + profile | Done (manual run from VS Code on 2026-10-23: sign-up → username → home) |
-| M2 Create/list auctions | In progress: (a) schema done 2026-10-24; (b) app side next |
+| M2 Create/list auctions | In progress: (a) schema and (b) create form done 2026-10-24; (c) list + detail next |
 | M3–M6 | Not started |
 
 ## What exists
@@ -28,7 +28,11 @@ _Last updated: 2026-10-24_
 - **App** (`lib/`): email/password sign-up and sign-in, choose-username, sign-out.
   `AuthFailure` maps every Supabase error to a Turkish message. Navigation is one pure
   function, `redirectFor` in `lib/app/routes.dart`, driven by `sessionStatusProvider`.
-- **Tests**: 55 unit/widget tests (`test/`), 63 pgTAP tests (`supabase/tests/`), 10 tests of
+  Create auction (`/auctions/new`, button on home): photo via `image_picker`, title,
+  description, start price, min increment, duration, start now / later. `Money` (int kuruş,
+  Turkish input), `AuctionRepository` (create, upload/delete photo), `AuctionFailure`.
+  Home is still a placeholder.
+- **Tests**: 109 unit/widget tests (`test/`), 63 pgTAP tests (`supabase/tests/`), 19 tests of
   the real repositories against local Supabase (`test_supabase/`), 1 end-to-end UI test on
   the Windows desktop (`integration_test/`). Only `test/` runs in CI.
 
@@ -49,11 +53,13 @@ _Last updated: 2026-10-24_
 ## Next steps
 
 1. Delete the old copy `C:\Users\USER\projects\mezat-app` once no session uses it.
-2. M2, plan agreed on 2026-10-24: (a) schema: done; (b) `Money` (integer kuruş),
-   `AuctionRepository` (map the error codes above to Turkish), create form with
-   `image_picker`, delete the uploaded photo if the insert fails; (c) home list
-   (live / upcoming, seller username via the `seller_id` foreign key), detail screen with
-   "start" for the seller, tests, README.
+2. M2 (c): home list (live / upcoming; seller username via the `seller_id` foreign key;
+   amounts selected as `::text`; photo URL built from `image_path`), detail screen
+   (`/auctions/:id`) with "start" for the seller (`start_auction`), create form goes to the
+   detail screen instead of back home, end-to-end test (sign up → create → see in list),
+   README.
+3. The create form has not been tried by hand in the running app yet (only widget and
+   repository tests). Try it from VS Code (F5) on Windows.
 
 ## Open items
 

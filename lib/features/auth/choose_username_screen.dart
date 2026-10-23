@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/widgets/form_layout.dart';
 import 'auth_controller.dart';
 import 'validators.dart';
-import 'widgets/auth_form_layout.dart';
 
 class ChooseUsernameScreen extends ConsumerStatefulWidget {
   const ChooseUsernameScreen({super.key});
@@ -37,7 +37,7 @@ class _ChooseUsernameScreenState extends ConsumerState<ChooseUsernameScreen> {
     final signOutState = ref.watch(authControllerProvider(AuthForm.signOut));
     final busy = state.isLoading || signOutState.isLoading;
 
-    return AuthFormLayout(
+    return FormLayout(
       title: 'Kullanıcı adı seç',
       children: [
         const Text(
@@ -61,8 +61,8 @@ class _ChooseUsernameScreenState extends ConsumerState<ChooseUsernameScreen> {
             validator: validateUsername,
           ),
         ),
-        AuthErrorMessage(state: state),
-        AuthErrorMessage(state: signOutState),
+        FailureMessage(state: state),
+        FailureMessage(state: signOutState),
         const SizedBox(height: 24),
         SubmitButton(label: 'Devam et', busy: busy, onPressed: _submit),
         const SizedBox(height: 8),

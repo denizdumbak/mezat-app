@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../core/auction_failure.dart';
 import '../core/auth_failure.dart';
 
 /// Translates an error thrown by the Supabase client into an [AuthFailure].
@@ -22,10 +23,40 @@ AuthFailure toAuthFailure(Object error) => switch (error) {
   // 23505 = unique_violation, 23514 = check_violation on profiles.username.
   PostgrestException(code: '23505') => AuthFailure.usernameTaken,
   PostgrestException(code: '23514') => AuthFailure.invalidUsername,
-  http.ClientException() ||
-  SocketException() ||
-  TimeoutException() => AuthFailure.network,
+  _ when _isNetworkError(error) => AuthFailure.network,
   _ => AuthFailure.unknown,
+};
+
+/// Translates an error from the auctions table, its functions or the
+/// auction-images bucket into an [AuctionFailure].
+AuctionFailure toAuctionFailure(Object error) => switch (error) {
+  AuctionFailure() => error,
+  // The auctions trigger and functions raise the code as the message
+  // (SQLSTATE P0001 = raise_exception).
+  PostgrestException(code: 'P0001', :final message) => switch (message) {
+    'INVALID_START_TIME' => AuctionFailure.invalidStartTime,
+    'NOT_AUCTION_SELLER' => AuctionFailure.notSeller,
+    'AUCTION_NOT_SCHEDULED' => AuctionFailure.notScheduled,
+    'AUCTION_NOT_FOUND' => AuctionFailure.notFound,
+    _ => AuctionFailure.unknown,
+  },
+  PostgrestException(code: '23514') => AuctionFailure.invalidInput,
+  // 42501 = insufficient_privilege: RLS or column privileges refused it.
+  PostgrestException(code: '42501') => AuctionFailure.notAllowed,
+  // Storage reports the HTTP status of its own check in statusCode.
+  StorageException(statusCode: '413') => AuctionFailure.imageTooLarge,
+  StorageException(statusCode: '415') => AuctionFailure.unsupportedImage,
+  StorageException(statusCode: '403') => AuctionFailure.notAllowed,
+  _ when _isNetworkError(error) => AuctionFailure.network,
+  _ => AuctionFailure.unknown,
+};
+
+bool _isNetworkError(Object error) => switch (error) {
+  http.ClientException() || SocketException() || TimeoutException() => true,
+  // The storage client wraps a request that got no response and puts the
+  // error's type name, not an HTTP status, into statusCode.
+  StorageException(:final statusCode) => int.tryParse(statusCode ?? '') == null,
+  _ => false,
 };
 
 AuthFailure _fromAuthCode(String? code, String? statusCode) => switch (code) {
@@ -46,5 +77,14 @@ Future<T> guardSupabase<T>(Future<T> Function() action) async {
     return await action();
   } catch (error) {
     throw toAuthFailure(error);
+  }
+}
+
+/// Runs [action] and rethrows any failure as an [AuctionFailure].
+Future<T> guardAuctions<T>(Future<T> Function() action) async {
+  try {
+    return await action();
+  } catch (error) {
+    throw toAuctionFailure(error);
   }
 }

@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:mezat_app/core/app_failure.dart';
+import 'package:mezat_app/core/auction_failure.dart';
 import 'package:mezat_app/core/auth_failure.dart';
 import 'package:mezat_app/data/supabase_errors.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -62,10 +64,7 @@ void main() {
 
     test('anything else is unknown, never raw text', () {
       expect(toAuthFailure(StateError('boom')), AuthFailure.unknown);
-      expect(
-        AuthFailure.messageFor(StateError('boom')),
-        isNot(contains('boom')),
-      );
+      expect(failureMessage(StateError('boom')), isNot(contains('boom')));
     });
 
     test('an AuthFailure passes through unchanged', () {
@@ -73,6 +72,73 @@ void main() {
         toAuthFailure(AuthFailure.usernameTaken),
         AuthFailure.usernameTaken,
       );
+    });
+  });
+
+  group('toAuctionFailure', () {
+    // Codes raised by the auctions trigger and start_auction.
+    final domainCodes = {
+      'INVALID_START_TIME': AuctionFailure.invalidStartTime,
+      'NOT_AUCTION_SELLER': AuctionFailure.notSeller,
+      'AUCTION_NOT_SCHEDULED': AuctionFailure.notScheduled,
+      'AUCTION_NOT_FOUND': AuctionFailure.notFound,
+      'SOME_NEW_CODE': AuctionFailure.unknown,
+    };
+    for (final MapEntry(key: code, value: failure) in domainCodes.entries) {
+      test('P0001 $code -> ${failure.name}', () {
+        expect(
+          toAuctionFailure(PostgrestException(message: code, code: 'P0001')),
+          failure,
+        );
+      });
+    }
+
+    test('check violation and missing privilege', () {
+      expect(
+        toAuctionFailure(const PostgrestException(message: 'x', code: '23514')),
+        AuctionFailure.invalidInput,
+      );
+      expect(
+        toAuctionFailure(const PostgrestException(message: 'x', code: '42501')),
+        AuctionFailure.notAllowed,
+      );
+    });
+
+    test('storage limits and permissions', () {
+      expect(
+        toAuctionFailure(const StorageException('big', statusCode: '413')),
+        AuctionFailure.imageTooLarge,
+      );
+      expect(
+        toAuctionFailure(const StorageException('type', statusCode: '415')),
+        AuctionFailure.unsupportedImage,
+      );
+      expect(
+        toAuctionFailure(const StorageException('rls', statusCode: '403')),
+        AuctionFailure.notAllowed,
+      );
+      expect(
+        toAuctionFailure(const StorageException('boom', statusCode: '500')),
+        AuctionFailure.unknown,
+      );
+    });
+
+    test('a storage request without a response is a network failure', () {
+      // The storage client puts the error type's name into statusCode.
+      expect(
+        toAuctionFailure(
+          const StorageException('x', statusCode: 'ClientException'),
+        ),
+        AuctionFailure.network,
+      );
+      expect(
+        toAuctionFailure(const SocketException('x')),
+        AuctionFailure.network,
+      );
+    });
+
+    test('anything else is unknown, never raw text', () {
+      expect(toAuctionFailure(StateError('boom')), AuctionFailure.unknown);
     });
   });
 }

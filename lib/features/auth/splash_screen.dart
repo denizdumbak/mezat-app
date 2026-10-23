@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/auth_failure.dart';
+import '../../core/app_failure.dart';
 import 'auth_controller.dart';
 import 'session.dart';
 
@@ -27,10 +27,7 @@ class SplashScreen extends ConsumerWidget {
                 : Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        AuthFailure.messageFor(error),
-                        textAlign: TextAlign.center,
-                      ),
+                      Text(failureMessage(error), textAlign: TextAlign.center),
                       const SizedBox(height: 16),
                       FilledButton(
                         onPressed: () => ref.invalidate(currentProfileProvider),

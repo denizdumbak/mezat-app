@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/auctions/create_auction_screen.dart';
 import '../features/auctions/home_screen.dart';
 import '../features/auth/choose_username_screen.dart';
 import '../features/auth/session.dart';
@@ -43,6 +44,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.home,
         builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.createAuction,
+        builder: (context, state) => const CreateAuctionScreen(),
       ),
     ],
   );

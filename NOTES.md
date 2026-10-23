@@ -9,6 +9,13 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Technical debt
 
+- **Date/time pickers are in English.** The app has no `flutter_localizations`, so Material's
+  built-in texts (pickers, tooltips) use the default English locale. Add it with a `tr`
+  locale in M6 (theme and polish).
+- **On desktop the photo is not scaled down** (`image_picker` ignores `maxWidth` there), so a
+  large original hits the 5 MB bucket limit and shows the "too large" message. Phones are
+  the target; fine for local trying.
+
 - **Orphan photos:** a photo uploaded for an auction that is never created stays in the
   bucket. The app deletes it when the insert fails, but a crash in between leaves it.
   A periodic cleanup (objects not referenced by any `auctions.image_path`) can come later.
@@ -30,6 +37,28 @@ Decisions and technical debt. Newest on top within each section.
   `flutter_riverpod` 3.4 are already out; upgrade deliberately, one at a time.
 
 ## Decisions
+
+- **Money is whole kuruş in an `int` (`Money`), sent and read as text (2026-10-24).** Dart
+  has no decimal type and doubles cannot hold 0.10 exactly. PostgREST returns `numeric` as a
+  JSON number, which `jsonDecode` turns into a double, so reads cast in the select
+  (`current_price::text`) and writes send `"1250.50"`. `Money.tryParse` reads Turkish input
+  ("1.250,50"; "1.250" is 1250 TL) and also "12.5" for dot-only keyboards. Verified with the
+  largest `numeric(12,2)` value against the local database. No `decimal` package needed.
+- **`AppFailure` interface over per-feature failure enums.** `AuthFailure` and
+  `AuctionFailure` both implement it; `failureMessage(error)` gives any widget the Turkish
+  text. The shared form frame moved from `features/auth/widgets` to
+  `core/widgets/form_layout.dart` (`FormLayout`, `FailureMessage`, `SubmitButton`) because
+  the auction form uses it too.
+- **`image_picker` 1.2.4 for the photo (the only new dependency in M2).** Official flutter.dev
+  package; gallery only (no camera permission needed). Photos are scaled to 1600 px and JPEG
+  quality 85 on the phone, which keeps them well under the 5 MB bucket limit. Wrapped in a
+  `PhotoPicker` provider so widget tests pick a photo without a gallery. Android needs no
+  permission (system photo picker); iOS got `NSPhotoLibraryUsageDescription`.
+- **Photo first, then the row; the photo is deleted if the insert fails.** The row needs the
+  path, so the upload must come first. Object names are random (not guessable, never
+  overwrite). Remaining gap: see "Orphan photos" under technical debt.
+- **Photo is optional.** An auction without one gets a placeholder; requiring it would block
+  quick test auctions during development and demos.
 
 - **The seller starts the auction; it does not start by the clock (2026-10-24).** In a live
   stream the auction should begin when the seller is on camera, not at a time they may miss.

@@ -1,9 +1,8 @@
+import 'app_failure.dart';
+
 /// Everything that can go wrong while signing up, signing in or choosing a
 /// username, with the text the user should read.
-///
-/// Repositories convert Supabase errors into this type, so widgets never see
-/// Supabase exceptions and every failure has a friendly Turkish message.
-enum AuthFailure implements Exception {
+enum AuthFailure implements AppFailure {
   invalidCredentials('E-posta veya şifre hatalı.'),
   emailNotConfirmed(
     'E-posta adresin henüz doğrulanmadı. Gelen kutunu kontrol et.',
@@ -20,15 +19,10 @@ enum AuthFailure implements Exception {
   ),
   tooManyRequests('Çok fazla deneme yapıldı. Biraz bekleyip tekrar dene.'),
   network('Sunucuya ulaşılamadı. İnternet bağlantını kontrol et.'),
-  unknown('Beklenmeyen bir hata oluştu. Lütfen tekrar dene.');
+  unknown(unknownFailureMessage);
 
   const AuthFailure(this.message);
 
+  @override
   final String message;
-
-  /// The message for any error that reaches the UI. Errors that were not
-  /// translated by a repository fall back to [unknown] instead of leaking
-  /// technical text to the user.
-  static String messageFor(Object error) =>
-      error is AuthFailure ? error.message : unknown.message;
 }

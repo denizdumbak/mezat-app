@@ -15,6 +15,8 @@ dependencies:
   # Already pulled in by supabase_flutter; declared because supabase_errors.dart
   # matches its ClientException (network failures). Same version as resolved.
   http: 1.6.0
+  # Picks the auction photo from the gallery (official flutter.dev package).
+  image_picker: 1.2.4
   supabase_flutter: 2.18.3
 
 dev_dependencies:

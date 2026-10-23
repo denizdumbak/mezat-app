@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mezat_app/app/app.dart';
 import 'package:mezat_app/core/auth_failure.dart';
+import 'package:mezat_app/core/photo_picker.dart';
+import 'package:mezat_app/data/auction_repository.dart';
 import 'package:mezat_app/data/auth_repository.dart';
 import 'package:mezat_app/data/profile_repository.dart';
 
@@ -97,11 +99,66 @@ class FakeProfileRepository implements ProfileRepository {
   }
 }
 
+/// In-memory stand-in for the auctions table and the auction-images bucket.
+class FakeAuctionRepository implements AuctionRepository {
+  final created = <({NewAuction auction, String? imagePath})>[];
+  final uploaded = <String>[];
+  final deleted = <String>[];
+
+  /// Thrown (once) by the next create / upload instead of succeeding.
+  Object? createError;
+  Object? uploadError;
+
+  /// When set, create waits for it; lets a test see the loading state.
+  Completer<void>? gate;
+
+  @override
+  Future<String> uploadImage({
+    required String userId,
+    required PickedPhoto photo,
+  }) async {
+    final error = uploadError;
+    uploadError = null;
+    if (error != null) throw error;
+    final path = '$userId/photo-${uploaded.length}.${photo.extension}';
+    uploaded.add(path);
+    return path;
+  }
+
+  @override
+  Future<void> deleteImage(String path) async => deleted.add(path);
+
+  @override
+  Future<String> create(NewAuction auction, {String? imagePath}) async {
+    await gate?.future;
+    final error = createError;
+    createError = null;
+    if (error != null) throw error;
+    created.add((auction: auction, imagePath: imagePath));
+    return 'auction-${created.length}';
+  }
+}
+
+/// Returns [next] (or throws [error]) instead of opening a gallery.
+class FakePhotoPicker implements PhotoPicker {
+  PickedPhoto? next;
+  Object? error;
+
+  @override
+  Future<PickedPhoto?> pick() async {
+    final error = this.error;
+    if (error != null) throw error;
+    return next;
+  }
+}
+
 /// Pumps the whole app on top of the fakes and waits for the first screen.
 Future<void> pumpApp(
   WidgetTester tester, {
   required FakeAuthRepository auth,
   FakeProfileRepository? profiles,
+  FakeAuctionRepository? auctions,
+  FakePhotoPicker? photoPicker,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -110,6 +167,10 @@ Future<void> pumpApp(
         profileRepositoryProvider.overrideWithValue(
           profiles ?? FakeProfileRepository(),
         ),
+        auctionRepositoryProvider.overrideWithValue(
+          auctions ?? FakeAuctionRepository(),
+        ),
+        photoPickerProvider.overrideWithValue(photoPicker ?? FakePhotoPicker()),
       ],
       // Riverpod retries failed providers by default; tests want the failure.
       retry: (retryCount, error) => null,

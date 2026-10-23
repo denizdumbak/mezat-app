@@ -6,6 +6,7 @@ abstract final class AppRoutes {
   static const signUp = '/sign-up';
   static const chooseUsername = '/choose-username';
   static const home = '/';
+  static const createAuction = '/auctions/new';
 }
 
 const _signedOutRoutes = {AppRoutes.signIn, AppRoutes.signUp};

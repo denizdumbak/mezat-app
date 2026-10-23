@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../core/auth_failure.dart';
+import '../../app/routes.dart';
+import '../../core/app_failure.dart';
 import '../auth/auth_controller.dart';
 import '../auth/session.dart';
 
@@ -19,7 +21,7 @@ class HomeScreen extends ConsumerWidget {
       if (error != null && !next.isLoading) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(AuthFailure.messageFor(error))));
+        ).showSnackBar(SnackBar(content: Text(failureMessage(error))));
       }
     });
 
@@ -46,6 +48,11 @@ class HomeScreen extends ConsumerWidget {
         ],
       ),
       body: const Center(child: Text('Canlı mezatlar yakında burada.')),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push(AppRoutes.createAuction),
+        icon: const Icon(Icons.add),
+        label: const Text('Mezat oluştur'),
+      ),
     );
   }
 }

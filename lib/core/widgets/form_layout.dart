@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/auth_failure.dart';
+import '../app_failure.dart';
 
-/// Shared frame for the auth forms: centered, scrollable (so the keyboard
+/// Shared frame for the app's forms: centered, scrollable (so the keyboard
 /// never hides the button) and narrow on wide screens.
-class AuthFormLayout extends StatelessWidget {
-  const AuthFormLayout({
-    super.key,
-    required this.title,
-    required this.children,
-  });
+class FormLayout extends StatelessWidget {
+  const FormLayout({super.key, required this.title, required this.children});
 
   final String title;
   final List<Widget> children;
@@ -38,10 +34,10 @@ class AuthFormLayout extends StatelessWidget {
 }
 
 /// The error of the last failed action, or nothing.
-class AuthErrorMessage extends StatelessWidget {
-  const AuthErrorMessage({super.key, required this.state});
+class FailureMessage extends StatelessWidget {
+  const FailureMessage({super.key, required this.state});
 
-  final AsyncValue<void> state;
+  final AsyncValue<Object?> state;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +47,7 @@ class AuthErrorMessage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: Text(
-        AuthFailure.messageFor(error),
+        failureMessage(error),
         style: TextStyle(color: colors.error),
         textAlign: TextAlign.center,
       ),
