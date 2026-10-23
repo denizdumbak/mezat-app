@@ -95,4 +95,6 @@ Her milestone çalışır, test edilmiş ve commit'lenmiş biter. Bir sonrakine 
 - Yeni migration uygulama: `npx supabase migration up`; şemayı sıfırdan kurma: `npx supabase db reset`
 - SQL testleri: `npx supabase test db`
 - Repository'leri gerçek local Supabase'e karşı test etme: `flutter test test_supabase --dart-define-from-file=.env` (`flutter test` bunları çalıştırmaz)
+- Uçtan uca UI testi (gerçek uygulama + local Supabase): `flutter test integration_test -d windows --dart-define-from-file=.env`
+- IDE'nin Run butonu `.env`'i kendiliğinden geçirmez; run configuration'a `--dart-define-from-file=.env` eklenmeli (bkz. README).
 - Edge Function deploy: M4'te eklenecek.

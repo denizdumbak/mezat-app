@@ -13,6 +13,8 @@ Future<void> main() async {
   try {
     env = Env.fromDefines();
   } on EnvException catch (e) {
+    // Also to the console: the screen alone is easy to miss in IDE logs.
+    debugPrint('$e\nStart with: flutter run --dart-define-from-file=.env');
     runApp(ConfigErrorApp(message: e.toString()));
     return;
   }

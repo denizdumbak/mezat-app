@@ -49,7 +49,12 @@ Local ports are in the 553xx range (API `55321`, DB `55322`, Studio `55323`) ins
 Supabase's default 543xx, which Windows often reserves for Hyper-V/WSL.
 
 If `.env` is missing or invalid, the app starts on a configuration error screen that lists
-what is wrong.
+what is wrong (also printed to the console).
+
+**IDE run buttons** do not pass `--dart-define-from-file=.env` by default, which leads to
+exactly that screen. Add it once: Android Studio / IntelliJ → *Edit Configurations* →
+`main.dart` → *Additional run args*; VS Code → `"args": ["--dart-define-from-file=.env"]`
+in `.vscode/launch.json`.
 
 ### Commands
 
@@ -63,6 +68,7 @@ what is wrong.
 | Rebuild DB from migrations | `npx supabase db reset` |
 | SQL tests (pgTAP) | `npx supabase test db` |
 | Repository tests against local Supabase | `flutter test test_supabase --dart-define-from-file=.env` |
+| End-to-end UI test (real app + local Supabase) | `flutter test integration_test -d <device> --dart-define-from-file=.env` |
 
 ## Project structure
 

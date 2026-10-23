@@ -4,10 +4,6 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Open work
 
-- **M1 has not been clicked through on a device.** No emulator/device is set up (see
-  Android licenses below) and the project has no desktop/web target. The flow is covered by
-  widget tests on fakes and by `test_supabase/` running the real repositories against local
-  Supabase, but the screens have not been seen running. Do this before starting M2's UI.
 - Android licenses are not accepted on the dev machine (`flutter doctor --android-licenses`,
   interactive). Not needed for tests; needed before the first Android build.
 
@@ -24,6 +20,14 @@ Decisions and technical debt. Newest on top within each section.
   `flutter_riverpod` 3.4 are already out; upgrade deliberately, one at a time.
 
 ## Decisions
+
+- **"Configuration error" on first desktop run (2026-10-23) was the IDE run button**, which
+  does not pass `--dart-define-from-file=.env`: all three values were missing, `.env` itself
+  was fine. Fix: add the arg to the run configuration (README). `main.dart` now also prints
+  the problem to the console, since the screen alone did not show up in the logs.
+- **`integration_test/` drives the real app against local Supabase** (sign-up → username →
+  sign-out → sign-in). Passed on Windows desktop on 2026-10-23. Like `test_supabase/`, not
+  in CI.
 
 - **`AuthFailure` enum carries the user-facing message.** Repositories translate every
   Supabase error (auth `error_code`, Postgres SQLSTATE, connection errors) into it via
