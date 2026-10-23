@@ -13,8 +13,8 @@ class App extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Mezat',
       debugShowCheckedModeBanner: false,
-      theme: lightTheme,
-      darkTheme: darkTheme,
+      // Dark only: the app has no light theme.
+      theme: appTheme,
       // The app is Turkish only, so the locale is fixed instead of following
       // the device: an English phone would otherwise get English pickers in a
       // Turkish app.

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme.dart';
+
 /// Shown instead of the real app when startup configuration is invalid,
 /// so a missing `.env` shows a readable message rather than a crash.
 class ConfigErrorApp extends StatelessWidget {
@@ -11,6 +13,7 @@ class ConfigErrorApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: appTheme,
       home: Scaffold(
         body: SafeArea(
           child: Padding(

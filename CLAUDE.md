@@ -101,3 +101,14 @@ Her milestone çalışır, test edilmiş ve commit'lenmiş biter. Bir sonrakine 
 - Uçtan uca UI testi (gerçek uygulama + local Supabase): `flutter test integration_test -d windows --dart-define-from-file=.env`
 - VS Code'da Run/F5 `.env`'i otomatik geçirir (`.vscode/settings.json` → `dart.flutterRunAdditionalArgs`). Masaüstünde denemek için `windows/` lokal olarak üretilir ve git'e girmez.
 - Edge Function deploy: M4'te eklenecek.
+
+## Tasarım kuralları
+
+- Her UI işinden önce kökteki `DESIGN.md` (görsel dil, belirteçler, hareket) ve `PRODUCT.md`
+  (gezinme, canlı oda, teklif ve güvenlik katmanı) okunur.
+- Renk, boşluk, yarıçap, süre ve yazı stilleri yalnızca `lib/app/design_tokens.dart`'tan gelir;
+  widget içinde sabit hex, `Colors.*` veya sihirli sayı yok. Yalnızca koyu tema.
+- Ortak bileşenler `lib/core/widgets` altında; varsayılan progress, SnackBar ve Card yerine
+  özel sürümleri kullanılır.
+- Her ekran için uzun kullanıcı adı, 6 haneli tutar, boş liste ve bağlantı kopması widget
+  testiyle denenir; ekran görüntüsü `test_screenshots/` ile alınıp incelenir.
