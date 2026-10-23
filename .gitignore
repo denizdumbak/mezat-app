@@ -55,3 +55,6 @@ supabase/.branches/
 
 # Node (Supabase CLI is a pinned devDependency)
 node_modules/
+
+# Desktop runner, local only: target platforms are android + ios (see NOTES).
+/windows/

@@ -36,9 +36,24 @@ void main() {
     const password = 'Passw0rd!x';
 
     await app.main();
-    // A session saved by an earlier manual run would skip the sign-in screen.
-    await Supabase.instance.client.auth.signOut();
-    await pumpUntilFound(tester, find.byKey(const Key('signIn.email')));
+    // A session saved by an earlier run opens home or choose-username instead
+    // of sign-in. Wait for the first real screen before signing out: Supabase
+    // restores the saved session in the background, and a sign-out sent
+    // before that finishes is undone by the restore.
+    final signInEmail = find.byKey(const Key('signIn.email'));
+    await pumpUntilFound(
+      tester,
+      find.byWidgetPredicate(
+        (w) =>
+            w.key == const Key('signIn.email') ||
+            w.key == const Key('chooseUsername.username') ||
+            (w is Tooltip && w.message == 'Çıkış yap'),
+      ),
+    );
+    if (signInEmail.evaluate().isEmpty) {
+      await Supabase.instance.client.auth.signOut();
+    }
+    await pumpUntilFound(tester, signInEmail);
 
     // Wrong password for an unknown account: friendly message, no crash.
     await tester.enterText(find.byKey(const Key('signIn.email')), email);

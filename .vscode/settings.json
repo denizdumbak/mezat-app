@@ -1,0 +1,5 @@
+{
+  // Every `flutter run` started from VS Code (F5, the Run/Debug links above
+  // main(), the device picker) gets the public config from .env.
+  "dart.flutterRunAdditionalArgs": ["--dart-define-from-file=.env"]
+}

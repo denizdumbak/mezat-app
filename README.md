@@ -51,10 +51,10 @@ Supabase's default 543xx, which Windows often reserves for Hyper-V/WSL.
 If `.env` is missing or invalid, the app starts on a configuration error screen that lists
 what is wrong (also printed to the console).
 
-**IDE run buttons** do not pass `--dart-define-from-file=.env` by default, which leads to
-exactly that screen. Add it once: Android Studio / IntelliJ → *Edit Configurations* →
-`main.dart` → *Additional run args*; VS Code → `"args": ["--dart-define-from-file=.env"]`
-in `.vscode/launch.json`.
+**IDE run buttons** do not pass `--dart-define-from-file=.env` by themselves, which leads
+to exactly that screen. VS Code is set up in the repo: `.vscode/settings.json` adds the arg
+to every `flutter run` (F5, the Run/Debug links above `main()`). Android Studio / IntelliJ:
+*Edit Configurations* → `main.dart` → *Additional run args* → `--dart-define-from-file=.env`.
 
 ### Commands
 

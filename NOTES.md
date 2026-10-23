@@ -21,10 +21,21 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Decisions
 
-- **"Configuration error" on first desktop run (2026-10-23) was the IDE run button**, which
-  does not pass `--dart-define-from-file=.env`: all three values were missing, `.env` itself
-  was fine. Fix: add the arg to the run configuration (README). `main.dart` now also prints
-  the problem to the console, since the screen alone did not show up in the logs.
+- **"Configuration error" on the first desktop run (2026-10-23) was the VS Code run button**,
+  which does not pass `--dart-define-from-file=.env`: all three values were missing, `.env`
+  itself was fine. Fix: `.vscode/settings.json` sets `dart.flutterRunAdditionalArgs` (checked
+  in the installed Dart extension 3.144.0; scope is the workspace). Not put in
+  `launch.json` `args`: those go to the app's `main`, not to `flutter run` (`toolArgs` would),
+  and having it in both places would pass it twice. `main.dart` also prints the problem.
+- **Desktop (Windows) is for local trying only; targets stay android + ios.** `windows/` is
+  git-ignored and regenerated with `flutter create --platforms=windows .` when needed.
+  Copying the project with robocopy turns the plugin symlinks in
+  `windows/flutter/ephemeral/` into real folders; delete that folder after a copy.
+- **Project moved to `D:\Flutter\mezat-app` (2026-10-23)** because C: is nearly full. Supabase
+  data lives in Docker volumes keyed by `project_id`, so it survived the move.
+- **Integration test waits for the first screen before signing out.** `Supabase.initialize`
+  restores a saved session in the background; a sign-out sent before that finishes is undone.
+  Not an app bug (a person cannot sign out within milliseconds of launch), but the test hit it.
 - **`integration_test/` drives the real app against local Supabase** (sign-up → username →
   sign-out → sign-in). Passed on Windows desktop on 2026-10-23. Like `test_supabase/`, not
   in CI.
