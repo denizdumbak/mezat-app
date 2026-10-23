@@ -4,7 +4,7 @@ Where the project stands, so the next session can continue without re-reading hi
 Read at the start of a session; update at the end. Decisions and their reasons live in
 NOTES.md; this file is only the current state.
 
-_Last updated: 2026-10-23_
+_Last updated: 2026-10-24_
 
 ## Milestones
 
@@ -37,20 +37,24 @@ _Last updated: 2026-10-23_
   `flutter run -d windows --dart-define-from-file=.env`.
 - Docker Desktop's disk image is on `D:\Docker` (moved 2026-10-23; data kept). The first
   `supabase start` after the move hit a health-check timeout; a second start worked.
-- Git: GitHub Flow, see CLAUDE.md. The developer runs all git commands; Claude supplies them.
+- Git: commits go straight to `main` after local `flutter analyze` + `flutter test` (see
+  CLAUDE.md). The developer runs all git commands; Claude supplies them.
 - No Android emulator yet (licenses not accepted).
 
 ## Next steps
 
 1. Delete the old copy `C:\Users\USER\projects\mezat-app` once no session uses it.
-2. Start M2 on a `feat/` branch: plan first (CLAUDE.md working rules), then auctions table +
-   RLS + Storage, create form, home list of live and upcoming auctions.
+2. M2, plan agreed on 2026-10-24: (a) schema: `auctions` + RLS/column grants + `auction-images`
+   bucket + pgTAP and attacker tests; (b) `Money` (integer kuruş), `AuctionRepository`, create
+   form with `image_picker`; (c) home list (live / upcoming), detail screen, tests, docs.
+   Decided: auctions open as `scheduled`; seller presses "start", `start_auction` RPC sets
+   `live` and `ends_at = now() + duration_minutes`. No seller role: any user with a username
+   can sell. Record both in NOTES.md when implemented.
 
 ## Open items
 
 - **GitHub Actions does not run:** the GitHub account is locked for a billing reason unrelated
-  to this repo (public repos are free). The "require status checks" rule on `main` is turned
-  off until it is resolved; run `flutter analyze` and `flutter test` locally before every PR.
-  Turn the rule back on (`flutter` check) once CI runs again.
+  to this repo (public repos are free). Branch protection on `main` is removed (no PRs since
+  2026-10-24); once CI runs again it reports on every push instead of gating merges.
 - `test_supabase/`, `integration_test/` and SQL tests are not in CI (need Docker). Revisit at M3.
 - Hosted Supabase project not created yet; copy auth settings from `config.toml` when it is.

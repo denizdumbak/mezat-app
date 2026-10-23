@@ -83,7 +83,7 @@ Her milestone çalışır, test edilmiş ve commit'lenmiş biter. Bir sonrakine 
 - Önce plan (5–10 madde), sonra kod. Tek seferde tek milestone/özellik.
 - Her adımdan sonra `flutter analyze` ve `flutter test` çalıştır; kırmızı test varken "bitti" deme. Test etmediğin şeye "çalışıyor" deme.
 - Güvenlik içeren her özellikte saldırgan testi: token'sız istek, başkasının kaynağı, client'tan `current_price`/`status` güncelleme denemesi, anon key ile `bids`'e doğrudan yazma.
-- **Git akışı (GitHub Flow):** `main` her zaman çalışır ve korumalıdır; doğrudan commit/push yok. Her iş kısa ömürlü bir branch'te yapılır (`feat/m2-auction-list`, `fix/…`, `docs/…`, `chore/…`, `test/…`), GitHub'da PR açılır, CI yeşilse "Squash and merge" ile `main`'e alınır ve branch silinir. Bir milestone birden fazla PR olabilir.
+- **Git akışı (trunk-based, tek geliştirici):** doğrudan `main`'e commit ve push; branch/PR yok. `main` yine her zaman çalışır: her commit'ten önce `flutter analyze` ve `flutter test` yerelde yeşil olmalı (veritabanı değiştiyse `npx supabase test db` de). Commit'ler küçük ve tek konulu olur; bir milestone birden fazla commit olabilir. Riskli bir deneme gerekirse geçici bir yerel branch açılabilir.
 - **Commit'leri Claude atmaz.** Her adım sonunda commit mesajını ve çalıştırılacak git komutlarını (PowerShell'e yapıştırılabilir) verir; commit ve push'u Deniz yapar.
 - Conventional Commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`). Force push, veri silme, production'a deploy öncesi onay al.
 - Kararları ve teknik borcu `NOTES.md`'ye yaz.

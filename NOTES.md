@@ -21,11 +21,16 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Decisions
 
-- **GitHub Flow instead of Git Flow (2026-10-23).** One developer, no release trains: a
-  long-lived `develop` branch would only add a second place to merge into. `main` is protected
-  (PR + green CI required) and every change goes through a short-lived branch and a PR, which
-  is what a reviewer of the repo expects to see. Squash merge keeps `main` one commit per PR.
-  Revisit (add `develop`/release branches) only if there are store releases to stabilise.
+- **Commit straight to `main`, no branches or PRs (2026-10-24).** Replaces the GitHub Flow
+  decision of 2026-10-23. With one developer and no reviewer, a branch + PR per change was
+  ceremony: nobody reviews the PR, and its main benefit, a CI gate before merge, does not
+  work while GitHub Actions is blocked. The guarantee that `main` works now comes from running
+  `flutter analyze` and `flutter test` locally before every commit (plus SQL tests when the
+  schema changes). Given up: the PR trail as a portfolio signal and one-commit-per-feature
+  history; small, conventional commits keep the log readable instead. Revisit if a second
+  developer joins or store releases need stabilising.
+- **Rejected: Git Flow (2026-10-23).** No release trains, so a long-lived `develop` branch
+  would only add a second place to merge into.
 - **CLAUDE.md, STATUS.md and `.claude/agents/` are committed.** They hold no secrets and
   document how the project is built; personal, machine-specific notes would go in
   `CLAUDE.local.md` (git-ignored by Claude Code convention) instead.
