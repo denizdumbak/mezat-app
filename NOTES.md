@@ -17,6 +17,24 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Decisions
 
+- **profiles: RLS for rows, column grants for columns.** RLS only limits *which rows* an
+  update may touch; it cannot stop a user changing `id` or `created_at` on their own row.
+  So `authenticated` gets `UPDATE` only on `(username, avatar_url)`; insert/delete are
+  revoked (rows come from the `handle_new_user` trigger and go with the auth.users cascade).
+- **Profile row created by a trigger on `auth.users`, username null until chosen.** Sign-up
+  and "choose username" are separate steps, so a taken username never blocks account
+  creation, and every user is guaranteed a profile row. The router sends users with a null
+  username to the choose-username screen.
+- **Usernames normalized in the database** (trim + lowercase in a `before` trigger, format
+  check `^[a-z0-9_]{3,20}$`). Uniqueness is then effectively case-insensitive without the
+  `citext` extension, and the rule holds no matter which client writes.
+- **Attacker checks for profiles (2026-10-23), against the local REST API:** no token, anon
+  update, editing another user's row, changing `id`, direct insert/delete, calling
+  `handle_new_user` over RPC and a forged JWT were all rejected; only a user's own
+  username update succeeded. Locally a request without an `apikey` header is served as
+  `anon`; harmless here (anon can only read public profiles) but worth re-checking on the
+  hosted project.
+
 - **Local Supabase ports moved from 543xx to 553xx.** On the dev machine Windows reserves
   54145–54819 (`netsh interface ipv4 show excludedportrange protocol=tcp`), so
   `supabase start` failed to bind 54322. Moving the ports in `config.toml` is permanent and
