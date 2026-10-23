@@ -11,7 +11,7 @@ _Last updated: 2026-10-23_
 | Milestone | State |
 | --- | --- |
 | M0 Setup | Done |
-| M1 Auth + profile | Code and tests done; waiting for a manual run from VS Code (see below) |
+| M1 Auth + profile | Done (manual run from VS Code on 2026-10-23: sign-up → username → home) |
 | M2 Create/list auctions | Not started |
 | M3–M6 | Not started |
 
@@ -42,14 +42,15 @@ _Last updated: 2026-10-23_
 
 ## Next steps
 
-1. Run the app from VS Code with `D:\Flutter\mezat-app` open (start Docker and
-   `npx supabase start` first); if sign-in appears, tick M1 in CLAUDE.md.
-2. Protect `main` on GitHub (PR + passing `flutter` check required).
-3. Delete the old copy `C:\Users\USER\projects\mezat-app` once no session uses it.
-4. Start M2 on a `feat/` branch: plan first (CLAUDE.md working rules), then auctions table +
-   RLS + Storage.
+1. Delete the old copy `C:\Users\USER\projects\mezat-app` once no session uses it.
+2. Start M2 on a `feat/` branch: plan first (CLAUDE.md working rules), then auctions table +
+   RLS + Storage, create form, home list of live and upcoming auctions.
 
 ## Open items
 
+- **GitHub Actions does not run:** the GitHub account is locked for a billing reason unrelated
+  to this repo (public repos are free). The "require status checks" rule on `main` is turned
+  off until it is resolved; run `flutter analyze` and `flutter test` locally before every PR.
+  Turn the rule back on (`flutter` check) once CI runs again.
 - `test_supabase/`, `integration_test/` and SQL tests are not in CI (need Docker). Revisit at M3.
 - Hosted Supabase project not created yet; copy auth settings from `config.toml` when it is.
