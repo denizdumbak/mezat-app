@@ -66,14 +66,14 @@ class Money implements Comparable<Money> {
   String toDb() =>
       '${kurus ~/ 100}.${(kurus % 100).toString().padLeft(2, '0')}';
 
-  /// For display: "1.250,50 ₺", or "150 ₺" when there are no kuruş.
+  /// For display: "₺1.250,50", or "₺150" when there are no kuruş.
   String format() {
     final lira = (kurus ~/ 100).toString().replaceAllMapped(
       RegExp(r'\B(?=(\d{3})+$)'),
       (_) => '.',
     );
     final rest = kurus % 100;
-    return rest == 0 ? '$lira ₺' : '$lira,${rest.toString().padLeft(2, '0')} ₺';
+    return rest == 0 ? '₺$lira' : '₺$lira,${rest.toString().padLeft(2, '0')}';
   }
 
   bool get isPositive => kurus > 0;

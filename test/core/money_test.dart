@@ -66,10 +66,10 @@ void main() {
 
   group('format', () {
     test('Turkish style, kuruş only when there are some', () {
-      expect(const Money.kurus(125050).format(), '1.250,50 ₺');
-      expect(const Money.kurus(15000).format(), '150 ₺');
-      expect(const Money.kurus(5).format(), '0,05 ₺');
-      expect(const Money.kurus(100000000).format(), '1.000.000 ₺');
+      expect(const Money.kurus(125050).format(), '₺1.250,50');
+      expect(const Money.kurus(15000).format(), '₺150');
+      expect(const Money.kurus(5).format(), '₺0,05');
+      expect(const Money.kurus(100000000).format(), '₺1.000.000');
     });
   });
 
