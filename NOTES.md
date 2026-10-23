@@ -21,6 +21,15 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Decisions
 
+- **GitHub Flow instead of Git Flow (2026-10-23).** One developer, no release trains: a
+  long-lived `develop` branch would only add a second place to merge into. `main` is protected
+  (PR + green CI required) and every change goes through a short-lived branch and a PR, which
+  is what a reviewer of the repo expects to see. Squash merge keeps `main` one commit per PR.
+  Revisit (add `develop`/release branches) only if there are store releases to stabilise.
+- **CLAUDE.md, STATUS.md and `.claude/agents/` are committed.** They hold no secrets and
+  document how the project is built; personal, machine-specific notes would go in
+  `CLAUDE.local.md` (git-ignored by Claude Code convention) instead.
+
 - **"Configuration error" on the first desktop run (2026-10-23) was the VS Code run button**,
   which does not pass `--dart-define-from-file=.env`: all three values were missing, `.env`
   itself was fine. Fix: `.vscode/settings.json` sets `dart.flutterRunAdditionalArgs` (checked

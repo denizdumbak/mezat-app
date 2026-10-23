@@ -70,6 +70,13 @@ to every `flutter run` (F5, the Run/Debug links above `main()`). Android Studio 
 | Repository tests against local Supabase | `flutter test test_supabase --dart-define-from-file=.env` |
 | End-to-end UI test (real app + local Supabase) | `flutter test integration_test -d <device> --dart-define-from-file=.env` |
 
+## Development workflow
+
+GitHub Flow: `main` is always green and protected. Work happens on short-lived branches
+(`feat/…`, `fix/…`, `docs/…`, `chore/…`, `test/…`), each merged through a pull request after
+CI passes, using squash merge. Commit messages follow
+[Conventional Commits](https://www.conventionalcommits.org/).
+
 ## Project structure
 
 ```
