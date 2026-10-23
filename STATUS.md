@@ -69,8 +69,7 @@ _Last updated: 2026-10-24_
 
 ## Next steps
 
-1. Delete the old copy `C:\Users\USER\projects\mezat-app` once no session uses it.
-2. M3, not started: the developer stopped the session at the end of M2 (2026-10-24) and
+1. M3, not started: the developer stopped the session at the end of M2 (2026-10-24) and
    approves M3 next time. Start with a 5–10 item plan (CLAUDE.md), then: `bids` table + RLS, `place_bid` (lock, rules, anti-sniping
    30 s / +30 s, error codes) with its SQL tests incl. concurrent bids; seller-set increments
    (`bid_increments`); daily limit in `profiles` enforced in `place_bid`; maximum (proxy)
