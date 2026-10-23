@@ -12,7 +12,7 @@ _Last updated: 2026-10-24_
 | --- | --- |
 | M0 Setup | Done |
 | M1 Auth + profile | Done (manual run from VS Code on 2026-10-23: sign-up → username → home) |
-| M2 Create/list auctions | Done 2026-10-24 (end-to-end test: create → Yayın aç → go live → Keşfet); developer's hand check of the real lists pending |
+| M2 Create/list auctions | Done 2026-10-24: end-to-end test (create → Yayın aç → go live → Keşfet) and the developer's hand check (room shows "Teklif verme henüz açık değil.", as intended until M3) |
 | Design foundation | Done 2026-10-24: tokens, dark theme, fonts, shared widgets, 4-tab shell, live room on mock data |
 | M3–M6 | Not started |
 
@@ -70,9 +70,8 @@ _Last updated: 2026-10-24_
 ## Next steps
 
 1. Delete the old copy `C:\Users\USER\projects\mezat-app` once no session uses it.
-2. Developer tries M2 by hand (F5): create an auction, see it under Yayın aç, start it, open
-   it from Keşfet with a second account.
-3. M3 (after approval, plan first): `bids` table + RLS, `place_bid` (lock, rules, anti-sniping
+2. M3, not started: the developer stopped the session at the end of M2 (2026-10-24) and
+   approves M3 next time. Start with a 5–10 item plan (CLAUDE.md), then: `bids` table + RLS, `place_bid` (lock, rules, anti-sniping
    30 s / +30 s, error codes) with its SQL tests incl. concurrent bids; seller-set increments
    (`bid_increments`); daily limit in `profiles` enforced in `place_bid`; maximum (proxy)
    bids; Realtime for the room and lists; bid feed and today's total from the server.
