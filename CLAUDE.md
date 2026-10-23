@@ -69,7 +69,7 @@ Her milestone çalışır, test edilmiş ve commit'lenmiş biter. Bir sonrakine 
 
 - [x] **M0 — Kurulum:** Flutter projesi, klasör yapısı, Riverpod/go_router, Supabase CLI ve local Supabase, `.env.example`, README iskeleti, GitHub Actions (`flutter analyze` + `flutter test`).
 - [x] **M1 — Auth + profil:** e-posta + şifre ile kayıt/giriş (Supabase Auth), kullanıcı adı seçme, çıkış. Hata mesajları kullanıcı dostu. Bu akış özellikle sağlam ve test edilmiş olsun: "kayıt oldum ama giriş yapamıyorum" en sık şikâyetlerden biridir.
-- [ ] **M2 — Mezat oluşturma ve listeleme:** satıcı başlık, açıklama, fotoğraf (Storage), başlangıç fiyatı, minimum artış, süre girer. Ana ekranda canlı ve yaklaşan mezatlar.
+- [x] **M2 — Mezat oluşturma ve listeleme:** satıcı başlık, açıklama, fotoğraf (Storage), başlangıç fiyatı, minimum artış, süre girer. Ana ekranda canlı ve yaklaşan mezatlar.
 - [ ] **M3 — Canlı teklif (videosuz):** mezat odası ekranı; güncel fiyat, son teklifler listesi, geri sayım, "teklif ver" (hızlı artış butonları: +min, +2×min). Realtime ile tüm izleyicilerde anlık güncellenir. `place_bid` için SQL testleri: düşük teklif, satıcı teklifi, bitmiş mezat, eşzamanlı teklifler, anti-sniping uzaması.
 - [ ] **M4 — Canlı video:** `livekit-token` Edge Function; satıcı kamerasını yayınlar, izleyiciler M3 ekranının üstünde videoyu izler. Yetki testi: izleyici token'ı ile yayın yapılamıyor.
 - [ ] **M5 — Bitiş ve sonuç:** pg_cron ile otomatik bitiş, kazanan ekranı, satıcının "mezatlarım", alıcının "kazandıklarım" listesi.
