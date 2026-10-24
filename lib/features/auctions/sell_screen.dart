@@ -7,11 +7,11 @@ import 'package:go_router/go_router.dart';
 import '../../app/design_tokens.dart';
 import '../../app/routes.dart';
 import '../../core/app_failure.dart';
-import '../../core/time_format.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/states.dart';
 import '../../data/auction_feed_repository.dart';
 import 'feed_providers.dart';
+import 'widgets/auction_card.dart';
 import 'widgets/screen_header.dart';
 
 /// Yayın aç: create an auction, and go live with one already planned.
@@ -84,6 +84,7 @@ class SellScreen extends ConsumerWidget {
   }
 }
 
+/// One of your planned auctions and the button that takes it live.
 class _ScheduledRow extends ConsumerWidget {
   const _ScheduledRow({required this.auction});
 
@@ -109,7 +110,6 @@ class _ScheduledRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final text = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpace.edge,
@@ -118,31 +118,19 @@ class _ScheduledRow extends ConsumerWidget {
         AppSpace.m,
       ),
       child: AppPanel(
-        child: Row(
+        padding: const EdgeInsets.all(AppSpace.m),
+        // The button under the row: next to the thumbnail it would squeeze
+        // the title on a small phone.
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    auction.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: text.titleSmall,
-                  ),
-                  const SizedBox(height: AppSpace.xs),
-                  Text(
-                    '${formatStartsAt(auction.startsAt, now: DateTime.now())}'
-                    ' · Açılış ${auction.currentPrice.format()}',
-                    style: text.bodySmall,
-                  ),
-                ],
+            AuctionCard.row(auction: auction),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => _start(context, ref),
+                child: const Text('Yayını başlat'),
               ),
-            ),
-            const SizedBox(width: AppSpace.s),
-            TextButton(
-              onPressed: () => _start(context, ref),
-              child: const Text('Yayını başlat'),
             ),
           ],
         ),

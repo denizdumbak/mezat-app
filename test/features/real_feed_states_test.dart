@@ -18,11 +18,11 @@ void main() {
       useSmallPhone(tester);
       final feed = FakeAuctionFeedRepository()
         ..discover = [liveAuction()]
-        ..rooms['zenit'] = liveRoom(
+        ..rooms['canon'] = liveRoom(
           bids: const [],
         ).copyWith(biddingOpen: false);
       await pumpSignedIn(tester, feed: feed);
-      await tester.tap(find.text('Zenit-E analog fotoğraf makinesi (1978)'));
+      await tester.tap(find.text('Canon AE-1 Program, 50mm f/1.8 lens'));
       await tester.pumpAndSettle();
 
       expect(find.text(AuctionFailure.biddingNotOpen.message), findsOneWidget);

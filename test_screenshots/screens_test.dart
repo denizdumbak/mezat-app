@@ -10,7 +10,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mezat_app/core/money.dart';
 import 'package:mezat_app/data/auction_feed_repository.dart';
+import 'package:mezat_app/data/mock_auction_feed_repository.dart';
 import 'package:mezat_app/data/profile_repository.dart';
+import 'package:mezat_app/data/spending_limit_repository.dart';
 
 import '../test/helpers/app_fonts.dart';
 import '../test/helpers/fakes.dart';
@@ -54,10 +56,37 @@ FakeAuctionFeedRepository _feed() => FakeAuctionFeedRepository()
       startsIn: const Duration(minutes: 30),
     ),
   ]
-  ..rooms['zenit'] = liveRoom()
+  ..rooms['canon'] = liveRoom()
   ..committed = const Money.kurus(30000);
 
+/// The app's demo catalogue (MockAuctionFeedRepository, with the photos in
+/// assets/mock/) as a fixed snapshot: the lists, the Canon room and a
+/// committed total.
+Future<FakeAuctionFeedRepository> _catalogue(WidgetTester tester) async {
+  late FakeAuctionFeedRepository feed;
+  await tester.runAsync(() async {
+    final mock = MockAuctionFeedRepository(
+      currentUser: () => (id: me, username: 'deniz'),
+      simulate: false,
+    );
+    feed = FakeAuctionFeedRepository()
+      ..discover = await mock.watchDiscover().first
+      ..myScheduled = await mock.watchMyScheduled().first
+      ..rooms['canon'] = await mock.watchRoom('canon').first
+      ..committed = const Money.kurus(30000);
+    mock.dispose();
+  });
+  return feed;
+}
+
 Future<void> _snap(WidgetTester tester, String name) async {
+  await tester.pumpAndSettle();
+  // Photos decode off the fake clock; wait for every one on screen.
+  await tester.runAsync(() async {
+    for (final element in find.byType(Image).evaluate()) {
+      await precacheImage((element.widget as Image).image, element);
+    }
+  });
   await tester.pumpAndSettle();
   await expectLater(
     find.byType(MaterialApp),
@@ -65,19 +94,35 @@ Future<void> _snap(WidgetTester tester, String name) async {
   );
 }
 
+/// Signed in on [feed], or on the demo catalogue when none is given. Most
+/// demo items cost more than the default ₺2.000 limit, so the catalogue gets
+/// a ₺50.000 one; the limit screenshot (09) has its own feed.
 Future<void> _signedIn(
   WidgetTester tester, {
   FakeAuctionFeedRepository? feed,
   String username = 'deniz',
-}) => pumpApp(
-  tester,
-  auth: FakeAuthRepository(signedInAs: me),
-  profiles: _profiles(username),
-  feed: feed ?? _feed(),
-);
+}) async {
+  final limits = InMemorySpendingLimitRepository();
+  if (feed == null) {
+    await limits.save(
+      const SpendingLimit(
+        amount: Money.kurus(5000000),
+        period: Duration(days: 1),
+        enabled: true,
+      ),
+    );
+  }
+  await pumpApp(
+    tester,
+    auth: FakeAuthRepository(signedInAs: me),
+    profiles: _profiles(username),
+    feed: feed ?? await _catalogue(tester),
+    spendingLimit: limits,
+  );
+}
 
 Future<void> _openRoom(WidgetTester tester) async {
-  await tester.tap(find.text('Zenit-E analog fotoğraf makinesi (1978)').first);
+  await tester.tap(find.text('Canon AE-1 Program, 50mm f/1.8 lens').first);
   await tester.pumpAndSettle();
 }
 
@@ -135,7 +180,7 @@ void main() {
   ) async {
     await _phone(tester);
     final feed = _feed()
-      ..rooms['zenit'] = liveRoom(
+      ..rooms['canon'] = liveRoom(
         seller: longUsername,
         price: sixDigits,
         endsIn: const Duration(seconds: 8),
@@ -187,7 +232,7 @@ void main() {
 
   testWidgets('12 connection lost', (tester) async {
     await _phone(tester);
-    final feed = _feed()..rooms['zenit'] = liveRoom(connected: false);
+    final feed = _feed()..rooms['canon'] = liveRoom(connected: false);
     await _signedIn(tester, feed: feed);
     await _openRoom(tester);
     await _snap(tester, '12_connection_lost');
@@ -199,12 +244,12 @@ void main() {
     await _signedIn(tester, feed: feed);
     await _openRoom(tester);
     feed
-      ..rooms['zenit'] = liveRoom(
+      ..rooms['canon'] = liveRoom(
         ended: true,
         endsIn: Duration.zero,
         sold: const SoldResult(
-          winnerId: 'bot-plakci_baris',
-          winnerUsername: 'plakci_baris',
+          winnerId: 'bot-retro_avcisi',
+          winnerUsername: 'retro_avcisi',
           amount: Money.kurus(125000),
         ),
       )

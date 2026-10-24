@@ -9,6 +9,8 @@ class AuctionSummary {
     required this.currentPrice,
     required this.startsAt,
     required this.isLive,
+    this.endsAt,
+    this.isEnded = false,
     this.imageUrl,
     this.viewerCount = 0,
   });
@@ -21,6 +23,15 @@ class AuctionSummary {
   /// Planned start while upcoming, actual start once live.
   final DateTime startsAt;
   final bool isLive;
+
+  /// When a live auction ends (moves with anti-sniping); null until it
+  /// starts.
+  final DateTime? endsAt;
+
+  /// Over; [currentPrice] is what it sold for (or its last price).
+  final bool isEnded;
+
+  /// A network URL, or an `assets/` path for the demo's bundled photos.
   final String? imageUrl;
   final int viewerCount;
 }

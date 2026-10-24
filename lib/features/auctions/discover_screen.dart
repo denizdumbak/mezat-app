@@ -5,11 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../app/design_tokens.dart';
 import '../../app/routes.dart';
 import '../../core/app_failure.dart';
-import '../../core/time_format.dart';
 import '../../core/widgets/states.dart';
 import '../../data/auction_feed_repository.dart';
 import '../auth/session.dart';
 import 'feed_providers.dart';
+import 'widgets/auction_card.dart';
 import 'widgets/auction_visuals.dart';
 import 'widgets/screen_header.dart';
 
@@ -107,7 +107,6 @@ class _DiscoverList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
@@ -125,8 +124,14 @@ class _DiscoverList extends StatelessWidget {
             sliver: SliverList.separated(
               itemCount: upcoming.length,
               separatorBuilder: (_, _) => const SizedBox(height: AppSpace.xl),
-              itemBuilder: (context, i) =>
-                  _UpcomingItem(auction: upcoming[i], now: now),
+              itemBuilder: (context, i) => AuctionCard.upcoming(
+                auction: upcoming[i],
+                // Reminders need notifications, which come after the MVP.
+                onRemind: () => showAppMessage(
+                  context,
+                  'Hatırlatmalar bildirimlerle birlikte gelecek.',
+                ),
+              ),
             ),
           ),
         ],
@@ -135,7 +140,7 @@ class _DiscoverList extends StatelessWidget {
   }
 }
 
-/// The live auctions, set apart by lines above and below.
+/// The live auctions, side by side.
 class _LiveStrip extends StatelessWidget {
   const _LiveStrip({required this.live});
 
@@ -151,142 +156,26 @@ class _LiveStrip extends StatelessWidget {
         children: [
           const SectionLabel('Şimdi canlı', leading: LiveDot()),
           SizedBox(
+            // The card's 3:4 photo plus the text under it.
             height:
-                AppSize.liveCardWidth * 5 / 4 +
+                AppSize.liveCardWidth * 4 / 3 +
                 MediaQuery.textScalerOf(context).scale(AppSize.liveCardInfo),
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: AppSpace.edge),
               itemCount: live.length,
               separatorBuilder: (_, _) => const SizedBox(width: AppSpace.m),
-              itemBuilder: (context, i) => _LiveCard(auction: live[i]),
+              itemBuilder: (context, i) => SizedBox(
+                width: AppSize.liveCardWidth,
+                child: AuctionCard.live(
+                  auction: live[i],
+                  onTap: () => context.push(AppRoutes.liveRoom(live[i].id)),
+                ),
+              ),
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _LiveCard extends StatelessWidget {
-  const _LiveCard({required this.auction});
-
-  final AuctionSummary auction;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return SizedBox(
-      width: AppSize.liveCardWidth,
-      child: InkWell(
-        borderRadius: AppRadius.cardAll,
-        onTap: () => context.push(AppRoutes.liveRoom(auction.id)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AuctionPhoto(
-              imageUrl: auction.imageUrl,
-              aspectRatio: 4 / 5,
-              overlay: Padding(
-                padding: const EdgeInsets.all(AppSpace.s),
-                // Both pills shrink rather than overflow on narrow cards or
-                // with large system text.
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: LiveBadge(),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpace.xs),
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: ViewerCount(count: auction.viewerCount),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpace.s),
-            Text(
-              auction.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: text.titleSmall,
-            ),
-            const SizedBox(height: AppSpace.xs),
-            Text(auction.currentPrice.format(), style: AppTextStyles.price),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _UpcomingItem extends StatelessWidget {
-  const _UpcomingItem({required this.auction, required this.now});
-
-  final AuctionSummary auction;
-  final DateTime now;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AuctionPhoto(imageUrl: auction.imageUrl, aspectRatio: 16 / 9),
-        const SizedBox(height: AppSpace.m),
-        Text(
-          auction.title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: text.titleMedium,
-        ),
-        const SizedBox(height: AppSpace.xs),
-        Text(
-          '@${auction.sellerUsername}',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: text.bodySmall,
-        ),
-        const SizedBox(height: AppSpace.s),
-        Row(
-          children: [
-            Expanded(
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(text: 'Açılış ', style: text.bodySmall),
-                    TextSpan(
-                      text: auction.currentPrice.format(),
-                      style: AppTextStyles.price,
-                    ),
-                  ],
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: AppSpace.m),
-            Icon(
-              Icons.schedule,
-              size: AppSize.iconSmall,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: AppSpace.xs),
-            Text(
-              formatStartsAt(auction.startsAt, now: now),
-              style: text.labelMedium!.copyWith(fontFeatures: AppFonts.tabular),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

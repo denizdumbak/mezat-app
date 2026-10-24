@@ -53,7 +53,7 @@ _Last updated: 2026-10-24_
   read-only room ("Teklif verme henüz açık değil."). No realtime: pull down to refresh; lists
   reload after create/start. `--dart-define=MOCK_FEED=true` switches to the demo mock with
   simulated bidders.
-- **Tests**: 231 unit/widget tests (`test/`, screens also at 360×640), 175 pgTAP tests
+- **Tests**: 242 unit/widget tests (`test/`, screens also at 360×640), 175 pgTAP tests
   (`supabase/tests/`, incl. dblink tests of bids racing for the locks), 34 tests of the
   real repositories and concurrent bids against local Supabase
   (`test_supabase/`), 2 end-to-end UI tests on the Windows desktop (`integration_test/`, run

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mezat_app/core/auction_failure.dart';
 import 'package:mezat_app/core/auction_rules.dart';
@@ -26,54 +28,73 @@ void main() {
     () async {
       final list = await repository.watchDiscover().first;
       expect(list.first.isLive, isTrue);
-      expect(list.where((a) => a.id == 'cezve'), isEmpty);
+      expect(list.where((a) => a.id == 'daktilo'), isEmpty);
       final mine = await repository.watchMyScheduled().first;
-      expect(mine.single.id, 'cezve');
+      expect(mine.single.id, 'daktilo');
     },
   );
 
+  test('the demo catalogue: ten auctions, each with a bundled photo', () async {
+    final discover = await repository.watchDiscover().first;
+    final mine = await repository.watchMyScheduled().first;
+    final shown = [...discover, ...mine];
+    expect(shown.where((a) => a.isLive), hasLength(4));
+    expect(shown.where((a) => !a.isLive), hasLength(4));
+    // Sold ones are not listed, but their rooms still open.
+    expect(shown.where((a) => a.isEnded), isEmpty);
+    final sold = await repository.watchRoom('lens').first;
+    expect(sold.sold!.amount, const Money.kurus(160000));
+
+    for (final auction in shown) {
+      expect(auction.imageUrl, startsWith('assets/mock/'));
+      expect(File(auction.imageUrl!).existsSync(), isTrue, reason: auction.id);
+    }
+    // Live cards show the time left.
+    expect(shown.where((a) => a.isLive && a.endsAt == null), isEmpty);
+  });
+
   test('a valid bid raises the price and leads', () async {
-    final before = await repository.watchRoom('zenit').first;
+    final before = await repository.watchRoom('canon').first;
     await repository.placeBid(
-      'zenit',
+      'canon',
       before.currentPrice + before.minIncrement,
     );
 
-    final after = await repository.watchRoom('zenit').first;
+    final after = await repository.watchRoom('canon').first;
     expect(after.currentPrice, before.currentPrice + before.minIncrement);
     expect(after.leadingBid!.bidderId, user.id);
     expect(await repository.watchCommitted().first, after.currentPrice);
   });
 
   test('a bid below current price + minimum step is BID_TOO_LOW', () async {
-    final room = await repository.watchRoom('zenit').first;
+    final room = await repository.watchRoom('canon').first;
     await expectLater(
-      repository.placeBid('zenit', room.currentPrice),
+      repository.placeBid('canon', room.currentPrice),
       throwsA(AuctionFailure.bidTooLow),
     );
   });
 
   test('the seller cannot bid on their own auction', () async {
-    await repository.startAuction('cezve');
-    final room = await repository.watchRoom('cezve').first;
+    await repository.startAuction('daktilo');
+    final room = await repository.watchRoom('daktilo').first;
     await expectLater(
-      repository.placeBid('cezve', room.currentPrice + room.minIncrement),
+      repository.placeBid('daktilo', room.currentPrice + room.minIncrement),
       throwsA(AuctionFailure.sellerCannotBid),
     );
   });
 
   test('a bid in the last 30 seconds extends the end by 30', () async {
-    final room = await repository.watchRoom('zenit').first;
+    final room = await repository.watchRoom('canon').first;
     now = room.endsAt.subtract(const Duration(seconds: 10));
-    await repository.placeBid('zenit', room.currentPrice + room.minIncrement);
+    await repository.placeBid('canon', room.currentPrice + room.minIncrement);
 
-    final after = await repository.watchRoom('zenit').first;
+    final after = await repository.watchRoom('canon').first;
     expect(after.endsAt, room.endsAt.add(antiSnipingExtension));
   });
 
   test('an upcoming auction is not open for bids', () async {
     await expectLater(
-      repository.placeBid('telkari', const Money.kurus(100000)),
+      repository.placeBid('walkman', const Money.kurus(100000)),
       throwsA(AuctionFailure.auctionNotLive),
     );
   });

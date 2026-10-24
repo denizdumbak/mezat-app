@@ -161,6 +161,8 @@ class _Row {
         currentPrice: currentPrice,
         startsAt: startsAt,
         isLive: isLive,
+        endsAt: endsAt,
+        isEnded: status == 'ended',
         imageUrl: imagePath == null ? null : publicUrl(imagePath!),
       );
 }

@@ -13,11 +13,13 @@ const longUsername = 'cok_uzun_kullanici_1';
 const sixDigits = Money.kurus(99999900);
 
 AuctionSummary liveAuction({
-  String id = 'zenit',
-  String title = 'Zenit-E analog fotoğraf makinesi (1978)',
-  String seller = 'antikaci_mert',
+  String id = 'canon',
+  String title = 'Canon AE-1 Program, 50mm f/1.8 lens',
+  String seller = 'analogdukkan',
   Money price = const Money.kurus(125000),
-  int viewers = 128,
+  int viewers = 236,
+  String? imageUrl = 'assets/mock/canon-ae1.jpg',
+  Duration endsIn = const Duration(minutes: 4),
 }) => AuctionSummary(
   id: id,
   title: title,
@@ -25,15 +27,18 @@ AuctionSummary liveAuction({
   currentPrice: price,
   startsAt: DateTime.now().subtract(const Duration(minutes: 6)),
   isLive: true,
+  endsAt: DateTime.now().add(endsIn),
+  imageUrl: imageUrl,
   viewerCount: viewers,
 );
 
 AuctionSummary upcomingAuction({
-  String id = 'telkari',
-  String title = 'Gümüş telkari broş, Midyat işi',
-  String seller = 'eskici_ayse',
+  String id = 'walkman',
+  String title = 'Sony Walkman WM-F10, kasetli, çalışır',
+  String seller = 'kasetcafe',
   Money price = const Money.kurus(35000),
   Duration startsIn = const Duration(hours: 2),
+  String? imageUrl = 'assets/mock/walkman.jpg',
 }) => AuctionSummary(
   id: id,
   title: title,
@@ -41,6 +46,25 @@ AuctionSummary upcomingAuction({
   currentPrice: price,
   startsAt: DateTime.now().add(startsIn),
   isLive: false,
+  imageUrl: imageUrl,
+);
+
+AuctionSummary endedAuction({
+  String id = 'lens',
+  String title = 'Helios 44-2 58mm lens, M42 bağlantı',
+  String seller = 'analogdukkan',
+  Money price = const Money.kurus(160000),
+  String? imageUrl = 'assets/mock/kamera-lens.jpg',
+}) => AuctionSummary(
+  id: id,
+  title: title,
+  sellerUsername: seller,
+  currentPrice: price,
+  startsAt: DateTime.now().subtract(const Duration(days: 1, hours: 1)),
+  endsAt: DateTime.now().subtract(const Duration(days: 1)),
+  isLive: false,
+  isEnded: true,
+  imageUrl: imageUrl,
 );
 
 Bid bid(String id, String who, int lira, {String? bidderId}) => Bid(
@@ -53,10 +77,10 @@ Bid bid(String id, String who, int lira, {String? bidderId}) => Bid(
 
 /// A live room; bids are newest first.
 LiveRoom liveRoom({
-  String id = 'zenit',
-  String title = 'Zenit-E analog fotoğraf makinesi (1978)',
+  String id = 'canon',
+  String title = 'Canon AE-1 Program, 50mm f/1.8 lens',
   String sellerId = 'seller-mert',
-  String seller = 'antikaci_mert',
+  String seller = 'analogdukkan',
   Money price = const Money.kurus(125000),
   List<Bid>? bids,
   Duration endsIn = const Duration(minutes: 4),
@@ -78,9 +102,9 @@ LiveRoom liveRoom({
   bids:
       bids ??
       [
-        bid('b3', 'plakci_baris', 1250),
-        bid('b2', 'zeynep_antik', 1200),
-        bid('b1', 'koleksiyoncu_can', 1150),
+        bid('b3', 'retro_avcisi', 1250),
+        bid('b2', 'analogsever', 1200),
+        bid('b1', 'foto_arsiv', 1150),
       ],
   viewerCount: viewers,
   ended: ended,

@@ -15,7 +15,9 @@ ama renk, logo ve ikon dili bizimdir.
   açılış, form ve hata ekranları. `liveTheme` (koyu) yalnızca canlı odadır
   (`/auctions/:id/live`, `router.dart` bu rotayı `Theme(data: liveTheme)` ile sarar; odadan
   açılan alt paneller de bu temayı alır).
-- Büyük alana renk yok. Gradyan yok, kart içinde kart yok, emoji ikon yok, `fromSeed` yok.
+- Büyük alana renk yok. Gradyan yok (tek istisna: canlı kartında görselin alt kenarındaki koyu
+  geçiş, beyaz kalan süre her fotoğrafta okunsun diye), kart içinde kart yok, emoji ikon yok,
+  `fromSeed` yok.
 - Kartlarda çerçeve yok; ayrım boşlukla ve görselle yapılır. Gölge yalnızca alt panellerde.
 
 ## Renk
@@ -129,6 +131,16 @@ akışı satırı, ekran geçişleri. Dekoratif, sürekli dönen animasyon yok.
   değil: hemen altındaki teklif butonuyla yarışmasın.
 - **Panel (`AppPanel`, `BlurredPanel`):** ikincil yüzey, 16, çerçevesiz. Canlı odada siyah
   %60 + blur, video üstünde okunur.
+- **Mezat kartı (`AuctionCard`, `lib/features/auctions/widgets`):** listelerdeki tek kart.
+  `live`: 3:4 görsel, sol üstte "CANLI · 236", altta geçiş üstünde kalan süre; altında satıcı
+  (avatar + ad, caption), ürün adı (en fazla 2 satır), güncel teklif. `upcoming`: geniş görsel,
+  üstünde "Bugün 21:00" ve "Hatırlat" düğmesi; altında satıcı, ad, açılış fiyatı. `ended`:
+  soluk (%60), "Satıldı ₺X". `row`: kare küçük görsel + ayrıntılar + sağda isteğe bağlı eylem
+  (Canlı listesi, Yayın aç'taki planlanmış mezatlar).
+- **Ürün görseli (`AuctionPhoto`):** ağ adresi ya da `assets/` yolu. Görsel yoksa ya da
+  yüklenmezse ikincil yüzey üstünde ürün adının baş harfi; büyük gri resim ikonu yok.
+- **Fiyat etiketi (`PriceLabel`):** listelerdeki her tutar. Türkçe ayraçlar (₺1.250,50), ₺
+  işareti rakamlardan biraz küçük (0,8), tabular w800; isteğe bağlı önek ("Açılış", "Satıldı").
 - **Fiyat göstergesi:** değişen rakamlar dikey kayar.
 - **Geri sayım:** son 30 saniyede (anti-sniping penceresi, `antiSnipingWindow` sabitinden)
   canlı kırmızı; süre uzayınca "+30 sn" çipi belirir.

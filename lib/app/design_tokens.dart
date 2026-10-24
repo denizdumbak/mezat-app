@@ -126,6 +126,9 @@ abstract final class AppSize {
   /// Thumbnail of the seller next to their name.
   static const avatar = 32.0;
 
+  /// The seller's avatar on an auction card, next to a caption.
+  static const avatarSmall = 20.0;
+
   /// The user's own avatar on the profile screen.
   static const avatarLarge = 56.0;
 
@@ -138,9 +141,9 @@ abstract final class AppSize {
   /// Width of a card in the "live now" strip.
   static const liveCardWidth = 168.0;
 
-  /// Room under a live card's photo for its title and price (before text
-  /// scaling).
-  static const liveCardInfo = 72.0;
+  /// Room under a live card's photo for the seller, a two-line title and
+  /// the price (before text scaling).
+  static const liveCardInfo = 112.0;
 
   /// Height of an item in the tab bar.
   static const tabBar = 64.0;

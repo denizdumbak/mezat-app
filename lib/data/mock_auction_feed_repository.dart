@@ -46,11 +46,11 @@ class MockAuctionFeedRepository implements AuctionFeedRepository {
   var _nextBidId = 0;
 
   static const _bots = [
-    'koleksiyoncu_can',
+    'retro_avcisi',
     'eskiye_merakli',
-    'zeynep_antik',
-    'plakci_baris',
-    'vintage_sevgi',
+    'analogsever',
+    'plakarsivi',
+    'stickerhane',
   ];
 
   void dispose() {
@@ -203,6 +203,9 @@ class MockAuctionFeedRepository implements AuctionFeedRepository {
     currentPrice: a.currentPrice,
     startsAt: a.startsAt,
     isLive: a.isLive,
+    endsAt: a.endsAt,
+    isEnded: a.ended,
+    imageUrl: a.imagePath,
     viewerCount: a.viewerCount,
   );
 
@@ -230,98 +233,212 @@ class MockAuctionFeedRepository implements AuctionFeedRepository {
     );
   }
 
+  /// The demo catalogue: ten collectables, each with a photo in
+  /// `assets/mock/`. Four live, three coming up from other sellers, one of
+  /// the signed-in user's own (under Yayın aç) and two already sold.
   void _seed() {
     final now = _clock();
     final me = currentUser();
     void add(_MockAuction a) => _auctions[a.id] = a;
 
+    /// [bids] listed oldest to newest; stored newest first, 25 s apart, the
+    /// newest 25 s plus [at] seconds ago.
+    List<Bid> history(String id, List<(String, int)> bids, {int at = 0}) => [
+      for (final (i, (who, tl)) in bids.reversed.indexed)
+        Bid(
+          id: 'seed-$id-$i',
+          bidderId: 'bot-$who',
+          username: who,
+          amount: Money.kurus(tl * 100),
+          placedAt: now.subtract(Duration(seconds: at + 25 * (i + 1))),
+        ),
+    ];
+
+    // Live.
     add(
       _MockAuction(
-          id: 'zenit',
-          title: 'Zenit-E analog fotoğraf makinesi (1978)',
-          sellerId: 'seller-mert',
-          sellerUsername: 'antikaci_mert',
-          price: const Money.kurus(125000),
-          startsAt: now.subtract(const Duration(minutes: 6)),
+          id: 'canon',
+          title: 'Canon AE-1 Program, 50mm f/1.8 lens',
+          sellerId: 'seller-analog',
+          sellerUsername: 'analogdukkan',
+          imagePath: 'assets/mock/canon-ae1.jpg',
+          price: const Money.kurus(425000),
+          minIncrement: const Money.kurus(2500),
+          increments: const [
+            Money.kurus(2500),
+            Money.kurus(5000),
+            Money.kurus(10000),
+          ],
+          startsAt: now.subtract(const Duration(minutes: 8)),
           endsAt: now.add(const Duration(minutes: 4)),
-          viewerCount: 128,
+          viewerCount: 236,
         )
-        ..bids.addAll([
-          for (final (i, (who, tl)) in [
-            ('plakci_baris', 1250),
-            ('zeynep_antik', 1200),
-            ('koleksiyoncu_can', 1150),
-          ].indexed)
-            Bid(
-              id: 'seed-zenit-$i',
-              bidderId: 'bot-$who',
-              username: who,
-              amount: Money.kurus(tl * 100),
-              placedAt: now.subtract(Duration(seconds: 20 * (i + 1))),
-            ),
-        ]),
+        ..bids.addAll(
+          history('canon', [
+            ('retro_avcisi', 3900),
+            ('analogsever', 4000),
+            ('foto_arsiv', 4150),
+            ('retro_avcisi', 4250),
+          ]),
+        ),
     );
     add(
       _MockAuction(
-        id: 'kilim',
-        title: 'El dokuması Uşak kilimi, 120×180 cm',
-        sellerId: 'seller-kilim',
-        sellerUsername: 'kilim_evi',
-        price: const Money.kurus(480000),
-        minIncrement: const Money.kurus(5000),
-        increments: const [
-          Money.kurus(5000),
-          Money.kurus(10000),
-          Money.kurus(25000),
-        ],
-        startsAt: now.subtract(const Duration(minutes: 3)),
-        endsAt: now.add(const Duration(minutes: 12)),
-        viewerCount: 64,
-      ),
+          id: 'panini',
+          title: '1998 Panini Dünya Kupası albümü, tam set',
+          sellerId: 'seller-kart',
+          sellerUsername: 'kartkoleksiyon',
+          imagePath: 'assets/mock/panini-album.jpg',
+          price: const Money.kurus(310000),
+          minIncrement: const Money.kurus(5000),
+          increments: const [
+            Money.kurus(5000),
+            Money.kurus(10000),
+            Money.kurus(25000),
+          ],
+          startsAt: now.subtract(const Duration(minutes: 3)),
+          endsAt: now.add(const Duration(minutes: 12)),
+          viewerCount: 412,
+        )
+        ..bids.addAll(
+          history('panini', [
+            ('albumcu_90lar', 2900),
+            ('stickerhane', 3000),
+            ('albumcu_90lar', 3100),
+          ]),
+        ),
     );
     add(
       _MockAuction(
-        id: 'telkari',
-        title: 'Gümüş telkari broş, Midyat işi',
-        sellerId: 'seller-ayse',
-        sellerUsername: 'eskici_ayse',
-        price: const Money.kurus(35000),
+          id: 'seiko',
+          title: 'Seiko 5 otomatik saat, 1970’ler, orijinal kordon',
+          sellerId: 'seller-saat',
+          sellerUsername: 'saatciusta',
+          imagePath: 'assets/mock/seiko-5.jpg',
+          price: const Money.kurus(275000),
+          startsAt: now.subtract(const Duration(minutes: 11)),
+          endsAt: now.add(const Duration(seconds: 50)),
+          viewerCount: 98,
+        )
+        ..bids.addAll(
+          history('seiko', [('saatsever', 2600), ('kurmali_kol', 2750)]),
+        ),
+    );
+    add(
+      _MockAuction(
+          id: 'forma',
+          title: 'Fenerbahçe 1996 iç saha forması, imzalı',
+          sellerId: 'seller-forma',
+          sellerUsername: 'formakoleksiyon',
+          imagePath: 'assets/mock/fenerbahce-forma.jpg',
+          price: const Money.kurus(1850000),
+          minIncrement: const Money.kurus(25000),
+          increments: const [
+            Money.kurus(25000),
+            Money.kurus(50000),
+            Money.kurus(100000),
+          ],
+          startsAt: now.subtract(const Duration(minutes: 20)),
+          endsAt: now.add(const Duration(minutes: 7)),
+          viewerCount: 1240,
+        )
+        ..bids.addAll(
+          history('forma', [
+            ('sari_lacivert', 17000),
+            ('tribun_arsiv', 17750),
+            ('sari_lacivert', 18500),
+          ]),
+        ),
+    );
+
+    // Coming up.
+    add(
+      _MockAuction(
+        id: 'walkman',
+        title: 'Sony Walkman WM-F10, kasetli, çalışır',
+        sellerId: 'seller-kaset',
+        sellerUsername: 'kasetcafe',
+        imagePath: 'assets/mock/walkman.jpg',
+        price: const Money.kurus(90000),
         startsAt: now.add(const Duration(hours: 2)),
       ),
     );
     add(
       _MockAuction(
-        id: 'tutunamayanlar',
-        title: 'Tutunamayanlar, ilk baskı (1972)',
-        sellerId: 'seller-sahaf',
-        sellerUsername: 'sahaf_kadikoy',
-        price: const Money.kurus(200000),
-        startsAt: DateTime(now.year, now.month, now.day + 1, 20),
+        id: 'plak',
+        title: '1970’ler Türk pop 45’lik plak seti, 12 adet',
+        sellerId: 'seller-plak',
+        sellerUsername: 'plakarsivi',
+        imagePath: 'assets/mock/plak.jpg',
+        price: const Money.kurus(65000),
+        startsAt: DateTime(now.year, now.month, now.day + 1, 20, 30),
       ),
     );
     add(
       _MockAuction(
-        id: 'seiko',
-        title: 'Seiko 5 otomatik kol saati, 1970’ler',
-        sellerId: 'seller-levent',
-        sellerUsername: 'saatci_levent',
-        price: const Money.kurus(90000),
-        startsAt: now.add(const Duration(days: 1, hours: 3)),
+        id: 'kolsaati',
+        title: 'Antika kurmalı kol saati, 1950’ler, gümüş kasa',
+        sellerId: 'seller-antika',
+        sellerUsername: 'antikacimehmet',
+        imagePath: 'assets/mock/kol-saati-antika.jpg',
+        price: const Money.kurus(550000),
+        minIncrement: const Money.kurus(10000),
+        startsAt: now.add(const Duration(days: 2, hours: 3)),
       ),
     );
-    if (me != null) {
-      add(
-        _MockAuction(
-          id: 'cezve',
-          title: 'Pirinç cezve takımı, el işi',
-          sellerId: me.id,
-          sellerUsername: me.username,
-          price: const Money.kurus(40000),
-          startsAt: now.add(const Duration(minutes: 30)),
-          durationMinutes: 5,
+
+    // The signed-in user's own, planned: shows under Yayın aç.
+    add(
+      _MockAuction(
+        id: 'daktilo',
+        title: 'Olivetti Lettera 32 daktilo, Türkçe klavye',
+        sellerId: me?.id ?? 'seller-daktilo',
+        sellerUsername: me?.username ?? 'eskiyazi',
+        imagePath: 'assets/mock/daktilo.jpg',
+        price: const Money.kurus(230000),
+        startsAt: now.add(const Duration(minutes: 30)),
+        durationMinutes: 5,
+      ),
+    );
+
+    // Sold.
+    add(
+      _MockAuction(
+          id: 'kartlar',
+          title: '1990’lar futbolcu kartları, 200 adet',
+          sellerId: 'seller-kart',
+          sellerUsername: 'kartkoleksiyon',
+          imagePath: 'assets/mock/kart-koleksiyon.jpg',
+          price: const Money.kurus(115000),
+          startsAt: now.subtract(const Duration(hours: 3)),
+          endsAt: now.subtract(const Duration(hours: 2, minutes: 50)),
+          viewerCount: 154,
+        )
+        ..ended = true
+        ..bids.addAll(
+          history('kartlar', [
+            ('stickerhane', 1000),
+            ('albumcu_90lar', 1150),
+          ], at: 600),
         ),
-      );
-    }
+    );
+    add(
+      _MockAuction(
+          id: 'lens',
+          title: 'Helios 44-2 58mm lens, M42 bağlantı',
+          sellerId: 'seller-analog',
+          sellerUsername: 'analogdukkan',
+          imagePath: 'assets/mock/kamera-lens.jpg',
+          price: const Money.kurus(160000),
+          startsAt: now.subtract(const Duration(days: 1, hours: 1)),
+          endsAt: now.subtract(const Duration(days: 1)),
+          viewerCount: 87,
+        )
+        ..ended = true
+        ..bids.addAll(
+          history('lens', [('foto_arsiv', 1500), ('analogsever', 1600)]),
+        ),
+    );
   }
 }
 
@@ -334,6 +451,7 @@ class _MockAuction {
     required Money price,
     required this.startsAt,
     this.endsAt,
+    this.imagePath,
     this.minIncrement = const Money.kurus(1000),
     this.increments = defaultIncrements,
     this.viewerCount = 0,
@@ -344,6 +462,7 @@ class _MockAuction {
   final String title;
   final String sellerId;
   final String sellerUsername;
+  final String? imagePath;
   final Money minIncrement;
   final List<Money> increments;
   final int durationMinutes;

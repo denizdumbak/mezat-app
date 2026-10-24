@@ -10,7 +10,7 @@ Finder _inStamp(Type type) =>
     find.descendant(of: find.byType(SoldStamp), matching: find.byType(type));
 
 const _stamp = SoldStamp(
-  winnerUsername: 'plakci_baris',
+  winnerUsername: 'retro_avcisi',
   amount: Money.kurus(125000),
   isMe: false,
 );
@@ -30,7 +30,7 @@ void main() {
       tester.widget<AnimatedOpacity>(_inStamp(AnimatedOpacity)).opacity,
       1,
     );
-    expect(find.text('@plakci_baris'), findsOneWidget);
+    expect(find.text('@retro_avcisi'), findsOneWidget);
   });
 
   testWidgets('with reduced motion it only fades in', (tester) async {

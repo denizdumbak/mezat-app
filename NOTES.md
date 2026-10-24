@@ -9,6 +9,15 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Technical debt
 
+- **"Hatırlat" only says reminders are coming.** The button is on upcoming cards (design
+  revision, step 2) but reminders need notifications, which are out of the MVP. It shows
+  "Hatırlatmalar bildirimlerle birlikte gelecek."
+- **Most demo items cost more than the default ₺2.000 limit**, so in demo mode (MOCK_FEED)
+  bidding on them is blocked at first. The default stays the product rule; step 7's "raise
+  the limit" flow answers it in the room. The screenshots give the catalogue a ₺50.000 limit.
+- **seed.sql has no photos.** Storage objects cannot be created from SQL, so seeded auctions
+  show the placeholder; demo mode uses the bundled photos instead.
+
 - **End-to-end test files must run one at a time on Windows.** `flutter test integration_test
   -d windows` passes the first file, then fails to launch the app for the second ("Error
   waiting for a debug connection: The log reader stopped unexpectedly"); each file passes on
@@ -48,6 +57,18 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Decisions
 
+- **Design revision, step 2: realistic data and one card (2026-10-24).** The mock catalogue
+  is ten collectables matching the developer's photos in `assets/mock/` (four live, three
+  upcoming from others, one of the signed-in user's own, two sold), with realistic Turkish
+  titles, handles that are not real people's names, varied prices and viewer counts, and bid
+  histories. `supabase/seed.sql` holds the same items for `db reset` (checked by running it
+  in a rolled-back transaction against the local database). `AuctionSummary.imageUrl` may be
+  an `assets/` path, and `AuctionPhoto` picks `Image.asset` for those, so the mock needs no
+  separate field; `endsAt` and `isEnded` were added for the live and sold cards. One
+  `AuctionCard` with live, upcoming, ended and row variants replaced the four per-screen
+  cards; one `PriceLabel` replaced four price `Text`s. On Yayın aç the start button moved
+  under the row: next to the thumbnail it squeezed the title by 57 dp on a 360 dp phone.
+  The screenshots now read the real mock catalogue instead of a hand-made list.
 - **Design revision, step 1: visual language (2026-10-24).** Developer's brief: the product
   photo and the price lead every screen, the rest is quiet; a live-auction energy instead of
   the "private bank" navy and gold. Two themes from the same tokens: `browseTheme` (light,

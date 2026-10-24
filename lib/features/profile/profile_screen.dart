@@ -5,6 +5,7 @@ import '../../app/design_tokens.dart';
 import '../../core/app_failure.dart';
 import '../../core/money.dart';
 import '../../core/time_format.dart';
+import '../../core/widgets/price_label.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/states.dart';
 import '../../data/spending_limit_repository.dart';
@@ -72,15 +73,17 @@ class ProfileScreen extends ConsumerWidget {
                 children: [
                   Text('Harcama limiti', style: text.bodySmall),
                   const SizedBox(height: AppSpace.xs),
-                  Text(
-                    switch (limit) {
-                      null => 'Yükleniyor',
-                      SpendingLimit(enabled: false) => 'Kapalı',
-                      _ => limit.amount.format(),
-                    },
-                    key: const Key('profile.limit'),
-                    style: AppTextStyles.price,
-                  ),
+                  switch (limit) {
+                    SpendingLimit(enabled: true, :final amount) => PriceLabel(
+                      amount,
+                      key: const Key('profile.limit'),
+                    ),
+                    _ => Text(
+                      limit == null ? 'Yükleniyor' : 'Kapalı',
+                      key: const Key('profile.limit'),
+                      style: AppTextStyles.price,
+                    ),
+                  },
                   const SizedBox(height: AppSpace.xs),
                   Text(
                     limit == null || limit.enabled

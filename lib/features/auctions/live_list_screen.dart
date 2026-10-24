@@ -8,7 +8,7 @@ import '../../core/app_failure.dart';
 import '../../core/widgets/states.dart';
 import '../../data/auction_feed_repository.dart';
 import 'feed_providers.dart';
-import 'widgets/auction_visuals.dart';
+import 'widgets/auction_card.dart';
 import 'widgets/screen_header.dart';
 
 /// Canlı: every auction streaming right now.
@@ -78,70 +78,14 @@ class _List extends StatelessWidget {
         ),
         itemCount: live.length,
         separatorBuilder: (_, _) => const Divider(height: AppSpace.xl),
-        itemBuilder: (context, i) => _LiveRow(auction: live[i]),
-      ),
-    );
-  }
-}
-
-class _LiveRow extends StatelessWidget {
-  const _LiveRow({required this.auction});
-
-  final AuctionSummary auction;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return InkWell(
-      borderRadius: AppRadius.imageAll,
-      onTap: () => context.push(AppRoutes.liveRoom(auction.id)),
-      child: Row(
-        children: [
-          SizedBox(
-            width: AppSize.thumbnail,
-            child: AuctionPhoto(imageUrl: auction.imageUrl, aspectRatio: 1),
-          ),
-          const SizedBox(width: AppSpace.m),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  auction.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.titleSmall,
-                ),
-                const SizedBox(height: AppSpace.xs),
-                Text(
-                  '@${auction.sellerUsername}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.bodySmall,
-                ),
-                const SizedBox(height: AppSpace.s),
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        auction.currentPrice.format(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.price,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpace.s),
-                    ViewerCount(count: auction.viewerCount),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Icon(
+        itemBuilder: (context, i) => AuctionCard.row(
+          auction: live[i],
+          onTap: () => context.push(AppRoutes.liveRoom(live[i].id)),
+          trailing: Icon(
             Icons.chevron_right,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-        ],
+        ),
       ),
     );
   }

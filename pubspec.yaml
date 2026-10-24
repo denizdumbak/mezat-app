@@ -33,6 +33,10 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  # Demo photos for the mock catalogue (MOCK_FEED, tests, screenshots).
+  assets:
+    - assets/mock/
+
   # Bundled instead of fetched at runtime (google_fonts): works offline, no
   # request to Google on launch, and tests can check the glyphs. SIL OFL 1.1,
   # licence next to the files. One family: Manrope.

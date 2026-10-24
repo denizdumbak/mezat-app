@@ -150,7 +150,7 @@ void main() {
     final feed = await openRoom(tester, _cheapRoom());
 
     feed
-      ..rooms['zenit'] = liveRoom(
+      ..rooms['canon'] = liveRoom(
         price: const Money.kurus(50000),
         connected: false,
       )
@@ -236,7 +236,7 @@ void main() {
       final feed = await openRoom(tester, _cheapRoom());
 
       feed
-        ..rooms['zenit'] = liveRoom(
+        ..rooms['canon'] = liveRoom(
           ended: true,
           sold: const SoldResult(
             winnerId: 'bot-$longUsername',

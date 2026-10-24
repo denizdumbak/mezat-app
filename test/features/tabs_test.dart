@@ -14,6 +14,20 @@ const _longTitle =
     'Çok uzun başlıklı bir ürün: el yapımı, gümüş kaplama, antika '
     'İstanbul işi kahve takımı ve tepsisi';
 
+/// The limit as the Profil screen shows it: a [PriceLabel] or plain text.
+String _limitText(WidgetTester tester) {
+  final text = tester.widget<Text>(
+    find
+        .descendant(
+          of: find.byKey(const Key('profile.limit')),
+          matching: find.byType(Text),
+          matchRoot: true,
+        )
+        .first,
+  );
+  return text.data ?? text.textSpan!.toPlainText();
+}
+
 Future<void> _openTab(WidgetTester tester, int index) async {
   await tester.tap(find.byKey(Key('tab.$index')));
   await tester.pumpAndSettle();
@@ -44,7 +58,7 @@ void main() {
       expect(find.byType(DiscoverScreen), findsOneWidget);
       expect(find.text('@$longUsername'), findsWidgets);
       expect(find.text('₺999.999'), findsWidgets);
-      expect(find.text('12 B'), findsOneWidget);
+      expect(find.text('CANLI · 12 B'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -65,10 +79,10 @@ void main() {
       useSmallPhone(tester);
       final feed = FakeAuctionFeedRepository()
         ..discover = [liveAuction()]
-        ..rooms['zenit'] = liveRoom();
+        ..rooms['canon'] = liveRoom();
       await pumpSignedIn(tester, feed: feed);
 
-      await tester.tap(find.text('Zenit-E analog fotoğraf makinesi (1978)'));
+      await tester.tap(find.text('Canon AE-1 Program, 50mm f/1.8 lens'));
       await tester.pumpAndSettle();
 
       expect(find.byType(LiveRoomScreen), findsOneWidget);
@@ -200,8 +214,7 @@ void main() {
       await pumpSignedIn(tester, feed: FakeAuctionFeedRepository());
       await _openTab(tester, 3);
 
-      final limit = find.byKey(const Key('profile.limit'));
-      expect(tester.widget<Text>(limit).data, '₺2.000');
+      expect(_limitText(tester), '₺2.000');
 
       await tapVisible(tester, find.text('Limiti değiştir'));
       await tester.enterText(find.byKey(const Key('profile.limitField')), '');
@@ -214,7 +227,7 @@ void main() {
       );
       await tapVisible(tester, find.text('Kaydet'));
 
-      expect(tester.widget<Text>(limit).data, '₺5.000');
+      expect(_limitText(tester), '₺5.000');
       expect(
         find.text('Limitin son 1 günde en fazla ₺5.000 oldu.'),
         findsOneWidget,
@@ -282,7 +295,7 @@ void main() {
       useSmallPhone(tester);
       final feed = FakeAuctionFeedRepository()
         ..discover = [liveAuction()]
-        ..rooms['zenit'] = liveRoom()
+        ..rooms['canon'] = liveRoom()
         ..committed = const Money.kurus(195000);
       await pumpSignedIn(tester, feed: feed);
 
@@ -291,16 +304,13 @@ void main() {
       await tapVisible(tester, find.byKey(const Key('profile.limitEnabled')));
       await tapVisible(tester, find.text('Kaydet'));
 
-      expect(
-        tester.widget<Text>(find.byKey(const Key('profile.limit'))).data,
-        'Kapalı',
-      );
+      expect(_limitText(tester), 'Kapalı');
       expect(find.text('Harcama limitin kapandı.'), findsOneWidget);
       expect(find.text('Sayacı sıfırla'), findsNothing);
 
       // ₺1.950 counted would block a ₺1.270 bid with the limit on.
       await _openTab(tester, 0);
-      await tester.tap(find.text('Zenit-E analog fotoğraf makinesi (1978)'));
+      await tester.tap(find.text('Canon AE-1 Program, 50mm f/1.8 lens'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Limitine ulaştın'), findsNothing);
     });
@@ -347,10 +357,7 @@ void main() {
       );
       await tapVisible(tester, find.text('Kaydet'));
 
-      expect(
-        tester.widget<Text>(find.byKey(const Key('profile.limit'))).data,
-        '₺2.000',
-      );
+      expect(_limitText(tester), '₺2.000');
       expect(find.text(AuctionFailure.network.message), findsOneWidget);
       expect(
         find.text('Limitin son 1 günde en fazla ₺5.000 oldu.'),
@@ -364,7 +371,7 @@ void main() {
       useSmallPhone(tester);
       final feed = FakeAuctionFeedRepository()
         ..discover = [liveAuction()]
-        ..rooms['zenit'] = liveRoom()
+        ..rooms['canon'] = liveRoom()
         ..committed = const Money.kurus(195000);
       await pumpSignedIn(tester, feed: feed);
 
@@ -377,7 +384,7 @@ void main() {
       await tapVisible(tester, find.text('Kaydet'));
 
       await _openTab(tester, 0);
-      await tester.tap(find.text('Zenit-E analog fotoğraf makinesi (1978)'));
+      await tester.tap(find.text('Canon AE-1 Program, 50mm f/1.8 lens'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Limitine ulaştın'), findsNothing);
     });
