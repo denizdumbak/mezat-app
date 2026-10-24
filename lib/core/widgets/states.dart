@@ -1,10 +1,14 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 
 import '../../app/design_tokens.dart';
+import '../../app/theme.dart';
 import 'app_loader.dart';
 
-/// A flat raised surface: the app's card. stageRaised, 16 dp corners, a
-/// 1 dp line instead of a shadow. Never nested inside another panel.
+/// The app's panel: the secondary surface with 16 dp corners and no frame.
+/// In the live room it is the see-through scrim with a blur behind, so it
+/// reads over the video. Never nested inside another panel.
 class AppPanel extends StatelessWidget {
   const AppPanel({
     super.key,
@@ -17,13 +21,45 @@ class AppPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.stageRaised,
-        borderRadius: AppRadius.largeAll,
-        border: Border.all(color: AppColors.line, width: AppSize.line),
-      ),
+    return BlurredPanel(
+      borderRadius: AppRadius.cardAll,
       child: Padding(padding: padding, child: child),
+    );
+  }
+}
+
+/// [AppPalette.panel] behind [child], blurring what is underneath when the
+/// panel is see-through (the live room).
+class BlurredPanel extends StatelessWidget {
+  const BlurredPanel({
+    super.key,
+    required this.borderRadius,
+    required this.child,
+  });
+
+  final BorderRadius borderRadius;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = context.palette;
+    final panel = DecoratedBox(
+      decoration: BoxDecoration(
+        color: palette.panel,
+        borderRadius: borderRadius,
+      ),
+      child: child,
+    );
+    if (!palette.panelBlurred) return panel;
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: AppSize.panelBlur,
+          sigmaY: AppSize.panelBlur,
+        ),
+        child: panel,
+      ),
     );
   }
 }
@@ -69,6 +105,7 @@ class EmptyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final muted = Theme.of(context).colorScheme.onSurfaceVariant;
     final message = this.message;
     final action = this.action;
     return Center(
@@ -77,14 +114,14 @@ class EmptyView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: AppColors.onStageMuted, size: AppSize.touch),
+            Icon(icon, color: muted, size: AppSize.touch),
             const SizedBox(height: AppSpace.l),
             Text(title, style: text.titleLarge, textAlign: TextAlign.center),
             if (message != null) ...[
               const SizedBox(height: AppSpace.s),
               Text(
                 message,
-                style: text.bodyMedium!.copyWith(color: AppColors.onStageMuted),
+                style: text.bodyMedium!.copyWith(color: muted),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -120,7 +157,8 @@ class ErrorView extends StatelessWidget {
   }
 }
 
-/// Shown on top of live content while the realtime connection is down.
+/// Shown on top of live content while the realtime connection is down. A
+/// waiting state, so the warning colour, not the error colour.
 class ConnectionBanner extends StatelessWidget {
   const ConnectionBanner({super.key});
 
@@ -128,13 +166,14 @@ class ConnectionBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final warning = context.palette.warning;
     return Semantics(
       liveRegion: true,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.stageRaised,
-          borderRadius: AppRadius.smallAll,
-          border: Border.all(color: AppColors.urgent, width: AppSize.line),
+          color: context.palette.panel,
+          borderRadius: AppRadius.imageAll,
+          border: Border.all(color: warning, width: AppSize.line),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -143,18 +182,14 @@ class ConnectionBanner extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(
-                Icons.wifi_off,
-                color: AppColors.urgent,
-                size: AppSize.iconSmall,
-              ),
+              Icon(Icons.wifi_off, color: warning, size: AppSize.iconSmall),
               const SizedBox(width: AppSpace.s),
               Expanded(
                 child: Text(
                   text,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall!.copyWith(color: AppColors.onStage),
+                  style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
               ),
             ],
@@ -174,10 +209,19 @@ void showAppMessage(
   String message, {
   AppMessageTone tone = AppMessageTone.info,
 }) {
+  // The snackbar is the inverse surface, so icons use colours that read on
+  // it.
+  final scheme = Theme.of(context).colorScheme;
   final (icon, color) = switch (tone) {
-    AppMessageTone.info => (Icons.info_outline, AppColors.onStageMuted),
-    AppMessageTone.success => (Icons.check_circle_outline, AppColors.success),
-    AppMessageTone.error => (Icons.error_outline, AppColors.urgent),
+    AppMessageTone.info => (Icons.info_outline, scheme.onInverseSurface),
+    AppMessageTone.success => (
+      Icons.check_circle_outline,
+      context.palette.success,
+    ),
+    AppMessageTone.error => (
+      Icons.error_outline,
+      context.palette.errorOnInverse,
+    ),
   };
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
@@ -213,8 +257,8 @@ class PullToRefresh extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      color: AppColors.gold,
-      backgroundColor: AppColors.stageRaised,
+      color: Theme.of(context).colorScheme.onSurface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       // A failed reload shows its own error view; the gesture just ends.
       onRefresh: () async {
         try {

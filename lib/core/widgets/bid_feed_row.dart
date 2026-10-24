@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../app/design_tokens.dart';
 import '../money.dart';
+import 'states.dart';
 
 /// One bid in the live feed: "@username  ₺1.250". Slides in from the left
 /// when it appears (fades only with reduced motion). Sits on the video, so
-/// it has its own dimmed background for legibility.
+/// it is a blurred pill for legibility.
 class BidFeedRow extends StatefulWidget {
   const BidFeedRow({
     super.key,
@@ -18,7 +19,7 @@ class BidFeedRow extends StatefulWidget {
   final String username;
   final Money amount;
 
-  /// The signed-in user's own bid: name in gold.
+  /// The signed-in user's own bid: "Sen", in full colour.
   final bool isMine;
 
   /// The current highest bid: amount in full colour, others muted.
@@ -44,18 +45,16 @@ class _BidFeedRowState extends State<BidFeedRow>
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
     final animation = CurvedAnimation(
       parent: _controller,
       curve: AppCurves.enter,
     );
-    final row = DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.scrim,
-        borderRadius: AppRadius.smallAll,
-      ),
+    final row = BlurredPanel(
+      borderRadius: AppRadius.pillAll,
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpace.s,
+          horizontal: AppSpace.m,
           vertical: AppSpace.xs,
         ),
         child: Row(
@@ -68,8 +67,9 @@ class _BidFeedRowState extends State<BidFeedRow>
                 overflow: TextOverflow.ellipsis,
                 style: text.labelMedium!.copyWith(
                   color: widget.isMine
-                      ? AppColors.gold
-                      : AppColors.onStageMuted,
+                      ? scheme.onSurface
+                      : scheme.onSurfaceVariant,
+                  fontWeight: widget.isMine ? FontWeight.w800 : null,
                 ),
               ),
             ),
@@ -80,8 +80,8 @@ class _BidFeedRowState extends State<BidFeedRow>
                 fontWeight: FontWeight.w800,
                 fontFeatures: AppFonts.tabular,
                 color: widget.isLeading
-                    ? AppColors.onStage
-                    : AppColors.onStageMuted,
+                    ? scheme.onSurface
+                    : scheme.onSurfaceVariant,
               ),
             ),
           ],

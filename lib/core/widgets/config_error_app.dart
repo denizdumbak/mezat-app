@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app/design_tokens.dart';
 import '../../app/theme.dart';
 
 /// Shown instead of the real app when startup configuration is invalid,
@@ -13,11 +14,11 @@ class ConfigErrorApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: appTheme,
+      theme: browseTheme,
       home: Scaffold(
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpace.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -25,9 +26,9 @@ class ConfigErrorApp extends StatelessWidget {
                   'Yapılandırma hatası',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpace.m),
                 Text(message),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppSpace.m),
                 const Text(
                   'Uygulamayı `flutter run --dart-define-from-file=.env` '
                   'ile başlatın. Örnek değerler için .env.example dosyasına bakın.',

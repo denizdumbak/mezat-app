@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/design_tokens.dart';
+import '../../app/theme.dart';
 import '../../core/app_failure.dart';
 import '../../core/money.dart';
 import '../../core/photo_picker.dart';
@@ -198,6 +199,8 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
               DropdownButtonFormField<int>(
                 key: const Key('createAuction.duration'),
                 initialValue: _durationMinutes,
+                isExpanded: true,
+                style: textTheme.bodyLarge,
                 decoration: const InputDecoration(labelText: 'Süre'),
                 items: [
                   for (final minutes in durationOptions)
@@ -248,7 +251,9 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
             padding: const EdgeInsets.only(top: AppSpace.s),
             child: Text(
               _startError!,
-              style: textTheme.bodySmall!.copyWith(color: AppColors.urgent),
+              style: textTheme.bodySmall!.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
             ),
           ),
         const SizedBox(height: AppSpace.s),
@@ -319,11 +324,8 @@ class _PhotoField extends StatelessWidget {
     return AspectRatio(
       aspectRatio: 4 / 3,
       child: Material(
-        color: AppColors.stageRaised,
-        shape: const RoundedRectangleBorder(
-          borderRadius: AppRadius.largeAll,
-          side: BorderSide(color: AppColors.line, width: AppSize.line),
-        ),
+        color: context.palette.panel,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.imageAll),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           key: const Key('createAuction.photo'),
@@ -332,9 +334,9 @@ class _PhotoField extends StatelessWidget {
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.add_a_photo_outlined,
-                      color: AppColors.gold,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(height: AppSpace.s),
                     const Text('Fotoğraf ekle (isteğe bağlı)'),

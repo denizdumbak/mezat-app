@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 /// so they can be read from rootBundle and registered here.
 Future<void> loadAppFonts() async {
   final families = {
-    'Fraunces': ['Fraunces-SemiBold', 'Fraunces-Bold'],
     'Manrope': [
       'Manrope-Regular',
       'Manrope-Medium',

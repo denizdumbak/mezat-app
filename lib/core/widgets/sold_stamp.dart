@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../app/design_tokens.dart';
+import '../../app/theme.dart';
 import '../money.dart';
 
 /// The "SATILDI" moment: the stamp drops in and settles with a small shake
@@ -58,10 +59,11 @@ class _SoldStampState extends State<SoldStamp>
   Widget build(BuildContext context) {
     final motion = motionAllowed(context);
     final text = Theme.of(context).textTheme;
+    final palette = context.palette;
     final stamp = DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: AppRadius.smallAll,
-        border: Border.all(color: AppColors.gold, width: AppSize.stampBorder),
+        borderRadius: AppRadius.imageAll,
+        border: Border.all(color: palette.success, width: AppSize.stampBorder),
       ),
       child: const Padding(
         padding: EdgeInsets.symmetric(
@@ -73,7 +75,7 @@ class _SoldStampState extends State<SoldStamp>
     );
 
     return ColoredBox(
-      color: AppColors.scrimStrong,
+      color: palette.scrimStrong,
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(AppSpace.xl),
@@ -118,14 +120,8 @@ class _SoldStampState extends State<SoldStamp>
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                       style: widget.isMe
-                          ? text.headlineSmall!.copyWith(
-                              color: AppColors.success,
-                            )
-                          // Usernames are set in the body face, like everywhere.
-                          : text.headlineSmall!.copyWith(
-                              fontFamily: AppFonts.body,
-                              fontWeight: FontWeight.w700,
-                            ),
+                          ? text.headlineSmall!.copyWith(color: palette.success)
+                          : text.headlineSmall,
                     ),
                     const SizedBox(height: AppSpace.xs),
                     Text(
@@ -134,7 +130,7 @@ class _SoldStampState extends State<SoldStamp>
                           : '${widget.amount.format()} ile kazandı.',
                       textAlign: TextAlign.center,
                       style: text.bodyMedium!.copyWith(
-                        color: AppColors.onStageMuted,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontFeatures: AppFonts.tabular,
                       ),
                     ),

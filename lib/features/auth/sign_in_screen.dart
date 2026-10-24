@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
 import '../../app/routes.dart';
 import '../../core/widgets/form_layout.dart';
 import '../../core/widgets/primary_button.dart';
@@ -61,7 +62,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   textInputAction: TextInputAction.next,
                   validator: validateEmail,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpace.l),
                 TextFormField(
                   key: const Key('signIn.password'),
                   controller: _password,
@@ -92,9 +93,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           ),
         ),
         FailureMessage(state: state),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpace.xl),
         PrimaryButton(label: 'Giriş yap', busy: busy, onPressed: _submit),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpace.s),
         TextButton(
           onPressed: busy ? null : () => context.go(AppRoutes.signUp),
           child: const Text('Hesabın yok mu? Kayıt ol'),

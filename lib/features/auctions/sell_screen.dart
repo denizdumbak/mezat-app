@@ -41,7 +41,7 @@ class SellScreen extends ConsumerWidget {
                   Text(
                     'Ürününü ekle; hazır olduğunda yayını başlat.',
                     style: text.bodyMedium!.copyWith(
-                      color: AppColors.onStageMuted,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: AppSpace.l),
@@ -59,7 +59,7 @@ class SellScreen extends ConsumerWidget {
                 child: Text(
                   'Henüz planlanmış mezatın yok.',
                   style: text.bodyMedium!.copyWith(
-                    color: AppColors.onStageMuted,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),

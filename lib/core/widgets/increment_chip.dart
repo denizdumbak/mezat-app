@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../app/design_tokens.dart';
+import '../../app/theme.dart';
 import '../money.dart';
 
-/// One of the seller's bid increments ("+₺50"). Selected: gold outline and
-/// text on a darker ground. Not a gold fill, which belongs to the bid button
-/// right below, the screen's one primary action.
+/// One of the seller's bid increments ("+₺50"), as a pill. Selected: a
+/// heavier outline in the text colour. Never the accent, which belongs to the
+/// bid button right below, the screen's one primary action.
 class IncrementChip extends StatelessWidget {
   const IncrementChip({
     super.key,
@@ -24,6 +25,7 @@ class IncrementChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final enabled = onSelected != null;
     final highlighted = selected && enabled;
+    final scheme = Theme.of(context).colorScheme;
     return Semantics(
       selected: selected,
       button: true,
@@ -38,17 +40,17 @@ class IncrementChip extends StatelessWidget {
           minWidth: AppSize.touch,
         ),
         decoration: BoxDecoration(
-          color: highlighted ? AppColors.stage : AppColors.stageRaised,
-          borderRadius: AppRadius.smallAll,
+          color: context.palette.panel,
+          borderRadius: AppRadius.pillAll,
           border: Border.all(
-            color: highlighted ? AppColors.gold : AppColors.line,
-            width: AppSize.line,
+            color: highlighted ? scheme.onSurface : scheme.outlineVariant,
+            width: highlighted ? AppSize.selectedLine : AppSize.line,
           ),
         ),
         child: Material(
           type: MaterialType.transparency,
           child: InkWell(
-            borderRadius: AppRadius.smallAll,
+            borderRadius: AppRadius.pillAll,
             onTap: onSelected,
             child: Center(
               widthFactor: 1,
@@ -57,11 +59,9 @@ class IncrementChip extends StatelessWidget {
                 child: Text(
                   '+${increment.format()}',
                   style: Theme.of(context).textTheme.labelLarge!.copyWith(
-                    color: highlighted
-                        ? AppColors.gold
-                        : enabled
-                        ? AppColors.onStage
-                        : AppColors.onStageMuted,
+                    color: enabled
+                        ? scheme.onSurface
+                        : context.palette.disabled,
                     fontFeatures: AppFonts.tabular,
                   ),
                 ),

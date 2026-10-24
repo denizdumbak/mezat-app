@@ -143,33 +143,26 @@ class _LiveStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.stage,
-        border: Border.symmetric(
-          horizontal: BorderSide(color: AppColors.line, width: AppSize.line),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: AppSpace.l),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SectionLabel('Şimdi canlı', leading: LiveDot()),
-            SizedBox(
-              height:
-                  AppSize.liveCardWidth * 5 / 4 +
-                  MediaQuery.textScalerOf(context).scale(AppSize.liveCardInfo),
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpace.edge),
-                itemCount: live.length,
-                separatorBuilder: (_, _) => const SizedBox(width: AppSpace.m),
-                itemBuilder: (context, i) => _LiveCard(auction: live[i]),
-              ),
+    // No frame: space and the photos set the strip apart.
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpace.l),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionLabel('Şimdi canlı', leading: LiveDot()),
+          SizedBox(
+            height:
+                AppSize.liveCardWidth * 5 / 4 +
+                MediaQuery.textScalerOf(context).scale(AppSize.liveCardInfo),
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.edge),
+              itemCount: live.length,
+              separatorBuilder: (_, _) => const SizedBox(width: AppSpace.m),
+              itemBuilder: (context, i) => _LiveCard(auction: live[i]),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -186,7 +179,7 @@ class _LiveCard extends StatelessWidget {
     return SizedBox(
       width: AppSize.liveCardWidth,
       child: InkWell(
-        borderRadius: AppRadius.largeAll,
+        borderRadius: AppRadius.cardAll,
         onTap: () => context.push(AppRoutes.liveRoom(auction.id)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,18 +274,15 @@ class _UpcomingItem extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpace.m),
-            const Icon(
+            Icon(
               Icons.schedule,
               size: AppSize.iconSmall,
-              color: AppColors.onStageMuted,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: AppSpace.xs),
             Text(
               formatStartsAt(auction.startsAt, now: now),
-              style: text.labelMedium!.copyWith(
-                color: AppColors.onStage,
-                fontFeatures: AppFonts.tabular,
-              ),
+              style: text.labelMedium!.copyWith(fontFeatures: AppFonts.tabular),
             ),
           ],
         ),
@@ -310,7 +300,7 @@ class _ProfileChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: AppRadius.smallAll,
+      borderRadius: AppRadius.pillAll,
       onTap: onTap,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: AppSize.touch),
@@ -323,7 +313,7 @@ class _ProfileChip extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                  color: AppColors.onStageMuted,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),

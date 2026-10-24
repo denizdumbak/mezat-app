@@ -93,17 +93,13 @@ class _LiveRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     return InkWell(
-      borderRadius: AppRadius.smallAll,
+      borderRadius: AppRadius.imageAll,
       onTap: () => context.push(AppRoutes.liveRoom(auction.id)),
       child: Row(
         children: [
           SizedBox(
             width: AppSize.thumbnail,
-            child: AuctionPhoto(
-              imageUrl: auction.imageUrl,
-              aspectRatio: 1,
-              borderRadius: AppRadius.smallAll,
-            ),
+            child: AuctionPhoto(imageUrl: auction.imageUrl, aspectRatio: 1),
           ),
           const SizedBox(width: AppSpace.m),
           Expanded(
@@ -141,7 +137,10 @@ class _LiveRow extends StatelessWidget {
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, color: AppColors.onStageMuted),
+          Icon(
+            Icons.chevron_right,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ],
       ),
     );

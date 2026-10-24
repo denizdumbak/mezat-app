@@ -18,7 +18,7 @@ Decisions and technical debt. Newest on top within each section.
   realtime (lists refresh by pulling down). The room shows "Teklif verme henüz açık değil."
 - **Auctions whose time is up stay `live` in the database until M5** (`finalize_ended_auctions`
   with pg_cron). The client hides them by `ends_at`; the server rule comes with M5.
-- **Pull to refresh uses Material's `RefreshIndicator` spinner** (gold on stageRaised), the one
+- **Pull to refresh uses Material's `RefreshIndicator` spinner** (text colour on the surface), the one
   place the stock progress indicator remains; a custom one is not worth it before M6.
 - **Seller-set increment chips have no column yet.** The room shows `defaultIncrements`
   (+₺10/+₺50/+₺100); the create form does not ask for them. M3: `bid_increments numeric[]`
@@ -48,6 +48,25 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Decisions
 
+- **Design revision, step 1: visual language (2026-10-24).** Developer's brief: the product
+  photo and the price lead every screen, the rest is quiet; a live-auction energy instead of
+  the "private bank" navy and gold. Two themes from the same tokens: `browseTheme` (light,
+  the default) and `liveTheme` (dark, only `/auctions/:id/live`, wrapped in `router.dart`;
+  sheets opened there capture it). Navy is gone. One accent, amber `#FFB020`, only on the bid
+  button, the primary call to action and the selected tab; red `#EF4444` only for live (badge,
+  dot, the countdown's last 30 s, read from `antiSnipingWindow`). Separate error colours
+  (`#DC2626` light, `#F87171` dark); waiting states use the warning colour. Fraunces removed:
+  one family, Manrope, on a six-step scale (priceDisplay 40, title 22, headline 17, body 15,
+  label 13, caption 12; nothing smaller). Radii 12/16/24/pill; buttons are pills, fields 12;
+  cards have no frame; only bottom panels have a shadow. Widgets read colours from the
+  ColorScheme and an `AppPalette` ThemeExtension, never `AppColors` (a test enforces it): a
+  hard-coded colour would be right in only one theme. Choices made on the way: dark line white
+  at 12 %; "SATILDI" in success green (6.3:1 on the strong scrim); the selected tab is an amber
+  pill behind a dark icon, since amber text on white reads at about 1.9:1; "CANLI" is white on
+  red (3.8:1, large-text level, accepted for a one-word badge); long explanations stay at body
+  15, only short helper text is 12. Found while doing it: `Countdown` replaced the text style
+  instead of merging it, so a colourless token style would have drawn the digits black on the
+  dark room; it now merges onto the theme's.
 - **The spending limit is a sliding window the user controls (2026-10-24).** Replaces the
   calendar day of M3 step 5 (developer's decision): "at most this much in the last N",
   N being 6 hours, 1 day, 1 week, 30 days or a custom period (1 hour to 365 days). A
@@ -139,7 +158,7 @@ Decisions and technical debt. Newest on top within each section.
   server rule for now and revisit later. Values live in `lib/core/auction_rules.dart`;
   `place_bid` (M3) must use the same numbers.
 
-- **Design language "Lacivert + altın", dark only (2026-10-24).** Decided by the developer's
+- **(Superseded by the design revision below.) Design language "Lacivert + altın", dark only (2026-10-24).** Decided by the developer's
   design brief; written down in `DESIGN.md` (look, tokens, motion) and `PRODUCT.md` (tabs,
   live room, bidding, safety layer). All values come from `lib/app/design_tokens.dart`; the
   theme maps them onto a hand-built `ColorScheme` instead of `fromSeed`. Token names are

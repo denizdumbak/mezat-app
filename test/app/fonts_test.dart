@@ -7,8 +7,6 @@ import '../helpers/font_file.dart';
 const turkishSample = 'ÇĞİIÖŞÜ çğıiöşü ₺';
 
 const _fonts = [
-  'Fraunces-SemiBold',
-  'Fraunces-Bold',
   'Manrope-Regular',
   'Manrope-Medium',
   'Manrope-SemiBold',
@@ -29,7 +27,7 @@ void main() {
   }
 
   test('Manrope has tabular figures for prices and countdowns', () {
-    for (final name in _fonts.where((f) => f.startsWith('Manrope'))) {
+    for (final name in _fonts) {
       expect(
         FontFile.read('assets/fonts/$name.ttf').substitutionFeatures,
         contains('tnum'),

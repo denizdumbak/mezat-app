@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/design_tokens.dart';
 import '../../core/widgets/form_layout.dart';
 import '../../core/widgets/primary_button.dart';
 import 'auth_controller.dart';
@@ -44,7 +45,7 @@ class _ChooseUsernameScreenState extends ConsumerState<ChooseUsernameScreen> {
         const Text(
           'Mezatlarda teklif verirken diğer kullanıcılar seni bu adla görecek.',
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: AppSpace.l),
         Form(
           key: _formKey,
           child: TextFormField(
@@ -64,9 +65,9 @@ class _ChooseUsernameScreenState extends ConsumerState<ChooseUsernameScreen> {
         ),
         FailureMessage(state: state),
         FailureMessage(state: signOutState),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpace.xl),
         PrimaryButton(label: 'Devam et', busy: busy, onPressed: _submit),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpace.s),
         TextButton(
           onPressed: busy
               ? null

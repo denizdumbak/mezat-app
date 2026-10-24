@@ -305,9 +305,7 @@ void main() {
       expect(find.textContaining('Limitine ulaştın'), findsNothing);
     });
 
-    testWidgets('resetting the window asks first, then resets', (
-      tester,
-    ) async {
+    testWidgets('resetting the window asks first, then resets', (tester) async {
       useSmallPhone(tester);
       final store = InMemorySpendingLimitRepository();
       await pumpSignedIn(

@@ -54,7 +54,8 @@ class FormLayout extends StatelessWidget {
   }
 }
 
-/// The app's name set in the display face, in gold. Stands in for a logo.
+/// The app's name in heavy type. Stands in for a logo; not the accent,
+/// which is for actions.
 class Wordmark extends StatelessWidget {
   const Wordmark({super.key});
 
@@ -66,10 +67,9 @@ class Wordmark extends StatelessWidget {
         alignment: Alignment.centerLeft,
         child: Text(
           'mezat',
-          style: Theme.of(context).textTheme.titleLarge!.copyWith(
-            color: AppColors.gold,
-            fontWeight: FontWeight.w700,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w800),
         ),
       ),
     );
@@ -90,9 +90,9 @@ class FailureMessage extends StatelessWidget {
       padding: const EdgeInsets.only(top: AppSpace.l),
       child: Text(
         failureMessage(error),
-        style: Theme.of(
-          context,
-        ).textTheme.bodyMedium!.copyWith(color: AppColors.urgent),
+        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+          color: Theme.of(context).colorScheme.error,
+        ),
         textAlign: TextAlign.center,
       ),
     );

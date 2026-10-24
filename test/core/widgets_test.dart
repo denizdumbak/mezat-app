@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mezat_app/app/design_tokens.dart';
+import 'package:mezat_app/app/theme.dart';
+import 'package:mezat_app/core/auction_rules.dart';
 import 'package:mezat_app/core/money.dart';
 import 'package:mezat_app/core/widgets/app_loader.dart';
 import 'package:mezat_app/core/widgets/bid_feed_row.dart';
@@ -129,7 +131,7 @@ void main() {
       expect(find.text('04:09'), findsOneWidget);
     });
 
-    testWidgets('turns urgent in the last 10 seconds', (tester) async {
+    testWidgets('turns live red for the anti-sniping window', (tester) async {
       var now = start;
       Color colour() => tester
           .widget<AnimatedDefaultTextStyle>(
@@ -140,16 +142,23 @@ void main() {
       await pumpThemed(
         tester,
         Countdown(
-          endsAt: start.add(const Duration(seconds: 11)),
+          endsAt: start.add(antiSnipingWindow + const Duration(seconds: 1)),
           clock: () => now,
         ),
+        theme: liveTheme,
       );
-      expect(colour(), AppColors.onStage);
+      // The live room's text colour, not black: the style is merged onto the
+      // theme's.
+      expect(colour(), AppColors.liveText);
 
       now = now.add(const Duration(seconds: 1));
       await tester.pump(const Duration(seconds: 1));
-      expect(find.text('00:10'), findsOneWidget);
-      expect(colour(), AppColors.urgent);
+      expect(find.text('00:30'), findsOneWidget);
+      expect(colour(), AppColors.live);
+    });
+
+    test('the red window is the anti-sniping window', () {
+      expect(Countdown(endsAt: DateTime(2026)).urgentBelow, antiSnipingWindow);
     });
 
     testWidgets('an extension shows "+30 sn" for a moment', (tester) async {
@@ -272,7 +281,8 @@ void main() {
 
       expect(find.text('Limitine ulaştın.'), findsOneWidget);
       final icon = tester.widget<Icon>(find.byIcon(Icons.error_outline));
-      expect(icon.color, AppColors.urgent);
+      // On the dark snackbar of the light theme.
+      expect(icon.color, AppColors.errorOnDark);
     });
   });
 }

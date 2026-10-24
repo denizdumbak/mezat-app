@@ -11,8 +11,9 @@ bids in real time, and the highest bidder wins when the timer runs out.
 
 ## Design
 
-Dark "navy and gold" look, Fraunces for headings and Manrope for text, built for one-handed
-use in Turkish. The visual language and its tokens are in [DESIGN.md](DESIGN.md), the product
+Light, quiet interface where the product photo and the price lead; the live room is dark. One
+accent (amber) for actions, red only for "live", Manrope throughout, built for one-handed use
+in Turkish. The visual language and its tokens are in [DESIGN.md](DESIGN.md), the product
 rules (tabs, live room, bidding, spending limits) in [PRODUCT.md](PRODUCT.md).
 
 ## Stack
@@ -94,7 +95,7 @@ lib/
   core/             # env, Supabase client, Money, failures, shared widgets
   data/             # repositories (all Supabase access) and the demo mock
   features/         # auth, auctions, live_room, profile
-assets/fonts/       # Fraunces and Manrope (SIL OFL)
+assets/fonts/       # Manrope (SIL OFL)
 supabase/           # config.toml, migrations, SQL tests (Edge Functions from M4)
 test/               # unit and widget tests (run in CI)
 test_supabase/      # repositories against local Supabase

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../../app/design_tokens.dart';
 import 'app_loader.dart';
 
-/// The one main action of a screen: gold, full width, at least 48 dp high
+/// The one main action of a screen: the accent, a full-width pill, at least
+/// 48 dp high
 /// ([PrimaryButton.bid] is 56 dp). Shows [AppLoader] and ignores taps while
 /// [busy]; disabled when [onPressed] is null.
 class PrimaryButton extends StatefulWidget {
@@ -53,7 +54,7 @@ class _PrimaryButtonState extends State<PrimaryButton> {
           child: FilledButton(
             onPressed: enabled ? widget.onPressed : null,
             child: widget.busy
-                ? const AppLoader(color: AppColors.onStageMuted)
+                ? const AppLoader()
                 : Text(
                     widget.label,
                     maxLines: 1,

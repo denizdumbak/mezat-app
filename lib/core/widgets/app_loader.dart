@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../app/design_tokens.dart';
-
-/// The app's loading indicator: three gold dots that fade in turn.
-/// Used instead of Material's spinner. Opacity only, so it behaves the same
-/// with reduced motion.
+/// The app's loading indicator: three dots that fade in turn, in the
+/// secondary text colour unless [color] is given. Used instead of Material's
+/// spinner. Opacity only, so it behaves the same with reduced motion.
 class AppLoader extends StatefulWidget {
-  const AppLoader({super.key, this.color = AppColors.gold, this.dotSize = 6});
+  const AppLoader({super.key, this.color, this.dotSize = 6});
 
-  final Color color;
+  final Color? color;
   final double dotSize;
 
   @override
@@ -31,6 +29,8 @@ class _AppLoaderState extends State<AppLoader>
 
   @override
   Widget build(BuildContext context) {
+    final color =
+        widget.color ?? Theme.of(context).colorScheme.onSurfaceVariant;
     return Semantics(
       label: 'Yükleniyor',
       child: AnimatedBuilder(
@@ -47,7 +47,7 @@ class _AppLoaderState extends State<AppLoader>
                     dimension: widget.dotSize,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: widget.color,
+                        color: color,
                         shape: BoxShape.circle,
                       ),
                     ),

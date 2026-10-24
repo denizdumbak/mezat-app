@@ -107,7 +107,8 @@ Her milestone çalışır, test edilmiş ve commit'lenmiş biter. Bir sonrakine 
 - Her UI işinden önce kökteki `DESIGN.md` (görsel dil, belirteçler, hareket) ve `PRODUCT.md`
   (gezinme, canlı oda, teklif ve güvenlik katmanı) okunur.
 - Renk, boşluk, yarıçap, süre ve yazı stilleri yalnızca `lib/app/design_tokens.dart`'tan gelir;
-  widget içinde sabit hex, `Colors.*` veya sihirli sayı yok. Yalnızca koyu tema.
+  widget içinde sabit hex, `Colors.*` veya sihirli sayı yok. İki tema: açık (varsayılan) ve
+  yalnızca canlı oda için koyu; widget'lar rengi `ColorScheme` ve `AppPalette`'ten okur.
 - Ortak bileşenler `lib/core/widgets` altında; varsayılan progress, SnackBar ve Card yerine
   özel sürümleri kullanılır.
 - Her ekran için uzun kullanıcı adı, 6 haneli tutar, boş liste ve bağlantı kopması widget

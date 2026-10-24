@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../app/design_tokens.dart';
+import '../../app/theme.dart';
+import '../auction_rules.dart';
 
 /// Remaining time until [endsAt], updated every second. Display only: the
 /// server decides when an auction ends.
 ///
-/// In the last [urgentBelow] the digits turn [AppColors.urgent]. When
+/// In the last [urgentBelow] (the anti-sniping window: a bid now moves the
+/// end) the digits turn the live colour. When
 /// [endsAt] moves later (a last-second bid extended the auction), a
 /// "+30 sn" chip shows the extension for a moment.
 class Countdown extends StatefulWidget {
@@ -15,7 +18,7 @@ class Countdown extends StatefulWidget {
     super.key,
     required this.endsAt,
     this.clock = DateTime.now,
-    this.urgentBelow = const Duration(seconds: 10),
+    this.urgentBelow = antiSnipingWindow,
     this.style = AppTextStyles.timer,
   });
 
@@ -82,9 +85,11 @@ class _CountdownState extends State<Countdown> {
           AnimatedDefaultTextStyle(
             duration: AppDurations.price,
             curve: AppCurves.enter,
-            style: widget.style.copyWith(
-              color: urgent ? AppColors.urgent : widget.style.color,
-            ),
+            // Merged onto the surrounding style, so the digits keep the
+            // theme's text colour until they turn live red.
+            style: DefaultTextStyle.of(context).style
+                .merge(widget.style)
+                .copyWith(color: urgent ? context.palette.live : null),
             child: Text(text),
           ),
           AnimatedSwitcher(
@@ -119,10 +124,11 @@ class ExtensionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.onSurface;
     return DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: AppRadius.smallAll,
-        border: Border.all(color: AppColors.gold, width: AppSize.line),
+        borderRadius: AppRadius.pillAll,
+        border: Border.all(color: color, width: AppSize.line),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -132,7 +138,8 @@ class ExtensionChip extends StatelessWidget {
         child: Text(
           '+${extendedBy.inSeconds} sn',
           style: Theme.of(context).textTheme.labelMedium!.copyWith(
-            color: AppColors.gold,
+            color: color,
+            fontWeight: FontWeight.w800,
             fontFeatures: AppFonts.tabular,
           ),
         ),

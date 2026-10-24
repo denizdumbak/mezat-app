@@ -74,7 +74,7 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(height: AppSpace.xs),
                   Text(
                     switch (limit) {
-                      null => '—',
+                      null => 'Yükleniyor',
                       SpendingLimit(enabled: false) => 'Kapalı',
                       _ => limit.amount.format(),
                     },
@@ -358,6 +358,8 @@ class _LimitSheetState extends State<_LimitSheet> {
                       child: DropdownButtonFormField<_PeriodUnit>(
                         key: const Key('profile.customPeriodUnit'),
                         initialValue: _unit,
+                        isExpanded: true,
+                        style: text.bodyLarge,
                         decoration: const InputDecoration(labelText: 'Birim'),
                         items: [
                           for (final unit in _PeriodUnit.values)

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/design_tokens.dart';
+import '../../app/theme.dart';
 import '../../core/app_failure.dart';
 import '../../core/auction_failure.dart';
 import '../../core/auction_rules.dart';
@@ -56,7 +57,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.stage,
       body: switch (room) {
         AsyncData(:final value) => _buildRoom(value),
         AsyncError(:final error) => SafeArea(
@@ -226,7 +226,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           )
         else if (room.ended)
           ColoredBox(
-            color: AppColors.scrimStrong,
+            color: context.palette.scrimStrong,
             child: EmptyView(
               icon: Icons.timer_off_outlined,
               title: 'Süre doldu',
@@ -249,16 +249,16 @@ class _VideoPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: AppColors.stage,
+      color: Theme.of(context).colorScheme.surface,
       // Above the bid feed and panel, not behind them.
       child: Align(
         alignment: const Alignment(0, -0.4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.videocam_outlined,
-              color: AppColors.onStageMuted,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
               size: AppSize.touch,
             ),
             const SizedBox(height: AppSpace.s),
@@ -338,103 +338,109 @@ class _BidPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    final palette = context.palette;
     final leading = room.leadingBid;
     final (leaderText, leaderColor) = switch (leading) {
-      null => ('İlk teklifi sen ver', AppColors.onStageMuted),
-      _ when leading.bidderId == userId => ('Öndesin', AppColors.success),
-      _ => ('Önde: @${leading.username}', AppColors.onStageMuted),
+      null => ('İlk teklifi sen ver', scheme.onSurfaceVariant),
+      _ when leading.bidderId == userId => ('Öndesin', palette.success),
+      _ => ('Önde: @${leading.username}', scheme.onSurfaceVariant),
     };
     final blockedReason = this.blockedReason;
+    // Waiting for the connection is not an error.
+    final blockedColor = room.connected ? scheme.error : palette.warning;
 
+    // The bottom panel: blurred over the video, and the one place with a
+    // shadow.
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.stageRaised,
-        borderRadius: AppRadius.largeTop,
-        border: Border(
-          top: BorderSide(color: AppColors.line, width: AppSize.line),
-        ),
+      decoration: BoxDecoration(
+        borderRadius: AppRadius.sheetTop,
+        boxShadow: [BoxShadow(color: palette.overlay, blurRadius: AppSpace.xl)],
       ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpace.edge,
-            AppSpace.l,
-            AppSpace.edge,
-            AppSpace.l,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                room.title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: text.titleSmall,
-              ),
-              const SizedBox(height: AppSpace.s),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: PriceDisplay(amount: room.currentPrice),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpace.m),
-                  Countdown(endsAt: room.endsAt),
-                ],
-              ),
-              const SizedBox(height: AppSpace.xs),
-              Text(
-                leaderText,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: text.bodySmall!.copyWith(color: leaderColor),
-              ),
-              const SizedBox(height: AppSpace.xs),
-              Text(
-                'Artış ${room.minIncrement.format()} · Son '
-                '${antiSnipingWindow.inSeconds} sn’de teklif '
-                '+${antiSnipingExtension.inSeconds} sn uzatır',
-                style: text.bodySmall,
-              ),
-              const SizedBox(height: AppSpace.m),
-              Row(
-                children: [
-                  for (final (i, increment) in increments.indexed) ...[
-                    if (i > 0) const SizedBox(width: AppSpace.s),
+      child: BlurredPanel(
+        borderRadius: AppRadius.sheetTop,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpace.edge,
+              AppSpace.l,
+              AppSpace.edge,
+              AppSpace.l,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  room.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.titleSmall,
+                ),
+                const SizedBox(height: AppSpace.s),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
                     Expanded(
-                      child: IncrementChip(
-                        increment: increment,
-                        selected: i == selected,
-                        onSelected: onSelect == null
-                            ? null
-                            : () => onSelect!(i),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: PriceDisplay(amount: room.currentPrice),
                       ),
                     ),
+                    const SizedBox(width: AppSpace.m),
+                    Countdown(endsAt: room.endsAt),
                   ],
-                ],
-              ),
-              const SizedBox(height: AppSpace.m),
-              PrimaryButton.bid(
-                label: bidLabel,
-                onPressed: onBid,
-                busy: sending,
-              ),
-              if (blockedReason != null) ...[
-                const SizedBox(height: AppSpace.s),
-                Text(
-                  blockedReason,
-                  key: const Key('liveRoom.blockedReason'),
-                  textAlign: TextAlign.center,
-                  style: text.bodySmall!.copyWith(color: AppColors.urgent),
                 ),
+                const SizedBox(height: AppSpace.xs),
+                Text(
+                  leaderText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.bodySmall!.copyWith(color: leaderColor),
+                ),
+                const SizedBox(height: AppSpace.xs),
+                Text(
+                  'Artış ${room.minIncrement.format()} · Son '
+                  '${antiSnipingWindow.inSeconds} sn’de teklif '
+                  '+${antiSnipingExtension.inSeconds} sn uzatır',
+                  style: text.bodySmall,
+                ),
+                const SizedBox(height: AppSpace.m),
+                Row(
+                  children: [
+                    for (final (i, increment) in increments.indexed) ...[
+                      if (i > 0) const SizedBox(width: AppSpace.s),
+                      Expanded(
+                        child: IncrementChip(
+                          increment: increment,
+                          selected: i == selected,
+                          onSelected: onSelect == null
+                              ? null
+                              : () => onSelect!(i),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: AppSpace.m),
+                PrimaryButton.bid(
+                  label: bidLabel,
+                  onPressed: onBid,
+                  busy: sending,
+                ),
+                if (blockedReason != null) ...[
+                  const SizedBox(height: AppSpace.s),
+                  Text(
+                    blockedReason,
+                    key: const Key('liveRoom.blockedReason'),
+                    textAlign: TextAlign.center,
+                    style: text.bodySmall!.copyWith(color: blockedColor),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/design_tokens.dart';
 import '../../app/routes.dart';
 import '../../core/widgets/form_layout.dart';
 import '../../core/widgets/primary_button.dart';
@@ -63,7 +64,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   textInputAction: TextInputAction.next,
                   validator: validateEmail,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpace.l),
                 TextFormField(
                   key: const Key('signUp.password'),
                   controller: _password,
@@ -89,7 +90,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   textInputAction: TextInputAction.next,
                   validator: validateNewPassword,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSpace.l),
                 // A typo in a password nobody can see is a common cause of
                 // "I cannot log in" right after signing up.
                 TextFormField(
@@ -110,9 +111,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           ),
         ),
         FailureMessage(state: state),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpace.xl),
         PrimaryButton(label: 'Kayıt ol', busy: busy, onPressed: _submit),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpace.s),
         TextButton(
           onPressed: busy ? null : () => context.go(AppRoutes.signIn),
           child: const Text('Zaten hesabın var mı? Giriş yap'),

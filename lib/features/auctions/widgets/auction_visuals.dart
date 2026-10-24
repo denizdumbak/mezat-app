@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../../../app/design_tokens.dart';
+import '../../../app/theme.dart';
 import '../../../core/time_format.dart';
 
-/// The auction's photo, or a calm placeholder when there is none.
+/// The auction's photo, the strongest thing on every screen, or a calm
+/// placeholder when there is none.
 class AuctionPhoto extends StatelessWidget {
   const AuctionPhoto({
     super.key,
     required this.imageUrl,
     required this.aspectRatio,
-    this.borderRadius = AppRadius.largeAll,
+    this.borderRadius = AppRadius.imageAll,
     this.overlay,
   });
 
@@ -24,11 +26,11 @@ class AuctionPhoto extends StatelessWidget {
   Widget build(BuildContext context) {
     final url = imageUrl;
     final placeholder = ColoredBox(
-      color: AppColors.stageRaised,
+      color: context.palette.panel,
       child: Center(
         child: Icon(
           Icons.photo_outlined,
-          color: AppColors.onStageMuted,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
           size: AppSize.touch,
         ),
       ),
@@ -56,17 +58,20 @@ class AuctionPhoto extends StatelessWidget {
   }
 }
 
-/// The gold dot that means "live", without the label.
+/// The live red dot that means "live", without the label.
 class LiveDot extends StatelessWidget {
-  const LiveDot({super.key});
+  const LiveDot({super.key, this.color});
+
+  /// Defaults to the live colour.
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox.square(
+    return SizedBox.square(
       dimension: AppSpace.s,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.gold,
+          color: color ?? context.palette.live,
           shape: BoxShape.circle,
         ),
       ),
@@ -74,21 +79,24 @@ class LiveDot extends StatelessWidget {
   }
 }
 
-/// "● CANLI" on a dimmed pill, for photos and the live screen.
+/// "● CANLI" on a live red pill, for photos and the live screen.
 class LiveBadge extends StatelessWidget {
   const LiveBadge({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.palette;
     return _Pill(
+      color: palette.live,
       children: [
-        const LiveDot(),
+        LiveDot(color: palette.onOverlay),
         const SizedBox(width: AppSpace.xs),
         Text(
           'CANLI',
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall!.copyWith(color: AppColors.gold),
+          style: Theme.of(context).textTheme.labelSmall!.copyWith(
+            color: palette.onOverlay,
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ],
     );
@@ -106,21 +114,23 @@ class ViewerCount extends StatelessWidget {
     // No count yet (presence arrives with the video in M4): show nothing
     // rather than a discouraging "0".
     if (count <= 0) return const SizedBox.shrink();
+    final onOverlay = context.palette.onOverlay;
     return Semantics(
       label: '$count izleyici',
       excludeSemantics: true,
       child: _Pill(
         children: [
-          const Icon(
+          Icon(
             Icons.visibility_outlined,
             size: AppSize.iconSmall,
-            color: AppColors.onStage,
+            color: onOverlay,
           ),
           const SizedBox(width: AppSpace.xs),
           Text(
             formatCount(count),
             style: Theme.of(context).textTheme.labelSmall!.copyWith(
-              color: AppColors.onStage,
+              color: onOverlay,
+              fontWeight: FontWeight.w700,
               fontFeatures: AppFonts.tabular,
             ),
           ),
@@ -130,17 +140,19 @@ class ViewerCount extends StatelessWidget {
   }
 }
 
+/// A small pill on a photo or the video: the dark overlay unless [color].
 class _Pill extends StatelessWidget {
-  const _Pill({required this.children});
+  const _Pill({required this.children, this.color});
 
   final List<Widget> children;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
-        color: AppColors.scrim,
-        borderRadius: AppRadius.smallAll,
+      decoration: BoxDecoration(
+        color: color ?? context.palette.overlay,
+        borderRadius: AppRadius.pillAll,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -174,16 +186,15 @@ class InitialAvatar extends StatelessWidget {
       dimension: size,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.stageRaised,
+          color: context.palette.panel,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.line, width: AppSize.line),
         ),
         child: Center(
           child: Text(
             initial.toUpperCase(),
             style: Theme.of(context).textTheme.titleSmall!.copyWith(
               fontSize: size * _initialScale,
-              color: AppColors.gold,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ),

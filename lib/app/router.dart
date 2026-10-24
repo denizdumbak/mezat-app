@@ -16,6 +16,7 @@ import '../features/profile/profile_screen.dart';
 import 'app_shell.dart';
 import 'design_tokens.dart';
 import 'routes.dart';
+import 'theme.dart';
 
 export 'routes.dart';
 
@@ -46,9 +47,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       // Full screen, above the tab bar.
       _route(AppRoutes.createAuction, (_) => const CreateAuctionScreen()),
+      // The one dark screen: the video is the stage. Sheets opened from here
+      // capture this theme too.
       _route(
         AppRoutes.liveRoomPattern,
-        (state) => LiveRoomScreen(auctionId: state.pathParameters['id']!),
+        (state) => Theme(
+          data: liveTheme,
+          child: LiveRoomScreen(auctionId: state.pathParameters['id']!),
+        ),
       ),
     ],
   );

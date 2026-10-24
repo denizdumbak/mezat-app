@@ -4,58 +4,96 @@ import 'package:flutter/widgets.dart' show BuildContext, MediaQuery;
 
 /// The single source of colours, sizes, durations and type for the app.
 ///
-/// Widgets never use hex values, `Colors.*` or bare numbers for these; they
-/// read them from here (or from the theme built from here). DESIGN.md
-/// explains each token; the Turkish token names there map as noted.
+/// Widgets never use hex values, `Colors.*` or bare numbers for these. Sizes,
+/// spacing, radii and type come from here; colours come from the theme
+/// (`ColorScheme` and `AppPalette` in theme.dart), which is built from
+/// [AppColors], so one widget looks right in both the light browse theme and
+/// the dark live-room theme. DESIGN.md explains each token.
 abstract final class AppColors {
-  /// Background of every screen ("stage").
-  static const stage = Color(0xFF0C1424);
+  // Browse (light): every screen except the live room.
 
-  /// Raised surfaces: sheets, panels, fields ("stageRaised").
-  static const stageRaised = Color(0xFF152036);
+  /// Screen background.
+  static const surface = Color(0xFFFFFFFF);
 
-  /// Main text and icons ("onStage").
-  static const onStage = Color(0xFFEEF1F7);
+  /// Secondary surface: panels, fields, chips.
+  static const surfaceAlt = Color(0xFFF4F4F5);
 
-  /// Secondary text ("onStageMuted"): 8.5:1 on stage, 7.5:1 on stageRaised.
-  static const onStageMuted = Color(0xFFA7B1C6);
+  /// Separators and outlines.
+  static const line = Color(0xFFE4E4E7);
 
-  /// Accent and primary button fill ("altın").
-  static const gold = Color(0xFFD9A93A);
+  /// Main text and icons: 19.8:1 on [surface].
+  static const text = Color(0xFF0A0A0B);
 
-  /// Text on [gold]: 8.5:1.
-  static const onGold = stage;
+  /// Secondary text: 7.7:1 on [surface], 7.0:1 on [surfaceAlt].
+  static const textMuted = Color(0xFF52525B);
 
-  /// Last seconds, errors, limit warnings ("zaman"): 6.6:1 on stage.
-  static const urgent = Color(0xFFFF6B5B);
+  /// Disabled controls only, never readable text.
+  static const disabled = Color(0xFFA1A1AA);
 
-  /// Won, success ("onay"): 8.3:1 on stage.
-  static const success = Color(0xFF4CC38A);
+  /// Error text and outlines on light: 4.8:1 on [surface].
+  static const error = Color(0xFFDC2626);
 
-  /// 1 dp separators and outlines instead of shadows: onStage at 14 %.
-  static const line = Color(0x24EEF1F7);
+  // Live room (dark).
 
-  /// Dims what sits behind a sheet; also the backing of text on video.
-  static const scrim = Color(0xB30C1424);
+  static const liveSurface = Color(0xFF0A0A0B);
+  static const liveText = Color(0xFFFFFFFF);
+
+  /// 7.7:1 on [liveSurface].
+  static const liveTextMuted = Color(0xFFA1A1AA);
+
+  /// White at 12 %.
+  static const liveLine = Color(0x1FFFFFFF);
+
+  /// Error text on dark: 7.2:1 on [liveSurface].
+  static const errorOnDark = Color(0xFFF87171);
+
+  /// Panels over the video: black at 60 %, always with a blur behind.
+  static const scrim = Color(0x99000000);
 
   /// Nearly hides what is behind: the "sold" and "time is up" moments.
-  static const scrimStrong = Color(0xEB0C1424);
+  static const scrimStrong = Color(0xEB000000);
+
+  // Both themes.
+
+  /// The one accent: bid button, primary call to action, selected tab.
+  /// Never text links or large areas.
+  static const accent = Color(0xFFFFB020);
+
+  /// Text on [accent]: 10.8:1.
+  static const onAccent = Color(0xFF0A0A0B);
+
+  /// Live: only the live badge and dot, and the countdown in its last
+  /// seconds.
+  static const live = Color(0xFFEF4444);
+
+  /// Won, done. 6.0:1 on [scrimStrong] over [liveSurface].
+  static const success = Color(0xFF16A34A);
+
+  /// Waiting states (a connection coming back), never errors.
+  static const warning = Color(0xFFF59E0B);
 }
 
-/// Only two corner radii exist.
+/// Corner radii.
 abstract final class AppRadius {
-  /// Fields, chips, buttons.
-  static const small = 8.0;
+  /// Photos and form fields.
+  static const image = 12.0;
 
-  /// Sheets, cards, panels.
-  static const large = 16.0;
+  /// Cards and panels.
+  static const card = 16.0;
 
-  static const smallAll = BorderRadius.all(Radius.circular(small));
-  static const largeAll = BorderRadius.all(Radius.circular(large));
-  static const largeTop = BorderRadius.vertical(top: Radius.circular(large));
+  /// Top corners of a bottom panel or sheet.
+  static const sheet = 24.0;
+
+  /// Fully round: chips, pill buttons, badges.
+  static const pill = 999.0;
+
+  static const imageAll = BorderRadius.all(Radius.circular(image));
+  static const cardAll = BorderRadius.all(Radius.circular(card));
+  static const sheetTop = BorderRadius.vertical(top: Radius.circular(sheet));
+  static const pillAll = BorderRadius.all(Radius.circular(pill));
 }
 
-/// Spacing scale: 4, 8, 12, 16, 24, 32. Screen edges are [edge].
+/// Spacing scale: 4, 8, 12, 16, 24, 32, 48. Screen edges are [edge].
 abstract final class AppSpace {
   static const xs = 4.0;
   static const s = 8.0;
@@ -63,6 +101,7 @@ abstract final class AppSpace {
   static const l = 16.0;
   static const xl = 24.0;
   static const xxl = 32.0;
+  static const xxxl = 48.0;
 
   /// Horizontal screen padding.
   static const edge = l;
@@ -77,6 +116,9 @@ abstract final class AppSize {
 
   /// Separator and outline width.
   static const line = 1.0;
+
+  /// Outline of a selected chip: heavier than a separator.
+  static const selectedLine = 2.0;
 
   static const icon = 24.0;
   static const iconSmall = 16.0;
@@ -108,6 +150,9 @@ abstract final class AppSize {
 
   /// Widest a form or list gets on large screens.
   static const contentMaxWidth = 480.0;
+
+  /// Blur behind the panels that sit on the live video.
+  static const panelBlur = 20.0;
 }
 
 /// Motion durations. Entering uses [AppCurves.enter], leaving [AppCurves.exit].
@@ -130,10 +175,7 @@ bool motionAllowed(BuildContext context) =>
     !(MediaQuery.maybeDisableAnimationsOf(context) ?? false);
 
 abstract final class AppFonts {
-  /// Headings.
-  static const display = 'Fraunces';
-
-  /// Everything else.
+  /// The only family.
   static const body = 'Manrope';
 
   /// Prices and timers: every digit equally wide, so numbers do not jitter
@@ -141,45 +183,87 @@ abstract final class AppFonts {
   static const tabular = [FontFeature.tabularFigures()];
 }
 
-/// Text styles that are not part of Material's TextTheme.
+/// The type scale. Material's TextTheme roles map onto it in theme.dart;
+/// nothing is smaller than [caption].
+abstract final class AppTypeScale {
+  /// Page and sheet titles. 22/28 w700.
+  static const title = TextStyle(
+    fontFamily: AppFonts.body,
+    fontSize: 22,
+    height: 28 / 22,
+    fontWeight: FontWeight.w700,
+  );
+
+  /// Section heads, row titles, button text. 17/22 w700.
+  static const headline = TextStyle(
+    fontFamily: AppFonts.body,
+    fontSize: 17,
+    height: 22 / 17,
+    fontWeight: FontWeight.w700,
+  );
+
+  /// Running text, including long explanations. 15/22 w400.
+  static const body = TextStyle(
+    fontFamily: AppFonts.body,
+    fontSize: 15,
+    height: 22 / 15,
+    fontWeight: FontWeight.w400,
+  );
+
+  /// Chips, segments, small controls. 13/18 w600.
+  static const label = TextStyle(
+    fontFamily: AppFonts.body,
+    fontSize: 13,
+    height: 18 / 13,
+    fontWeight: FontWeight.w600,
+  );
+
+  /// Short helper text and meta lines. 12/16 w500.
+  static const caption = TextStyle(
+    fontFamily: AppFonts.body,
+    fontSize: 12,
+    height: 16 / 12,
+    fontWeight: FontWeight.w500,
+  );
+}
+
+/// Numbers. Tabular and w800 everywhere; colour comes from the surrounding
+/// theme.
 abstract final class AppTextStyles {
-  /// The current price on the live screen.
-  static const priceLarge = TextStyle(
+  /// The current price in the live room, and nowhere else. 40/44.
+  static const priceDisplay = TextStyle(
     fontFamily: AppFonts.body,
     fontSize: 40,
-    height: 1.1,
+    height: 44 / 40,
     fontWeight: FontWeight.w800,
     fontFeatures: AppFonts.tabular,
-    color: AppColors.onStage,
   );
 
-  /// Prices in lists and rows.
+  /// Prices in lists, cards and rows. 17/22.
   static const price = TextStyle(
     fontFamily: AppFonts.body,
-    fontSize: 18,
-    height: 1.2,
-    fontWeight: FontWeight.w700,
+    fontSize: 17,
+    height: 22 / 17,
+    fontWeight: FontWeight.w800,
     fontFeatures: AppFonts.tabular,
-    color: AppColors.onStage,
   );
 
-  /// The countdown.
+  /// The countdown. 22/28.
   static const timer = TextStyle(
     fontFamily: AppFonts.body,
-    fontSize: 20,
-    height: 1.2,
-    fontWeight: FontWeight.w700,
+    fontSize: 22,
+    height: 28 / 22,
+    fontWeight: FontWeight.w800,
     fontFeatures: AppFonts.tabular,
-    color: AppColors.onStage,
   );
 
-  /// The "SATILDI" stamp.
+  /// The "SATILDI" stamp, at the live price size. Success green.
   static const stamp = TextStyle(
-    fontFamily: AppFonts.display,
-    fontSize: 48,
+    fontFamily: AppFonts.body,
+    fontSize: 40,
     height: 1,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w800,
     letterSpacing: 2,
-    color: AppColors.gold,
+    color: AppColors.success,
   );
 }

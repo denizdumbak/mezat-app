@@ -35,14 +35,8 @@ flutter:
 
   # Bundled instead of fetched at runtime (google_fonts): works offline, no
   # request to Google on launch, and tests can check the glyphs. SIL OFL 1.1,
-  # licences next to the files.
+  # licence next to the files. One family: Manrope.
   fonts:
-    - family: Fraunces
-      fonts:
-        - asset: assets/fonts/Fraunces-SemiBold.ttf
-          weight: 600
-        - asset: assets/fonts/Fraunces-Bold.ttf
-          weight: 700
     - family: Manrope
       fonts:
         - asset: assets/fonts/Manrope-Regular.ttf

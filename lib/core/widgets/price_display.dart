@@ -10,7 +10,7 @@ class PriceDisplay extends StatelessWidget {
   const PriceDisplay({
     super.key,
     required this.amount,
-    this.style = AppTextStyles.priceLarge,
+    this.style = AppTextStyles.priceDisplay,
   });
 
   final Money amount;
