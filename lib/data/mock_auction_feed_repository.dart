@@ -103,19 +103,6 @@ class MockAuctionFeedRepository implements AuctionFeedRepository {
   }
 
   @override
-  Future<void> setMaxBid(String auctionId, Money max) async {
-    final user = currentUser();
-    if (user == null) throw AuctionFailure.notAllowed;
-    final auction = _auctions[auctionId];
-    if (auction == null) throw AuctionFailure.notFound;
-    if (!auction.isLive) throw AuctionFailure.auctionNotLive;
-    if (auction.sellerId == user.id) throw AuctionFailure.sellerCannotBid;
-    auction.maxBids[user.id] = max;
-    _applyMaxBids(auction);
-    _changes.add(null);
-  }
-
-  @override
   Future<void> startAuction(String auctionId) async {
     final auction = _auctions[auctionId];
     if (auction == null) throw AuctionFailure.notFound;
@@ -157,29 +144,6 @@ class MockAuctionFeedRepository implements AuctionFeedRepository {
     }
   }
 
-  /// Outbid users with a maximum bid get raised by one step, up to it.
-  void _applyMaxBids(_MockAuction auction) {
-    var changed = true;
-    while (changed) {
-      changed = false;
-      final leader = auction.bids.isEmpty ? null : auction.bids.first.bidderId;
-      for (final MapEntry(key: userId, value: max) in auction.maxBids.entries) {
-        if (userId == leader) continue;
-        final next = auction.currentPrice + auction.minIncrement;
-        if (next.kurus > max.kurus) continue;
-        final user = currentUser();
-        _bid(
-          auction,
-          userId,
-          user?.id == userId ? user!.username : userId,
-          next,
-        );
-        changed = true;
-        break;
-      }
-    }
-  }
-
   void _tick() {
     final now = _clock();
     for (final auction in _auctions.values.where((a) => a.isLive)) {
@@ -197,7 +161,6 @@ class MockAuctionFeedRepository implements AuctionFeedRepository {
             bot,
             auction.currentPrice + auction.increments.first,
           );
-          _applyMaxBids(auction);
         }
       }
       auction.viewerCount = max(
@@ -248,7 +211,6 @@ class MockAuctionFeedRepository implements AuctionFeedRepository {
       increments: a.increments,
       bids: List.unmodifiable(a.bids.take(20)),
       viewerCount: a.viewerCount,
-      myMaxBid: a.maxBids[currentUser()?.id],
       ended: a.ended,
       sold: a.ended && leader != null
           ? SoldResult(
@@ -378,7 +340,6 @@ class _MockAuction {
   final List<Money> increments;
   final int durationMinutes;
   final bids = <Bid>[];
-  final maxBids = <String, Money>{};
   Money currentPrice;
   DateTime startsAt;
   DateTime? endsAt;

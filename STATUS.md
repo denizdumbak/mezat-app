@@ -14,7 +14,8 @@ _Last updated: 2026-10-24_
 | M1 Auth + profile | Done (manual run from VS Code on 2026-10-23: sign-up → username → home) |
 | M2 Create/list auctions | Done 2026-10-24: end-to-end test (create → Yayın aç → go live → Keşfet) and the developer's hand check (room shows "Teklif verme henüz açık değil.", as intended until M3) |
 | Design foundation | Done 2026-10-24: tokens, dark theme, fonts, shared widgets, 4-tab shell, live room on mock data |
-| M3–M6 | Not started |
+| M3 Live bidding | In progress: steps 1–3 of 9 done (bids, place_bid, concurrency tests); maximum bids built and removed (NOTES.md) |
+| M4–M6 | Not started |
 
 ## What exists
 
@@ -26,6 +27,10 @@ _Last updated: 2026-10-24_
   `live`), public `auction-images` bucket (5 MB, jpeg/png/webp, uploads to own folder).
   Domain errors are raised as a code in the message (`INVALID_START_TIME`,
   `NOT_AUCTION_SELLER`, `AUCTION_NOT_SCHEDULED`, `AUCTION_NOT_FOUND`).
+  `bids` table (everyone reads, no client writes) and `place_bid(auction_id, amount)`:
+  row lock, bidder from the JWT, anti-sniping (last 30 s → +30 s), codes `INVALID_AMOUNT`,
+  `USERNAME_REQUIRED`, `AUCTION_NOT_LIVE`, `AUCTION_ENDED`, `SELLER_CANNOT_BID`,
+  `ALREADY_WINNING`, `BID_TOO_LOW`. Not called by the app yet (step 7).
 - **App** (`lib/`): email/password sign-up and sign-in, choose-username, sign-out.
   `AuthFailure` maps every Supabase error to a Turkish message. Navigation is one pure
   function, `redirectFor` in `lib/app/routes.dart`, driven by `sessionStatusProvider`.
@@ -38,18 +43,19 @@ _Last updated: 2026-10-24_
   `lib/core/widgets` (primary button, increment chip, rolling price, countdown with
   extension chip, bid feed row, sold stamp, loader, empty/error/connection states, app
   message). Tabs: Keşfet, Canlı, Yayın aç, Profil (`lib/app/app_shell.dart`). Live room
-  (`/auctions/:id/live`) with bid panel, high-bid confirmation, maximum bid, daily limit
+  (`/auctions/:id/live`) with bid panel, high-bid confirmation, daily limit
   (Profil). Bid safety rules in `lib/features/live_room/bid_safety.dart`.
 - **Feed** (`AuctionFeedRepository`): `SupabaseAuctionFeedRepository` (default) serves the
   real lists (Keşfet: live + others' upcoming; Yayın aç: your planned), `start_auction`, and a
   read-only room ("Teklif verme henüz açık değil."). No realtime: pull down to refresh; lists
   reload after create/start. `--dart-define=MOCK_FEED=true` switches to the demo mock with
   simulated bidders.
-- **Tests**: 217 unit/widget tests (`test/`, screens also at 360×640), 63 pgTAP tests
-  (`supabase/tests/`), 26 tests of the real repositories against local Supabase
+- **Tests**: 212 unit/widget tests (`test/`, screens also at 360×640), 128 pgTAP tests
+  (`supabase/tests/`, incl. a dblink test of two bids racing for the lock), 29 tests of the
+  real repositories and concurrent bids against local Supabase
   (`test_supabase/`), 2 end-to-end UI tests on the Windows desktop (`integration_test/`, run
   one file at a time),
-  14 screenshots for design review (`flutter test test_screenshots --update-goldens`, PNGs in
+  13 screenshots for design review (`flutter test test_screenshots --update-goldens`, PNGs in
   `test_screenshots/goldens/`, git-ignored). Only `test/` runs in CI.
 
 ## Environment
@@ -69,11 +75,12 @@ _Last updated: 2026-10-24_
 
 ## Next steps
 
-1. M3, not started: the developer stopped the session at the end of M2 (2026-10-24) and
-   approves M3 next time. Start with a 5–10 item plan (CLAUDE.md), then: `bids` table + RLS, `place_bid` (lock, rules, anti-sniping
-   30 s / +30 s, error codes) with its SQL tests incl. concurrent bids; seller-set increments
-   (`bid_increments`); daily limit in `profiles` enforced in `place_bid`; maximum (proxy)
-   bids; Realtime for the room and lists; bid feed and today's total from the server.
+1. M3, approved plan (2026-10-24), steps left: 5 daily limit in `profiles`, enforced in
+   `place_bid` (`DAILY_LIMIT_EXCEEDED`, `committed_today()`); 6 seller-set increments
+   (`bid_increments`, form field); 7 `SupabaseAuctionFeedRepository.placeBid` + bid feed,
+   error codes mapped to Turkish in `AuctionFailure`; 8 Realtime for the room and lists;
+   9 end-to-end test with two bidders, the developer's hand check, docs. Step 4 (maximum
+   bids) was dropped by the developer: no automatic bidding.
 
 ## Open items
 

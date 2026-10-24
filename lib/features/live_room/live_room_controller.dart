@@ -23,10 +23,6 @@ class LiveRoomController extends AsyncNotifier<void> {
     () => ref.read(auctionFeedRepositoryProvider).placeBid(auctionId, amount),
   );
 
-  Future<void> setMaxBid(Money max) => _run(
-    () => ref.read(auctionFeedRepositoryProvider).setMaxBid(auctionId, max),
-  );
-
   Future<void> _run(Future<void> Function() action) async {
     // One bid at a time: a double tap must not send two.
     if (state.isLoading) return;

@@ -214,62 +214,6 @@ void main() {
     expect(find.text('Öndesin'), findsOneWidget);
   });
 
-  group('maximum bid', () {
-    testWidgets('must be at least the next valid bid', (tester) async {
-      useSmallPhone(tester);
-      final feed = await openRoom(tester, _cheapRoom());
-
-      await tapVisible(tester, find.text('Maksimum teklif'));
-      await tester.enterText(find.byKey(const Key('maxBid.amount')), '505');
-      await tapVisible(tester, find.text('Maksimum teklifi kaydet'));
-
-      expect(find.text('En az ₺510 olmalı.'), findsOneWidget);
-      expect(feed.maxBids, isEmpty);
-    });
-
-    testWidgets('is saved and shown on the button', (tester) async {
-      useSmallPhone(tester);
-      final feed = await openRoom(tester, _cheapRoom());
-
-      await tapVisible(tester, find.text('Maksimum teklif'));
-      await tester.enterText(find.byKey(const Key('maxBid.amount')), '800');
-      await tapVisible(tester, find.text('Maksimum teklifi kaydet'));
-
-      expect(feed.maxBids.single.max, const Money.kurus(80000));
-    });
-
-    testWidgets('a high maximum asks for confirmation', (tester) async {
-      useSmallPhone(tester);
-      final feed = await openRoom(tester, _cheapRoom());
-
-      await tapVisible(tester, find.text('Maksimum teklif'));
-      await tester.enterText(find.byKey(const Key('maxBid.amount')), '1.500');
-      await tapVisible(tester, find.text('Maksimum teklifi kaydet'));
-
-      expect(
-        find.text('₺1.500 tutarına kadar senin adına teklif verilecek.'),
-        findsOneWidget,
-      );
-      await tapVisible(tester, find.text('Onaylıyorum'));
-      expect(feed.maxBids.single.max, const Money.kurus(150000));
-    });
-
-    testWidgets('cannot pass the daily limit', (tester) async {
-      useSmallPhone(tester);
-      final feed = await openRoom(tester, _cheapRoom());
-
-      await tapVisible(tester, find.text('Maksimum teklif'));
-      await tester.enterText(find.byKey(const Key('maxBid.amount')), '2.500');
-      await tapVisible(tester, find.text('Maksimum teklifi kaydet'));
-
-      expect(
-        find.text('Limitine ulaştın. Günlük limitin ₺2.000.'),
-        findsOneWidget,
-      );
-      expect(feed.maxBids, isEmpty);
-    });
-  });
-
   group('the end', () {
     testWidgets('sold: stamp, winner and a firm haptic', (tester) async {
       useSmallPhone(tester);

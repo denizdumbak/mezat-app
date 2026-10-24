@@ -116,10 +116,6 @@ class SupabaseAuctionFeedRepository implements AuctionFeedRepository {
   Future<void> placeBid(String auctionId, Money amount) =>
       Future.error(AuctionFailure.biddingNotOpen);
 
-  @override
-  Future<void> setMaxBid(String auctionId, Money max) =>
-      Future.error(AuctionFailure.biddingNotOpen);
-
   String _publicUrl(String path) =>
       _client.storage.from(AuctionRepository.imageBucket).getPublicUrl(path);
 }

@@ -67,7 +67,6 @@ class LiveRoom {
     required this.increments,
     required this.bids,
     this.viewerCount = 0,
-    this.myMaxBid,
     this.ended = false,
     this.sold,
     this.connected = true,
@@ -91,9 +90,6 @@ class LiveRoom {
   final List<Bid> bids;
   final int viewerCount;
 
-  /// The signed-in user's maximum (proxy) bid, if they set one.
-  final Money? myMaxBid;
-
   /// True once the time is up (the server finalizes it).
   final bool ended;
 
@@ -114,7 +110,6 @@ class LiveRoom {
     DateTime? endsAt,
     List<Bid>? bids,
     int? viewerCount,
-    Money? myMaxBid,
     bool? ended,
     SoldResult? sold,
     bool? connected,
@@ -130,7 +125,6 @@ class LiveRoom {
     increments: increments,
     bids: bids ?? this.bids,
     viewerCount: viewerCount ?? this.viewerCount,
-    myMaxBid: myMaxBid ?? this.myMaxBid,
     ended: ended ?? this.ended,
     sold: sold ?? this.sold,
     connected: connected ?? this.connected,
@@ -161,7 +155,4 @@ abstract interface class AuctionFeedRepository {
   Future<void> startAuction(String auctionId);
 
   Future<void> placeBid(String auctionId, Money amount);
-
-  /// The system bids for the user, one minimum step at a time, up to [max].
-  Future<void> setMaxBid(String auctionId, Money max);
 }

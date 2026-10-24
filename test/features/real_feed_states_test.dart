@@ -35,14 +35,6 @@ void main() {
       )) {
         expect(chip.onSelected, isNull);
       }
-      expect(
-        tester
-            .widget<TextButton>(
-              find.widgetWithText(TextButton, 'Maksimum teklif'),
-            )
-            .onPressed,
-        isNull,
-      );
     },
   );
 

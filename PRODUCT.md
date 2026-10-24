@@ -27,7 +27,7 @@ teklif akışı, altta teklif paneli:
 - güncel fiyat (40 sp) ve geri sayım,
 - kural satırı: "Artış ₺X · Son 30 sn'de teklif +30 sn uzatır" (değerler sabitlerden gelir,
   sunucu kuralıyla aynı),
-- artış çipleri, büyük birincil buton "+₺X teklif ver", "Maksimum teklif" metin butonu.
+- artış çipleri ve büyük birincil buton "+₺X teklif ver".
 
 Canlı sohbet MVP kapsamı dışında (CLAUDE.md); solda sohbet yerine teklif akışı var.
 
@@ -35,8 +35,9 @@ Canlı sohbet MVP kapsamı dışında (CLAUDE.md); solda sohbet yerine teklif ak
 
 - Çipler satıcının belirlediği artışlardır; varsayılan +₺10, +₺50, +₺100.
 - En küçük çip seçili gelir. Birincil buton seçili artışı güncel fiyata ekleyip teklif verir.
-- "Maksimum teklif" (ön teklif): kullanıcı bir üst sınır belirler; geçildikçe sistem en küçük
-  artışla onun adına teklif verir, sınıra kadar.
+- Her teklifi bir kişi verir; maksimum (ön) teklif ve otomatik teklif yok. Süre bittiğinde en
+  yüksek teklif kazanır. Her teklif en az güncel fiyat + minimum artış olduğu için eşit teklif
+  verilemez (karar ve gerekçe: NOTES.md).
 
 ## Güvenlik katmanı (kaldırılmaz, kısaltılmaz)
 

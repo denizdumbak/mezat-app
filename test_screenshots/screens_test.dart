@@ -167,14 +167,6 @@ void main() {
     await _snap(tester, '10_confirm');
   });
 
-  testWidgets('11 max bid sheet', (tester) async {
-    await _phone(tester);
-    await _signedIn(tester);
-    await _openRoom(tester);
-    await tester.tap(find.text('Maksimum teklif'));
-    await _snap(tester, '11_max_bid');
-  });
-
   testWidgets('12 connection lost', (tester) async {
     await _phone(tester);
     final feed = _feed()..rooms['zenit'] = liveRoom(connected: false);

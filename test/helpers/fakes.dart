@@ -175,7 +175,6 @@ class FakeAuctionFeedRepository implements AuctionFeedRepository {
   Completer<void>? bidGate;
 
   final placed = <({String auctionId, Money amount})>[];
-  final maxBids = <({String auctionId, Money max})>[];
   final started = <String>[];
 
   final _changes = StreamController<void>.broadcast();
@@ -224,10 +223,6 @@ class FakeAuctionFeedRepository implements AuctionFeedRepository {
     if (error != null) throw error;
     placed.add((auctionId: auctionId, amount: amount));
   }
-
-  @override
-  Future<void> setMaxBid(String auctionId, Money max) async =>
-      maxBids.add((auctionId: auctionId, max: max));
 }
 
 /// Pumps the whole app on top of the fakes and waits for the first screen.

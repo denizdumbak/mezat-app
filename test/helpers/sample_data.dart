@@ -66,7 +66,6 @@ LiveRoom liveRoom({
   bool ended = false,
   SoldResult? sold,
   bool connected = true,
-  Money? myMaxBid,
 }) => LiveRoom(
   auctionId: id,
   title: title,
@@ -87,5 +86,4 @@ LiveRoom liveRoom({
   ended: ended,
   sold: sold,
   connected: connected,
-  myMaxBid: myMaxBid,
 );

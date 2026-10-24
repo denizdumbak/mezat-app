@@ -134,35 +134,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           .placeBid(amount);
     }
 
-    Future<void> setMaxBid() async {
-      final max = await askMaxBid(
-        context,
-        minimum: room.currentPrice + room.minIncrement,
-        step: room.minIncrement,
-        current: room.myMaxBid,
-        validate: (max) => switch (check(max)) {
-          BidBlocked(:final reason) => reason,
-          BidAllowed() => null,
-        },
-      );
-      if (max == null || !mounted) return;
-      if (check(max) case BidAllowed(
-        needsConfirmation: true,
-        :final committedAfter,
-      )) {
-        final ok = await confirmHighBid(
-          context,
-          amount: max,
-          committedAfter: committedAfter,
-          isMaxBid: true,
-        );
-        if (!ok || !mounted) return;
-      }
-      await ref
-          .read(liveRoomControllerProvider(room.auctionId).notifier)
-          .setMaxBid(max);
-    }
-
     // Once it is over the stamp takes the stage; the feed would only
     // show through behind it.
     final feed = room.ended
@@ -238,7 +209,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 onBid: canBid ? placeBid : null,
                 sending: sending,
                 blockedReason: blockedReason,
-                onMaxBid: canBid ? setMaxBid : null,
               ),
             ],
           ),
@@ -352,7 +322,6 @@ class _BidPanel extends StatelessWidget {
     required this.onBid,
     required this.sending,
     required this.blockedReason,
-    required this.onMaxBid,
   });
 
   final LiveRoom room;
@@ -364,7 +333,6 @@ class _BidPanel extends StatelessWidget {
   final VoidCallback? onBid;
   final bool sending;
   final String? blockedReason;
-  final VoidCallback? onMaxBid;
 
   @override
   Widget build(BuildContext context) {
@@ -375,7 +343,6 @@ class _BidPanel extends StatelessWidget {
       _ when leading.bidderId == userId => ('Öndesin', AppColors.success),
       _ => ('Önde: @${leading.username}', AppColors.onStageMuted),
     };
-    final maxBid = room.myMaxBid;
     final blockedReason = this.blockedReason;
 
     return DecoratedBox(
@@ -393,7 +360,7 @@ class _BidPanel extends StatelessWidget {
             AppSpace.edge,
             AppSpace.l,
             AppSpace.edge,
-            AppSpace.s,
+            AppSpace.l,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -466,14 +433,6 @@ class _BidPanel extends StatelessWidget {
                   style: text.bodySmall!.copyWith(color: AppColors.urgent),
                 ),
               ],
-              TextButton(
-                onPressed: onMaxBid,
-                child: Text(
-                  maxBid == null
-                      ? 'Maksimum teklif'
-                      : 'Maksimum teklifin: ${maxBid.format()}',
-                ),
-              ),
             ],
           ),
         ),

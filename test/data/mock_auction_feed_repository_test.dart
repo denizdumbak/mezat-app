@@ -71,17 +71,6 @@ void main() {
     expect(after.endsAt, room.endsAt.add(antiSnipingExtension));
   });
 
-  test('a maximum bid answers others one step at a time', () async {
-    final room = await repository.watchRoom('zenit').first;
-    final max = room.currentPrice + const Money.kurus(5000);
-    await repository.setMaxBid('zenit', max);
-
-    final after = await repository.watchRoom('zenit').first;
-    expect(after.leadingBid!.bidderId, user.id);
-    expect(after.currentPrice, room.currentPrice + room.minIncrement);
-    expect(after.myMaxBid, max);
-  });
-
   test('an upcoming auction is not open for bids', () async {
     await expectLater(
       repository.placeBid('telkari', const Money.kurus(100000)),
