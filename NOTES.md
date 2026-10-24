@@ -20,9 +20,9 @@ Decisions and technical debt. Newest on top within each section.
   with pg_cron). The client hides them by `ends_at`; the server rule comes with M5.
 - **Pull to refresh uses Material's `RefreshIndicator` spinner** (gold on stageRaised), the one
   place the stock progress indicator remains; a custom one is not worth it before M6.
-- **Bid safety is client-side only.** The daily limit lives in memory
-  (`InMemorySpendingLimitRepository`, lost on restart) and is checked in the screen. M3: store
-  it in `profiles` and enforce it in `place_bid`, or a modified client can ignore it.
+- **The app still keeps the daily limit in memory.** The server enforces it from
+  `spending_limits` since M3 step 5; the app's `InMemorySpendingLimitRepository` is replaced
+  in the same step's second commit.
 - **Seller-set increment chips have no column yet.** The room shows `defaultIncrements`
   (+₺10/+₺50/+₺100); the create form does not ask for them. M3: `bid_increments numeric[]`
   on `auctions` (each >= `min_increment`) and a field in the form.
@@ -51,6 +51,19 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Decisions
 
+- **Daily limit on the server (M3 step 5, 2026-10-24).** Its own table `spending_limits`,
+  not a `profiles` column: profiles are readable by everyone, and someone's limit is
+  private (it would also tell rivals how far they can go). No row means ₺2.000, the same
+  default as the app. `committed_today()` is PRODUCT.md's "bugünkü toplam": auctions the
+  user leads that are still running plus those won today, "today" being the Turkish
+  calendar day (`Europe/Istanbul`). `place_bid` refuses with `DAILY_LIMIT_EXCEEDED` when
+  total + bid passes the limit (exactly the limit is allowed). It locks the bidder's
+  profile row before the auction row, so one person's bids on two auctions at once are
+  judged one after the other (without it both fit the old total; shown by removing the
+  lock in `06_place_bid_concurrency_test.sql`). Always profile first, then auction, so no
+  two bids wait for each other. `for no key update` so the lock does not block the
+  key-share locks foreign keys take. A raised limit applies at once (PRODUCT.md: the user
+  changes it); a cooling-off delay can come later if needed.
 - **No maximum (proxy) bids and no automatic bidding (2026-10-24).** Every bid is tapped by
   a person; when time is up the highest bid wins. The developer's reasons: a maximum only
   saves the bidder from tapping and has nothing to do with winning, and deciding whose
