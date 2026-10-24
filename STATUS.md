@@ -82,7 +82,14 @@ _Last updated: 2026-10-24_
    (`bid_increments`, form field); 7 `SupabaseAuctionFeedRepository.placeBid` + bid feed,
    error codes mapped to Turkish in `AuctionFailure` (incl. `ALREADY_WINNING`,
    `AUCTION_ENDED`, `SPENDING_LIMIT_EXCEEDED`), the total from `committed_in_window()`, the
-   mock refusing the leader's second bid like the server; 8 Realtime for the room and lists;
+   mock refusing the leader's second bid like the server; "raise the limit" from the room
+   (developer's request, 2026-10-24): a bid over the limit no longer disables the button
+   (a note says by how much it passes); tapping it opens "Limit aşıldı" with Kapat /
+   Limiti artır; "Limiti artır" asks "Limitin ₺X'den ₺Y'ye çıkacak ve ₺Z pey verilecek.
+   Emin misin?" (Evet / Hayır); Evet raises the limit by exactly the overage and sends the
+   bid (no separate high-bid confirmation; the amount is in that sheet). The same sheet
+   opens when the server refuses with SPENDING_LIMIT_EXCEEDED. Reset stays in Profil only;
+   8 Realtime for the room and lists;
    9 end-to-end test with two bidders, the developer's hand check, docs. Step 4 (maximum
    bids) was dropped by the developer: no automatic bidding.
 
