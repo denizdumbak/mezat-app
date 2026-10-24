@@ -53,6 +53,38 @@ void main() {
     });
   });
 
+  group('SecondaryButton', () {
+    Color? fill(WidgetTester tester) => tester
+        .widget<FilledButton>(find.byType(FilledButton))
+        .style!
+        .backgroundColor!
+        .resolve({});
+
+    for (final (name, theme) in [
+      ('browse', browseTheme),
+      ('live room', liveTheme),
+    ]) {
+      testWidgets('is a 48 dp pill one tone lighter, in the $name theme', (
+        tester,
+      ) async {
+        var taps = 0;
+        await pumpThemed(
+          tester,
+          SecondaryButton(label: 'Hayır', onPressed: () => taps++),
+          theme: theme,
+        );
+
+        final palette = theme.extension<AppPalette>()!;
+        expect(fill(tester), palette.secondaryFill);
+        expect(fill(tester), isNot(theme.colorScheme.primary));
+        expect(fill(tester), isNot(theme.colorScheme.surface));
+        expect(tester.getSize(find.byType(FilledButton)).height, AppSize.touch);
+        await tester.tap(find.text('Hayır'));
+        expect(taps, 1);
+      });
+    }
+  });
+
   testWidgets('IncrementChip shows "+₺50" and reports taps', (tester) async {
     var selected = false;
     await pumpThemed(

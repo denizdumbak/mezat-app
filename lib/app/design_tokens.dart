@@ -36,6 +36,9 @@ abstract final class AppColors {
   // Live room (dark).
 
   static const liveSurface = Color(0xFF0A0A0B);
+
+  /// One step lighter than [liveSurface]: secondary buttons on dark sheets.
+  static const liveSurfaceAlt = Color(0xFF27272A);
   static const liveText = Color(0xFFFFFFFF);
 
   /// 7.7:1 on [liveSurface].

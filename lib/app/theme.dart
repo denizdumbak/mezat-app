@@ -18,6 +18,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     required this.warning,
     required this.panel,
     required this.panelBlurred,
+    required this.secondaryFill,
     required this.scrimStrong,
     required this.disabled,
     required this.errorOnInverse,
@@ -31,6 +32,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     warning: AppColors.warning,
     panel: AppColors.surfaceAlt,
     panelBlurred: false,
+    secondaryFill: AppColors.surfaceAlt,
     scrimStrong: AppColors.scrimStrong,
     disabled: AppColors.disabled,
     errorOnInverse: AppColors.errorOnDark,
@@ -42,6 +44,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     warning: AppColors.warning,
     panel: AppColors.scrim,
     panelBlurred: true,
+    secondaryFill: AppColors.liveSurfaceAlt,
     scrimStrong: AppColors.scrimStrong,
     disabled: AppColors.disabled,
     errorOnInverse: AppColors.error,
@@ -60,6 +63,10 @@ class AppPalette extends ThemeExtension<AppPalette> {
 
   /// Whether [panel] needs a blur behind it (it is see-through).
   final bool panelBlurred;
+
+  /// `SecondaryButton`'s fill: one tone lighter than the surface it sits on
+  /// (opaque, unlike [panel], so it reads on the dark sheets too).
+  final Color secondaryFill;
 
   /// Over the room for the "sold" and "time is up" moments.
   final Color scrimStrong;
@@ -82,6 +89,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     Color? warning,
     Color? panel,
     bool? panelBlurred,
+    Color? secondaryFill,
     Color? scrimStrong,
     Color? disabled,
     Color? overlay,
@@ -93,6 +101,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     warning: warning ?? this.warning,
     panel: panel ?? this.panel,
     panelBlurred: panelBlurred ?? this.panelBlurred,
+    secondaryFill: secondaryFill ?? this.secondaryFill,
     scrimStrong: scrimStrong ?? this.scrimStrong,
     disabled: disabled ?? this.disabled,
     overlay: overlay ?? this.overlay,

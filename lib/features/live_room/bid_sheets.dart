@@ -23,7 +23,7 @@ Future<bool> confirmHighBid(
 );
 
 /// A bid past the spending limit. Resolves to true when the user wants to
-/// raise the limit, false for "Kapat". Closing is the filled button: the
+/// raise the limit, false for "Kapat". Closing is the accent button: the
 /// safe choice is the easy one.
 Future<bool> offerLimitRaise(
   BuildContext context, {
@@ -45,9 +45,9 @@ Future<bool> offerLimitRaise(
           onPressed: () => Navigator.of(context).pop(false),
         ),
         const SizedBox(height: AppSpace.s),
-        TextButton(
+        SecondaryButton(
+          label: 'Limiti artır',
           onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Limiti artır'),
         ),
       ],
     ),
@@ -95,9 +95,9 @@ Future<bool> _ask(
           onPressed: () => Navigator.of(context).pop(true),
         ),
         const SizedBox(height: AppSpace.s),
-        TextButton(
+        SecondaryButton(
+          label: no,
           onPressed: () => Navigator.of(context).pop(false),
-          child: Text(no),
         ),
       ],
     ),

@@ -45,6 +45,7 @@ denetler.
 | Rol | Kod | Değer | Kontrast |
 | --- | --- | --- | --- |
 | Zemin | `liveSurface` | #0A0A0B | |
+| İkincil buton dolgusu | `liveSurfaceAlt` | #27272A | |
 | Panel (video üstü) | `scrim` | siyah %60 + 20 blur | |
 | Metin | `liveText` | #FFFFFF | 19.8:1 zeminde |
 | İkincil metin | `liveTextMuted` | #A1A1AA | 7.7:1 zeminde |
@@ -127,6 +128,11 @@ akışı satırı, ekran geçişleri. Dekoratif, sürekli dönen animasyon yok.
 - **Birincil buton:** amber dolgu, hap, en az 48 (teklif butonu 56). Ekranda tek birincil
   eylem; **amber dolgu yalnızca onda**. Devre dışıyken panel rengi dolgu, pasif yazı, nedeni
   altında yazılı.
+- **İkincil buton (`SecondaryButton`):** birincilin yanındaki sakin seçenek (Vazgeç, Hayır,
+  Limiti artır). Aynı tam genişlik hap ve 48 yükseklik; dolgu zeminden bir ton açık
+  (`palette.secondaryFill`: açıkta `surfaceAlt`, canlı odada `liveSurfaceAlt`), yazı metin
+  renginde. Düz metin bağlantısı değil, buton olduğu görülsün diye (geliştiricinin isteği,
+  2026-10-25).
 - **Artış çipi:** hap, panel zemini, 1 dp çizgi; seçiliyken 2 dp metin rengi çerçeve. Amber
   değil: hemen altındaki teklif butonuyla yarışmasın.
 - **Panel (`AppPanel`, `BlurredPanel`):** ikincil yüzey, 16, çerçevesiz. Canlı odada siyah
