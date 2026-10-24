@@ -35,6 +35,7 @@ AuctionFailure toAuctionFailure(Object error) => switch (error) {
   // (SQLSTATE P0001 = raise_exception).
   PostgrestException(code: 'P0001', :final message) => switch (message) {
     'INVALID_START_TIME' => AuctionFailure.invalidStartTime,
+    'INVALID_INCREMENTS' => AuctionFailure.invalidIncrements,
     'NOT_AUCTION_SELLER' => AuctionFailure.notSeller,
     'AUCTION_NOT_SCHEDULED' => AuctionFailure.notScheduled,
     'AUCTION_NOT_FOUND' => AuctionFailure.notFound,

@@ -25,7 +25,7 @@ class SupabaseAuctionFeedRepository implements AuctionFeedRepository {
   // foreign keys point at profiles, so the seller one is named.
   static const _columns =
       'id, title, image_path, status, seller_id, starts_at, ends_at, '
-      'current_price::text, min_increment::text, '
+      'current_price::text, min_increment::text, bid_increments::text, '
       'seller:profiles!auctions_seller_id_fkey(username)';
 
   String? get _userId => _client.auth.currentUser?.id;
@@ -90,7 +90,10 @@ class SupabaseAuctionFeedRepository implements AuctionFeedRepository {
       currentPrice: auction.currentPrice,
       endsAt: endsAt,
       minIncrement: auction.minIncrement,
-      increments: incrementsFor(auction.minIncrement),
+      increments: incrementsFor(
+        auction.minIncrement,
+        chosen: auction.bidIncrements,
+      ),
       bids: const [],
       ended: !endsAt.isAfter(_clock()),
       biddingOpen: false,
@@ -136,7 +139,8 @@ class _Row {
           ? null
           : DateTime.parse(row['ends_at'] as String),
       currentPrice = Money.parseDb(row['current_price'] as String),
-      minIncrement = Money.parseDb(row['min_increment'] as String);
+      minIncrement = Money.parseDb(row['min_increment'] as String),
+      bidIncrements = _parseDbArray(row['bid_increments'] as String);
 
   final DateTime now;
   final String id;
@@ -149,6 +153,16 @@ class _Row {
   final DateTime? endsAt;
   final Money currentPrice;
   final Money minIncrement;
+  final List<Money> bidIncrements;
+
+  /// A numeric array cast to text: '{10.00,25.50}', or '{}' when empty.
+  static List<Money> _parseDbArray(String raw) {
+    final inner = raw.substring(1, raw.length - 1);
+    return [
+      if (inner.isNotEmpty)
+        for (final item in inner.split(',')) Money.parseDb(item),
+    ];
+  }
 
   bool get isScheduled => status == 'scheduled';
   bool get isLive => status == 'live' && endsAt != null && endsAt!.isAfter(now);

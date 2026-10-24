@@ -17,10 +17,17 @@ const defaultIncrements = [
   Money.kurus(10000),
 ];
 
-/// The chips for an auction whose seller has not chosen any: the defaults
-/// when they all meet [minIncrement], otherwise 1×, 5× and 10× of it (the
-/// server refuses a step below the minimum).
-List<Money> incrementsFor(Money minIncrement) =>
-    defaultIncrements.first >= minIncrement
+/// Most chips a seller can choose (the database allows three).
+const maxIncrementChips = 3;
+
+/// The chips the room shows: the seller's [chosen] ones, or when there are
+/// none, the defaults if they all meet [minIncrement], otherwise 1×, 5× and
+/// 10× of it (the server refuses a step below the minimum).
+List<Money> incrementsFor(
+  Money minIncrement, {
+  List<Money> chosen = const [],
+}) => chosen.isNotEmpty
+    ? chosen
+    : defaultIncrements.first >= minIncrement
     ? defaultIncrements
     : [minIncrement, minIncrement * 5, minIncrement * 10];

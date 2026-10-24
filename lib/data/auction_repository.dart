@@ -19,6 +19,7 @@ class NewAuction {
     required this.description,
     required this.startPrice,
     required this.minIncrement,
+    this.bidIncrements = const [],
     required this.durationMinutes,
     required this.startsAt,
   });
@@ -27,6 +28,9 @@ class NewAuction {
   final String description;
   final Money startPrice;
   final Money minIncrement;
+
+  /// The seller's increment chips, smallest first; empty for the defaults.
+  final List<Money> bidIncrements;
   final int durationMinutes;
   final DateTime startsAt;
 }
@@ -76,6 +80,9 @@ class AuctionRepository {
               // Sent as text, so no amount ever passes through a double.
               'start_price': auction.startPrice.toDb(),
               'min_increment': auction.minIncrement.toDb(),
+              'bid_increments': [
+                for (final increment in auction.bidIncrements) increment.toDb(),
+              ],
               'duration_minutes': auction.durationMinutes,
               'starts_at': auction.startsAt.toUtc().toIso8601String(),
             })

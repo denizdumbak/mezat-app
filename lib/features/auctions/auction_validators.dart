@@ -37,6 +37,33 @@ String? validateAmount(String? raw) {
   return null;
 }
 
+/// One of the optional increment chip fields. Empty is fine. A chip below
+/// [minIncrement] (when that field is already valid) or equal to one of the
+/// [earlier] fields is refused, as the database would refuse it.
+String? validateIncrement(
+  String? raw, {
+  Money? minIncrement,
+  List<Money> earlier = const [],
+}) {
+  final text = (raw ?? '').trim();
+  if (text.isEmpty) return null;
+  final amountError = validateAmount(text);
+  if (amountError != null) return amountError;
+  final amount = Money.tryParse(text)!;
+  if (minIncrement != null && minIncrement > amount) {
+    return 'En az ${minIncrement.format()}';
+  }
+  if (earlier.contains(amount)) return 'Tekrar ediyor';
+  return null;
+}
+
+/// The filled chip fields as amounts, smallest first (the order the room
+/// shows them). Call after the fields are validated.
+List<Money> parseIncrements(Iterable<String> raws) => [
+  for (final raw in raws)
+    if (raw.trim().isNotEmpty) Money.tryParse(raw.trim())!,
+]..sort();
+
 /// For a scheduled start; "start now" needs no check.
 String? validateScheduledStart(DateTime? startsAt, {required DateTime now}) {
   if (startsAt == null) return 'Başlangıç tarihi ve saatini seç.';

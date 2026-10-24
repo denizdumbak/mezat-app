@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mezat_app/core/money.dart';
 import 'package:mezat_app/core/photo_picker.dart';
 import 'package:mezat_app/features/auctions/auction_validators.dart';
 import 'package:mezat_app/features/auctions/create_auction_screen.dart';
@@ -71,6 +72,39 @@ void main() {
         ),
         'Mezat en fazla 30 gün sonrasına planlanabilir.',
       );
+    });
+  });
+
+  group('increment chips', () {
+    const min = Money.kurus(2500);
+
+    test('empty is fine; others follow the amount rules', () {
+      expect(validateIncrement(''), isNull);
+      expect(validateIncrement('  '), isNull);
+      expect(validateIncrement('abc'), 'Geçerli bir tutar gir (ör. 1.250,50).');
+      expect(validateIncrement('0'), "Tutar 0'dan büyük olmalı.");
+    });
+
+    test('a chip below the minimum is refused, equal is fine', () {
+      expect(validateIncrement('10', minIncrement: min), 'En az ₺25');
+      expect(validateIncrement('25', minIncrement: min), isNull);
+      // Without a valid minimum there is nothing to compare with yet.
+      expect(validateIncrement('10'), isNull);
+    });
+
+    test('a repeated chip is refused', () {
+      expect(
+        validateIncrement('50', earlier: const [Money.kurus(5000)]),
+        'Tekrar ediyor',
+      );
+    });
+
+    test('filled chips are parsed smallest first, blanks skipped', () {
+      expect(parseIncrements(['100', '', ' 25,50 ']), const [
+        Money.kurus(2550),
+        Money.kurus(10000),
+      ]);
+      expect(parseIncrements(['', '', '']), isEmpty);
     });
   });
 

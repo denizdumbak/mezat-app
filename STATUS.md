@@ -4,7 +4,7 @@ Where the project stands, so the next session can continue without re-reading hi
 Read at the start of a session; update at the end. Decisions and their reasons live in
 NOTES.md; this file is only the current state.
 
-_Last updated: 2026-10-24_
+_Last updated: 2026-10-25_
 
 ## Milestones
 
@@ -14,7 +14,7 @@ _Last updated: 2026-10-24_
 | M1 Auth + profile | Done (manual run from VS Code on 2026-10-23: sign-up → username → home) |
 | M2 Create/list auctions | Done 2026-10-24: end-to-end test (create → Yayın aç → go live → Keşfet) and the developer's hand check (room shows "Teklif verme henüz açık değil.", as intended until M3) |
 | Design foundation | Done 2026-10-24: tokens, dark theme, fonts, shared widgets, 4-tab shell, live room on mock data |
-| M3 Live bidding | In progress: steps 1–3 and 5 of 9 done (bids, place_bid, concurrency tests, spending limit on the server: sliding window the user picks, reset, switch-off); step 4 (maximum bids) dropped (NOTES.md) |
+| M3 Live bidding | In progress: steps 1–3, 5 and 6 of 9 done (bids, place_bid, concurrency tests, spending limit on the server: sliding window the user picks, reset, switch-off; seller-set increment chips); step 4 (maximum bids) dropped (NOTES.md) |
 | M4–M6 | Not started |
 
 ## What exists
@@ -24,9 +24,10 @@ _Last updated: 2026-10-24_
   (everyone reads, owner updates) and column grants (only `username`, `avatar_url`).
   `auctions` table (opens `scheduled`, server sets status/price/winner/times; clients insert
   only form columns, no update/delete), `start_auction(id)` RPC (seller only, `scheduled` →
-  `live`), public `auction-images` bucket (5 MB, jpeg/png/webp, uploads to own folder).
+  `live`), optional `bid_increments` (up to 3 chips, each >= the minimum, ascending),
+  public `auction-images` bucket (5 MB, jpeg/png/webp, uploads to own folder).
   Domain errors are raised as a code in the message (`INVALID_START_TIME`,
-  `NOT_AUCTION_SELLER`, `AUCTION_NOT_SCHEDULED`, `AUCTION_NOT_FOUND`).
+  `NOT_AUCTION_SELLER`, `AUCTION_NOT_SCHEDULED`, `AUCTION_NOT_FOUND`, `INVALID_INCREMENTS`).
   `bids` table (everyone reads, no client writes) and `place_bid(auction_id, amount)`:
   row lock, bidder from the JWT, anti-sniping (last 30 s → +30 s), codes `INVALID_AMOUNT`,
   `USERNAME_REQUIRED`, `AUCTION_NOT_LIVE`, `AUCTION_ENDED`, `SELLER_CANNOT_BID`,
@@ -38,7 +39,8 @@ _Last updated: 2026-10-24_
   `AuthFailure` maps every Supabase error to a Turkish message. Navigation is one pure
   function, `redirectFor` in `lib/app/routes.dart`, driven by `sessionStatusProvider`.
   Create auction (`/auctions/new`, from the Sat tab): photo via `image_picker`, title,
-  description, start price, min increment, duration, start now / later. `Money` (int kuruş,
+  description, start price, min increment, up to three increment chips (optional, sorted by
+  the app), duration, start now / later. `Money` (int kuruş,
   Turkish input, "₺1.250"), `AuctionRepository` (create, upload/delete photo), `AuctionFailure`.
   Locale fixed to Turkish (`flutter_localizations`).
 - **Design** (`DESIGN.md`, `PRODUCT.md`, `lib/app/design_tokens.dart`, `lib/app/theme.dart`):
@@ -55,12 +57,12 @@ _Last updated: 2026-10-24_
   read-only room ("Teklif verme henüz açık değil."). No realtime: pull down to refresh; lists
   reload after create/start. `--dart-define=MOCK_FEED=true` switches to the demo mock with
   simulated bidders.
-- **Tests**: 252 unit/widget tests (`test/`, screens also at 360×640), 175 pgTAP tests
-  (`supabase/tests/`, incl. dblink tests of bids racing for the locks), 34 tests of the
+- **Tests**: 261 unit/widget tests (`test/`, screens also at 360×640), 188 pgTAP tests
+  (`supabase/tests/`, incl. dblink tests of bids racing for the locks), 36 tests of the
   real repositories and concurrent bids against local Supabase
   (`test_supabase/`), 2 end-to-end UI tests on the Windows desktop (`integration_test/`, run
   one file at a time),
-  16 screenshots for design review (`flutter test test_screenshots --update-goldens`, PNGs in
+  17 screenshots for design review (`flutter test test_screenshots --update-goldens`, PNGs in
   `test_screenshots/goldens/`, git-ignored). Only `test/` runs in CI.
 
 ## Environment
@@ -80,8 +82,7 @@ _Last updated: 2026-10-24_
 
 ## Next steps
 
-1. M3, approved plan (2026-10-24), steps left: 6 seller-set increments
-   (`bid_increments`, form field); 7 `SupabaseAuctionFeedRepository.placeBid` + bid feed,
+1. M3, approved plan (2026-10-24), steps left: 7 `SupabaseAuctionFeedRepository.placeBid` + bid feed,
    error codes mapped to Turkish in `AuctionFailure` (incl. `ALREADY_WINNING`,
    `AUCTION_ENDED`, `SPENDING_LIMIT_EXCEEDED`), the total from `committed_in_window()`, the
    mock refusing the leader's second bid like the server; "raise the limit" from the room

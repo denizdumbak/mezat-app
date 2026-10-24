@@ -79,6 +79,7 @@ void main() {
     // Codes raised by the auctions trigger and start_auction.
     final domainCodes = {
       'INVALID_START_TIME': AuctionFailure.invalidStartTime,
+      'INVALID_INCREMENTS': AuctionFailure.invalidIncrements,
       'NOT_AUCTION_SELLER': AuctionFailure.notSeller,
       'AUCTION_NOT_SCHEDULED': AuctionFailure.notScheduled,
       'AUCTION_NOT_FOUND': AuctionFailure.notFound,

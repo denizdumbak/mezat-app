@@ -6,6 +6,9 @@ enum AuctionFailure implements AppFailure {
   invalidStartTime(
     'Başlangıç zamanı şimdi ile 30 gün sonrası arasında olmalı.',
   ),
+  invalidIncrements(
+    'Teklif artışları minimum artıştan küçük olamaz ve en fazla 3 tane olabilir.',
+  ),
   invalidInput('Bilgilerden biri geçersiz. Formu kontrol edip tekrar dene.'),
   notAllowed('Bu işlem için yetkin yok.'),
   notSeller('Bu mezatı yalnızca satıcısı başlatabilir.'),

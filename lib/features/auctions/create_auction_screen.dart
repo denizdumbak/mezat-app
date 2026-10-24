@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/design_tokens.dart';
 import '../../app/theme.dart';
 import '../../core/app_failure.dart';
+import '../../core/auction_rules.dart';
 import '../../core/money.dart';
 import '../../core/photo_picker.dart';
 import '../../core/widgets/form_layout.dart';
@@ -29,6 +30,10 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
   final _description = TextEditingController();
   final _startPrice = TextEditingController();
   final _minIncrement = TextEditingController();
+  final _increments = List.generate(
+    maxIncrementChips,
+    (_) => TextEditingController(),
+  );
 
   PickedPhoto? _photo;
   int _durationMinutes = defaultDurationMinutes;
@@ -42,6 +47,9 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
     _description.dispose();
     _startPrice.dispose();
     _minIncrement.dispose();
+    for (final controller in _increments) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -108,12 +116,30 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
             // Validated above, so parsing cannot fail here.
             startPrice: Money.tryParse(_startPrice.text)!,
             minIncrement: Money.tryParse(_minIncrement.text)!,
+            bidIncrements: parseIncrements(_increments.map((c) => c.text)),
             durationMinutes: _durationMinutes,
             startsAt: _startNow ? now : _scheduledAt!,
           ),
           photo: _photo,
         );
   }
+
+  /// The minimum increment, when its field holds a valid amount.
+  Money? get _validMinIncrement {
+    final text = _minIncrement.text.trim();
+    return validateAmount(text) == null ? Money.tryParse(text) : null;
+  }
+
+  String? _validateIncrement(int index, String? raw) => validateIncrement(
+    raw,
+    minIncrement: _validMinIncrement,
+    earlier: [
+      for (final controller in _increments.take(index))
+        if (validateIncrement(controller.text) == null &&
+            controller.text.trim().isNotEmpty)
+          Money.tryParse(controller.text.trim())!,
+    ],
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -194,6 +220,46 @@ class _CreateAuctionScreenState extends ConsumerState<CreateAuctionScreen> {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: AppSpace.l),
+              Text(
+                'Teklif artışları (isteğe bağlı)',
+                style: textTheme.titleSmall,
+              ),
+              const SizedBox(height: AppSpace.s),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var i = 0; i < maxIncrementChips; i++) ...[
+                    if (i > 0) const SizedBox(width: AppSpace.s),
+                    Expanded(
+                      child: _AmountField(
+                        fieldKey: Key('createAuction.increment$i'),
+                        controller: _increments[i],
+                        label: '${i + 1}. artış',
+                        enabled: !busy,
+                        validator: (raw) => _validateIncrement(i, raw),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: AppSpace.xs),
+              // The defaults depend on the minimum, so follow that field.
+              ListenableBuilder(
+                listenable: _minIncrement,
+                builder: (context, _) {
+                  final defaults = incrementsFor(
+                    _validMinIncrement ?? defaultIncrements.first,
+                  );
+                  final names = defaults.map((m) => m.format()).toList();
+                  return Text(
+                    'İzleyiciler bu tutarları tek dokunuşla ekler. Boş '
+                    'bırakırsan ${names.take(names.length - 1).join(', ')} '
+                    've ${names.last} kullanılır.',
+                    style: textTheme.bodySmall,
+                  );
+                },
               ),
               const SizedBox(height: AppSpace.l),
               DropdownButtonFormField<int>(
@@ -284,12 +350,14 @@ class _AmountField extends StatelessWidget {
     required this.controller,
     required this.label,
     required this.enabled,
+    this.validator = validateAmount,
   });
 
   final Key fieldKey;
   final TextEditingController controller;
   final String label;
   final bool enabled;
+  final FormFieldValidator<String> validator;
 
   @override
   Widget build(BuildContext context) {
@@ -297,10 +365,15 @@ class _AmountField extends StatelessWidget {
       key: fieldKey,
       controller: controller,
       enabled: enabled,
-      decoration: InputDecoration(labelText: label, prefixText: '₺ '),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       textInputAction: TextInputAction.next,
-      validator: validateAmount,
+      validator: validator,
+      // The chip fields are a third of the width; let their errors wrap.
+      decoration: InputDecoration(
+        labelText: label,
+        prefixText: '₺ ',
+        errorMaxLines: 2,
+      ),
     );
   }
 }

@@ -39,9 +39,14 @@ Decisions and technical debt. Newest on top within each section.
   with pg_cron). The client hides them by `ends_at`; the server rule comes with M5.
 - **Pull to refresh uses Material's `RefreshIndicator` spinner** (text colour on the surface), the one
   place the stock progress indicator remains; a custom one is not worth it before M6.
-- **Seller-set increment chips have no column yet.** The room shows `defaultIncrements`
-  (+₺10/+₺50/+₺100); the create form does not ask for them. M3: `bid_increments numeric[]`
-  on `auctions` (each >= `min_increment`) and a field in the form.
+- **Seller-set increment chips (M3 step 6, 2026-10-25).** `auctions.bid_increments
+  numeric(12,2)[]`, optional, at most three, each >= `min_increment`, ascending, no repeats;
+  set once at insert and checked by a trigger (`INVALID_INCREMENTS`), like the start time.
+  Empty means the app's defaults (`incrementsFor`). The chips are only a shortcut for the
+  bidder: `place_bid` still checks every bid against `current_price + min_increment`, so it
+  does not read them. The form sorts the chips itself instead of asking the seller to type
+  them in order. The column is read as text (`'{10.00,25.50}'`) so amounts never pass
+  through a double.
 - **Screenshots are rendered in the test engine, not on a device** (`test_screenshots/`), since
   no Android emulator is set up. Real fonts and layout, but no platform chrome, keyboard or
   real video. Check on a phone before M6.

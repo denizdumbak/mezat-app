@@ -49,6 +49,7 @@ Future<void> _fillForm(
   String title = 'Analog kamera',
   String startPrice = '1.250,50',
   String minIncrement = '25',
+  List<String> increments = const [],
 }) async {
   await tester.enterText(find.byKey(const Key('createAuction.title')), title);
   await tester.enterText(
@@ -63,6 +64,12 @@ Future<void> _fillForm(
     find.byKey(const Key('createAuction.minIncrement')),
     minIncrement,
   );
+  for (var i = 0; i < increments.length; i++) {
+    await tester.enterText(
+      find.byKey(Key('createAuction.increment$i')),
+      increments[i],
+    );
+  }
 }
 
 Future<void> _submit(WidgetTester tester) async {
@@ -105,6 +112,7 @@ void main() {
     expect(auction.description, 'Çalışır durumda.');
     expect(auction.startPrice, const Money.kurus(125050));
     expect(auction.minIncrement, const Money.kurus(2500));
+    expect(auction.bidIncrements, isEmpty);
     expect(auction.durationMinutes, 30);
     // "Start now" sends the current time.
     expect(auction.startsAt.isBefore(before), isFalse);
@@ -112,6 +120,47 @@ void main() {
 
     expect(find.text('Mezat oluşturuldu.'), findsOneWidget);
     expect(find.byKey(const Key('createAuction.title')), findsNothing);
+  });
+
+  testWidgets("the seller's increment chips are sent smallest first", (
+    tester,
+  ) async {
+    final auctions = FakeAuctionRepository();
+    await _openForm(tester, auctions: auctions);
+
+    await _fillForm(tester, increments: ['250', '', '25']);
+    await _submit(tester);
+
+    expect(auctions.created.single.auction.bidIncrements, const [
+      Money.kurus(2500),
+      Money.kurus(25000),
+    ]);
+  });
+
+  testWidgets('chips below the minimum or repeated are caught', (tester) async {
+    final auctions = FakeAuctionRepository();
+    await _openForm(tester, auctions: auctions);
+
+    await _fillForm(tester, increments: ['10', '50', '50']);
+    await _submit(tester);
+
+    expect(find.text('En az ₺25'), findsOneWidget);
+    expect(find.text('Tekrar ediyor'), findsOneWidget);
+    expect(auctions.created, isEmpty);
+  });
+
+  testWidgets('the hint shows the defaults for the minimum typed', (
+    tester,
+  ) async {
+    await _openForm(tester, auctions: FakeAuctionRepository());
+
+    expect(find.textContaining('₺10, ₺50 ve ₺100'), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const Key('createAuction.minIncrement')),
+      '25',
+    );
+    await tester.pump();
+    expect(find.textContaining('₺25, ₺125 ve ₺250'), findsOneWidget);
   });
 
   testWidgets('the chosen photo is uploaded and linked to the auction', (

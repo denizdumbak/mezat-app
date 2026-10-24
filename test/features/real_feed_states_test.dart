@@ -121,4 +121,9 @@ void main() {
       Money.kurus(25000),
     ]);
   });
+
+  test("the seller's own chips replace the defaults", () {
+    const chosen = [Money.kurus(2500), Money.kurus(20000)];
+    expect(incrementsFor(const Money.kurus(2500), chosen: chosen), chosen);
+  });
 }

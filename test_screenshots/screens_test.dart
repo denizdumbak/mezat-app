@@ -288,4 +288,39 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Mezat oluştur'));
     await _snap(tester, '14_create');
   });
+
+  testWidgets('14b create auction, increment chips with errors', (
+    tester,
+  ) async {
+    await _phone(tester);
+    await _signedIn(tester);
+    await tester.tap(find.byKey(const Key('tab.1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Mezat oluştur'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('createAuction.minIncrement')),
+      '100.000',
+    );
+    await tester.enterText(
+      find.byKey(const Key('createAuction.increment0')),
+      '50',
+    );
+    await tester.enterText(
+      find.byKey(const Key('createAuction.increment1')),
+      '250.000',
+    );
+    await tester.enterText(
+      find.byKey(const Key('createAuction.increment2')),
+      '250.000',
+    );
+    final submit = find.widgetWithText(FilledButton, 'Mezatı oluştur');
+    await tester.ensureVisible(submit);
+    await tester.tap(submit);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const Key('createAuction.increment0')),
+    );
+    await _snap(tester, '14b_create_increments');
+  });
 }

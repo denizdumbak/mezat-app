@@ -45,6 +45,7 @@ void main() {
   Future<String> createAuction({
     String title = 'Analog kamera',
     Money minIncrement = const Money.kurus(1000),
+    List<Money> bidIncrements = const [],
     String? imagePath,
   }) => AuctionRepository(seller).create(
     NewAuction(
@@ -52,6 +53,7 @@ void main() {
       description: '',
       startPrice: const Money.kurus(125050),
       minIncrement: minIncrement,
+      bidIncrements: bidIncrements,
       durationMinutes: 5,
       startsAt: DateTime.now().add(const Duration(hours: 1)),
     ),
@@ -154,6 +156,28 @@ void main() {
     expect(
       room.endsAt.difference(DateTime.now()).inMinutes,
       inInclusiveRange(4, 5),
+    );
+  });
+
+  test("the room shows the seller's own increment chips", () async {
+    const chips = [Money.kurus(2500), Money.kurus(7550), Money.kurus(100000)];
+    final id = await createAuction(
+      minIncrement: const Money.kurus(2500),
+      bidIncrements: chips,
+    );
+    await SupabaseAuctionFeedRepository(seller).startAuction(id);
+
+    final room = await SupabaseAuctionFeedRepository(buyer).watchRoom(id).first;
+    expect(room.increments, chips);
+  });
+
+  test('chips below the minimum are refused with their own message', () async {
+    await expectLater(
+      createAuction(
+        minIncrement: const Money.kurus(2500),
+        bidIncrements: const [Money.kurus(1000)],
+      ),
+      throwsA(AuctionFailure.invalidIncrements),
     );
   });
 
