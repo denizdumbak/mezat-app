@@ -53,11 +53,11 @@ select throws_ok(
 
 -- Reading -------------------------------------------------------------------
 select pg_temp.act_as_anon();
-select is((select count(*) from public.bids), 1::bigint, 'anon can read bids');
+select is((select count(*) from public.bids where auction_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 1::bigint, 'anon can read bids');
 reset role;
 
 select pg_temp.act_as('11111111-1111-1111-1111-111111111111');
-select is((select count(*) from public.bids), 1::bigint, 'a signed-in user can read bids');
+select is((select count(*) from public.bids where auction_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 1::bigint, 'a signed-in user can read bids');
 reset role;
 
 -- Attacker: writing bids directly -------------------------------------------
@@ -124,7 +124,7 @@ select is(
 
 -- Clean-up of a deleted auction ---------------------------------------------
 delete from public.auctions where id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
-select is((select count(*) from public.bids), 0::bigint, 'bids go with their auction');
+select is((select count(*) from public.bids where auction_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'), 0::bigint, 'bids go with their auction');
 
 select * from finish();
 rollback;

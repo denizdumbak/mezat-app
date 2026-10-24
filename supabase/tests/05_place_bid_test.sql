@@ -2,7 +2,7 @@
 -- Attacker cases: anon calling it, bidding in someone else's name is impossible (the
 -- bidder comes from the JWT), the seller bidding, amounts that break numeric(12,2).
 begin;
-select plan(31);
+select plan(36);
 
 -- alice sells; bob and dave bid; carol has not chosen a username.
 insert into auth.users (id, email)
@@ -16,7 +16,7 @@ update public.profiles set username = 'bob' where id = '22222222-2222-2222-2222-
 update public.profiles set username = 'dave' where id = '44444444-4444-4444-4444-444444444444';
 
 -- live: 30 minutes left. closing: 10 seconds left. over: time is up, still 'live'.
--- scheduled: not started.
+-- scheduled: not started. ended / cancelled: closed by the server.
 insert into public.auctions
   (id, seller_id, title, start_price, min_increment, duration_minutes, starts_at)
 values
@@ -27,13 +27,21 @@ values
   ('aaaaaaaa-0000-0000-0000-000000000003', '11111111-1111-1111-1111-111111111111',
    'Over item', 100.00, 10.00, 30, now()),
   ('aaaaaaaa-0000-0000-0000-000000000004', '11111111-1111-1111-1111-111111111111',
-   'Scheduled item', 100.00, 10.00, 30, now());
+   'Scheduled item', 100.00, 10.00, 30, now()),
+  ('aaaaaaaa-0000-0000-0000-000000000005', '11111111-1111-1111-1111-111111111111',
+   'Ended item', 100.00, 10.00, 30, now()),
+  ('aaaaaaaa-0000-0000-0000-000000000006', '11111111-1111-1111-1111-111111111111',
+   'Cancelled item', 100.00, 10.00, 30, now());
 update public.auctions set status = 'live', ends_at = now() + interval '30 minutes'
 where id = 'aaaaaaaa-0000-0000-0000-000000000001';
 update public.auctions set status = 'live', ends_at = now() + interval '10 seconds'
 where id = 'aaaaaaaa-0000-0000-0000-000000000002';
 update public.auctions set status = 'live', ends_at = now() - interval '1 second'
 where id = 'aaaaaaaa-0000-0000-0000-000000000003';
+update public.auctions set status = 'ended', ends_at = now() + interval '30 minutes'
+where id = 'aaaaaaaa-0000-0000-0000-000000000005';
+update public.auctions set status = 'cancelled', ends_at = now() + interval '30 minutes'
+where id = 'aaaaaaaa-0000-0000-0000-000000000006';
 
 create function pg_temp.act_as(user_id uuid) returns void language sql as $$
   select set_config('request.jwt.claims',
@@ -169,7 +177,8 @@ select is(
   3::bigint, 'refused bids are not recorded'
 );
 select is(
-  (select count(*) from public.bids where auction_id <> 'aaaaaaaa-0000-0000-0000-000000000001'),
+  (select count(*) from public.bids where auction_id in ('aaaaaaaa-0000-0000-0000-000000000003',
+    'aaaaaaaa-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-00000000ffff')),
   0::bigint, 'no bids on the ended, scheduled or unknown auctions'
 );
 
@@ -201,6 +210,33 @@ select is(
   (select ends_at + interval '30 seconds' from closing_end),
   'a bid with more than 30 seconds left does not extend again'
 );
+
+-- More refusals and the outbid bidder --------------------------------------
+select pg_temp.act_as('22222222-2222-2222-2222-222222222222');
+select throws_ok(
+  $$ select public.place_bid('aaaaaaaa-0000-0000-0000-000000000005', 500.00) $$,
+  'P0001', 'AUCTION_NOT_LIVE', 'an ended auction takes no bids, even with time on the clock'
+);
+select throws_ok(
+  $$ select public.place_bid('aaaaaaaa-0000-0000-0000-000000000006', 500.00) $$,
+  'P0001', 'AUCTION_NOT_LIVE', 'a cancelled auction takes no bids'
+);
+select lives_ok(
+  $$ select public.place_bid('aaaaaaaa-0000-0000-0000-000000000002', 130.00) $$,
+  'an outbid bidder may bid again'
+);
+
+-- Attacker: a bidder skipping place_bid -------------------------------------
+select throws_ok(
+  $$ update public.auctions set current_winner_id = '22222222-2222-2222-2222-222222222222'
+     where id = 'aaaaaaaa-0000-0000-0000-000000000001' $$,
+  '42501', null, 'a bidder cannot make themselves the winner'
+);
+select throws_ok(
+  $$ update public.auctions set ends_at = now() where id = 'aaaaaaaa-0000-0000-0000-000000000001' $$,
+  '42501', null, 'a bidder cannot end an auction early'
+);
+reset role;
 
 -- Not callable around the rules ---------------------------------------------
 select ok(

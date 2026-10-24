@@ -53,6 +53,18 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Decisions
 
+- **Concurrent bids are tested twice (M3, 2026-10-24).** pgTAP runs one file in one
+  connection and one rolled-back transaction, so it cannot race two bids by itself.
+  `supabase/tests/06_place_bid_concurrency_test.sql` opens extra sessions with `dblink`
+  (created inside the test transaction, never in a migration): A bids and holds the lock, B
+  is shown to be waiting in `pg_locks`, then is refused against A's price. Removing
+  `FOR UPDATE` makes it fail (checked). It logs in with the local default password over the
+  container's own address, since dblink refuses password-less (trusted) logins for
+  non-superusers. `test_supabase/place_bid_concurrency_test.dart` fires bids together through
+  the real API; it shows the same outcome end to end but cannot force the overlap
+  (the local API adds ~120 ms per request; `place_bid` itself takes ~2 ms in the database).
+- **SQL tests count only their own rows.** Real bids from `test_supabase` stay in the local
+  database, so a test that counted the whole `bids` table broke; counts are by auction id.
 - **`place_bid` rules (M3, 2026-10-24).** The first bid must be `start_price + min_increment`
   too (current price starts at the start price; one rule for every bid, as in CLAUDE.md).
   The leader cannot bid again (`ALREADY_WINNING`): raising your own lead only costs you money;
