@@ -101,8 +101,15 @@ class MockAuctionFeedRepository implements AuctionFeedRepository {
     if (auction == null) throw AuctionFailure.notFound;
     if (!auction.isLive) throw AuctionFailure.auctionNotLive;
     if (auction.sellerId == user.id) throw AuctionFailure.sellerCannotBid;
+    // Same order as place_bid.
+    final leader = auction.bids.isEmpty ? null : auction.bids.first;
+    if (leader?.bidderId == user.id) throw AuctionFailure.alreadyWinning;
     if (amount.kurus < (auction.currentPrice + auction.minIncrement).kurus) {
       throw AuctionFailure.bidTooLow;
+    }
+    final limit = _spendingLimit();
+    if (limit.enabled && _committed() + amount > limit.amount) {
+      throw AuctionFailure.spendingLimitExceeded;
     }
     _bid(auction, user.id, user.username, amount);
     _changes.add(null);

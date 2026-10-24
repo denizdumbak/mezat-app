@@ -1,11 +1,12 @@
 // Runs SupabaseAuctionFeedRepository against the local Supabase stack: what
-// the lists show to whom, starting an auction, and the read-only live room.
+// the lists show to whom, starting an auction, the live room and bidding.
 //
 // Needs `npx supabase start`. Not part of `flutter test`:
 //   flutter test test_supabase --dart-define-from-file=.env
 @Tags(['supabase'])
 library;
 
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -135,7 +136,7 @@ void main() {
     );
   });
 
-  test('the live room reads the auction; bidding is not open yet', () async {
+  test('the live room reads the auction, with no bids yet', () async {
     final id = await createAuction(minIncrement: const Money.kurus(2500));
     await SupabaseAuctionFeedRepository(seller).startAuction(id);
 
@@ -151,7 +152,7 @@ void main() {
       Money.kurus(12500),
       Money.kurus(25000),
     ]);
-    expect(room.biddingOpen, isFalse);
+    expect(room.bids, isEmpty);
     expect(room.ended, isFalse);
     expect(
       room.endsAt.difference(DateTime.now()).inMinutes,
@@ -211,12 +212,75 @@ void main() {
     },
   );
 
-  test('bids are refused until place_bid exists (M3)', () async {
-    await expectLater(
-      SupabaseAuctionFeedRepository(
-        buyer,
-      ).placeBid('any', const Money.kurus(1000)),
-      throwsA(AuctionFailure.biddingNotOpen),
-    );
+  group('bidding', () {
+    /// A live auction at ₺1.250,50 with a ₺25 minimum step.
+    Future<String> liveAuction() async {
+      final id = await createAuction(minIncrement: const Money.kurus(2500));
+      await SupabaseAuctionFeedRepository(seller).startAuction(id);
+      return id;
+    }
+
+    test('a bid moves the price, joins the feed and counts against the '
+        'limit; the room reloads by itself', () async {
+      final id = await liveAuction();
+      final bidder = await signUp('fd');
+      addTearDown(bidder.dispose);
+      final repository = SupabaseAuctionFeedRepository(bidder);
+      final rooms = StreamIterator(repository.watchRoom(id));
+      expect(await rooms.moveNext(), isTrue);
+      expect(rooms.current.bids, isEmpty);
+
+      await repository.placeBid(id, const Money.kurus(127550));
+
+      expect(await rooms.moveNext(), isTrue);
+      final room = rooms.current;
+      expect(room.currentPrice, const Money.kurus(127550));
+      expect(room.bids.single.amount, const Money.kurus(127550));
+      expect(room.bids.single.username, 'fd_$run');
+      expect(room.bids.single.bidderId, bidder.auth.currentUser!.id);
+      await rooms.cancel();
+
+      // The buyer leads it, so it counts against their limit.
+      expect(
+        await repository.watchCommitted().first,
+        const Money.kurus(127550),
+      );
+    });
+
+    test("the server's refusals arrive as their own failures", () async {
+      final id = await liveAuction();
+      final bidder = await signUp('fe');
+      addTearDown(bidder.dispose);
+      final repository = SupabaseAuctionFeedRepository(bidder);
+
+      await expectLater(
+        repository.placeBid(id, const Money.kurus(126000)),
+        throwsA(AuctionFailure.bidTooLow),
+      );
+      await expectLater(
+        SupabaseAuctionFeedRepository(
+          seller,
+        ).placeBid(id, const Money.kurus(127550)),
+        throwsA(AuctionFailure.sellerCannotBid),
+      );
+      await repository.placeBid(id, const Money.kurus(127550));
+      await expectLater(
+        repository.placeBid(id, const Money.kurus(130050)),
+        throwsA(AuctionFailure.alreadyWinning),
+      );
+    });
+
+    test('a bid over the default ₺2.000 limit is refused', () async {
+      final id = await liveAuction();
+      final other = await signUp('fc');
+      addTearDown(other.dispose);
+
+      await expectLater(
+        SupabaseAuctionFeedRepository(
+          other,
+        ).placeBid(id, const Money.kurus(200100)),
+        throwsA(AuctionFailure.spendingLimitExceeded),
+      );
+    });
   });
 }

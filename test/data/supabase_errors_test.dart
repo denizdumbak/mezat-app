@@ -80,6 +80,12 @@ void main() {
     final domainCodes = {
       'INVALID_START_TIME': AuctionFailure.invalidStartTime,
       'INVALID_INCREMENTS': AuctionFailure.invalidIncrements,
+      'AUCTION_ENDED': AuctionFailure.auctionEnded,
+      'ALREADY_WINNING': AuctionFailure.alreadyWinning,
+      'SPENDING_LIMIT_EXCEEDED': AuctionFailure.spendingLimitExceeded,
+      'USERNAME_REQUIRED': AuctionFailure.usernameRequired,
+      'INVALID_AMOUNT': AuctionFailure.invalidInput,
+      'NOT_AUTHENTICATED': AuctionFailure.notAllowed,
       'NOT_AUCTION_SELLER': AuctionFailure.notSeller,
       'AUCTION_NOT_SCHEDULED': AuctionFailure.notScheduled,
       'AUCTION_NOT_FOUND': AuctionFailure.notFound,

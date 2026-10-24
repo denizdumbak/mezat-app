@@ -1,43 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mezat_app/core/auction_failure.dart';
 import 'package:mezat_app/core/auction_rules.dart';
 import 'package:mezat_app/core/money.dart';
-import 'package:mezat_app/core/widgets/increment_chip.dart';
 
 import '../helpers/fakes.dart';
 import '../helpers/sample_data.dart';
 import '../helpers/screens.dart';
 
-/// States that come with real auctions before M3: no bids yet, no viewer
-/// counts, lists that refresh by pulling or after a change.
+/// States that come with real auctions: no bids yet, no viewer counts,
+/// lists that refresh by pulling or after a change.
 void main() {
-  testWidgets(
-    'bidding not open yet: the room says so and nothing is tappable',
-    (tester) async {
-      useSmallPhone(tester);
-      final feed = FakeAuctionFeedRepository()
-        ..discover = [liveAuction()]
-        ..rooms['canon'] = liveRoom(
-          bids: const [],
-        ).copyWith(biddingOpen: false);
-      await pumpSignedIn(tester, feed: feed);
-      await tester.tap(find.text('Canon AE-1 Program, 50mm f/1.8 lens'));
-      await tester.pumpAndSettle();
-
-      expect(find.text(AuctionFailure.biddingNotOpen.message), findsOneWidget);
-      expect(
-        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
-        isNull,
-      );
-      for (final chip in tester.widgetList<IncrementChip>(
-        find.byType(IncrementChip),
-      )) {
-        expect(chip.onSelected, isNull);
-      }
-    },
-  );
-
   testWidgets('no viewer count yet: the eye icon is not shown', (tester) async {
     useSmallPhone(tester);
     await pumpSignedIn(

@@ -47,7 +47,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
     ref.listen(liveRoomControllerProvider(widget.auctionId), (_, next) {
       final error = next.error;
-      if (error != null && !next.isLoading) {
+      // A refusal over the limit opens the raise sheet instead (_send).
+      if (error != null &&
+          !next.isLoading &&
+          error != AuctionFailure.spendingLimitExceeded) {
         showAppMessage(
           context,
           failureMessage(error),
@@ -98,41 +101,58 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         : Money.zero;
     final isSeller = room.sellerId == userId;
 
-    BidCheck check(Money amount) => checkBid(
+    final bidCheck = checkBid(
       amount: amount,
       committed: committed,
       myLeadingHere: myLeading,
       limit: limit,
       confirmThreshold: config.confirmThreshold,
     );
-    final bidCheck = check(amount);
 
     // Why bidding is not possible right now, if it is not.
-    final blockedReason = switch (bidCheck) {
+    final blockedReason = switch (room) {
       _ when room.ended => null,
       _ when !room.connected => 'Bağlantı bekleniyor.',
       _ when isSeller => 'Kendi mezatına teklif veremezsin.',
-      _ when !room.biddingOpen => AuctionFailure.biddingNotOpen.message,
-      BidBlocked(:final reason) => reason,
-      BidAllowed() => null,
+      // The server refuses the leader's bid (ALREADY_WINNING).
+      _ when myLeading.isPositive =>
+        'Biri geçerse yeniden teklif verebilirsin.',
+      _ => null,
     };
     final canBid = blockedReason == null && !room.ended;
+    final scheme = Theme.of(context).colorScheme;
+    final (note, noteColor) = switch (bidCheck) {
+      _ when blockedReason != null => (
+        blockedReason,
+        switch (room) {
+          // Waiting for the connection, or for a rival: not errors.
+          _ when !room.connected => context.palette.warning,
+          _ when myLeading.isPositive => scheme.onSurfaceVariant,
+          _ => scheme.error,
+        },
+      ),
+      BidOverLimit(:final overage) when canBid => (
+        overLimitNote(limit, overage),
+        context.palette.warning,
+      ),
+      _ => (null, null),
+    };
 
     Future<void> placeBid() async {
-      if (bidCheck case BidAllowed(
-        needsConfirmation: true,
-        :final committedAfter,
-      )) {
-        final ok = await confirmHighBid(
-          context,
-          amount: amount,
-          committedAfter: committedAfter,
-        );
-        if (!ok || !mounted) return;
+      switch (bidCheck) {
+        case BidOverLimit(:final overage):
+          await _raiseLimitAndBid(room, amount, limit, overage);
+          return;
+        case BidAllowed(needsConfirmation: true, :final committedAfter):
+          final ok = await confirmHighBid(
+            context,
+            amount: amount,
+            committedAfter: committedAfter,
+          );
+          if (!ok || !mounted) return;
+        case BidAllowed():
       }
-      await ref
-          .read(liveRoomControllerProvider(room.auctionId).notifier)
-          .placeBid(amount);
+      await _send(room, amount);
     }
 
     // Once it is over the stamp takes the stage; the feed would only
@@ -209,7 +229,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 bidLabel: '+${increment.format()} teklif ver',
                 onBid: canBid ? placeBid : null,
                 sending: sending,
-                blockedReason: blockedReason,
+                note: note,
+                noteColor: noteColor,
               ),
             ],
           ),
@@ -239,6 +260,72 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           ),
       ],
     );
+  }
+
+  Future<void> _send(LiveRoom room, Money amount) async {
+    final provider = liveRoomControllerProvider(room.auctionId);
+    await ref.read(provider.notifier).placeBid(amount);
+    if (!mounted ||
+        ref.read(provider).error != AuctionFailure.spendingLimitExceeded) {
+      return;
+    }
+    // The server counted more than this screen knew (say, an auction won on
+    // another device). Ask again with its total.
+    final committed = await ref.refresh(committedProvider.future);
+    final limit =
+        ref.read(spendingLimitProvider).value ?? SpendingLimit.defaults;
+    final overage = committed + amount - limit.amount;
+    if (!mounted) return;
+    if (!overage.isPositive) {
+      showAppMessage(
+        context,
+        AuctionFailure.spendingLimitExceeded.message,
+        tone: AppMessageTone.error,
+      );
+      return;
+    }
+    await _raiseLimitAndBid(room, amount, limit, overage);
+  }
+
+  /// "Limit aşıldı" → "Limiti artır" → "Emin misin?" → raises the limit by
+  /// exactly [overage] and sends the bid. The last sheet names the amount,
+  /// so there is no separate high-bid confirmation.
+  Future<void> _raiseLimitAndBid(
+    LiveRoom room,
+    Money amount,
+    SpendingLimit limit,
+    Money overage,
+  ) async {
+    final raise = await offerLimitRaise(
+      context,
+      limit: limit,
+      overage: overage,
+    );
+    if (!raise || !mounted) return;
+    final raised = limit.amount + overage;
+    final sure = await confirmLimitRaise(
+      context,
+      from: limit.amount,
+      to: raised,
+      amount: amount,
+    );
+    if (!sure || !mounted) return;
+    try {
+      await ref
+          .read(spendingLimitProvider.notifier)
+          .change(limit.copyWith(amount: raised));
+    } catch (error) {
+      if (mounted) {
+        showAppMessage(
+          context,
+          failureMessage(error),
+          tone: AppMessageTone.error,
+        );
+      }
+      return;
+    }
+    if (!mounted) return;
+    await _send(room, amount);
   }
 }
 
@@ -322,7 +409,8 @@ class _BidPanel extends StatelessWidget {
     required this.bidLabel,
     required this.onBid,
     required this.sending,
-    required this.blockedReason,
+    required this.note,
+    required this.noteColor,
   });
 
   final LiveRoom room;
@@ -333,7 +421,10 @@ class _BidPanel extends StatelessWidget {
   final String bidLabel;
   final VoidCallback? onBid;
   final bool sending;
-  final String? blockedReason;
+
+  /// Why the button is off, or a warning about the bid it would send.
+  final String? note;
+  final Color? noteColor;
 
   @override
   Widget build(BuildContext context) {
@@ -346,9 +437,7 @@ class _BidPanel extends StatelessWidget {
       _ when leading.bidderId == userId => ('Öndesin', palette.success),
       _ => ('Önde: @${leading.username}', scheme.onSurfaceVariant),
     };
-    final blockedReason = this.blockedReason;
-    // Waiting for the connection is not an error.
-    final blockedColor = room.connected ? scheme.error : palette.warning;
+    final note = this.note;
 
     // The bottom panel: blurred over the video, and the one place with a
     // shadow.
@@ -430,13 +519,13 @@ class _BidPanel extends StatelessWidget {
                   onPressed: onBid,
                   busy: sending,
                 ),
-                if (blockedReason != null) ...[
+                if (note != null) ...[
                   const SizedBox(height: AppSpace.s),
                   Text(
-                    blockedReason,
-                    key: const Key('liveRoom.blockedReason'),
+                    note,
+                    key: const Key('liveRoom.note'),
                     textAlign: TextAlign.center,
-                    style: text.bodySmall!.copyWith(color: blockedColor),
+                    style: text.bodySmall!.copyWith(color: noteColor),
                   ),
                 ],
               ],

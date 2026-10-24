@@ -6,7 +6,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:mezat_app/core/auction_failure.dart';
 import 'package:mezat_app/features/auctions/discover_screen.dart';
 import 'package:mezat_app/features/live_room/live_room_screen.dart';
 import 'package:mezat_app/main.dart' as app;
@@ -86,7 +85,6 @@ void main() {
     expect(find.text('Kendi mezatına teklif veremezsin.'), findsOneWidget);
     expect(find.bySemanticsLabel('₺1.250,50'), findsOneWidget);
     expect(find.text('+₺25 teklif ver'), findsOneWidget);
-    expect(find.text(AuctionFailure.biddingNotOpen.message), findsNothing);
 
     // Keşfet now shows it among the live auctions.
     await tester.tap(find.byType(BackButton));

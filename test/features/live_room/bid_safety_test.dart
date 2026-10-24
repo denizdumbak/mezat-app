@@ -66,24 +66,21 @@ void main() {
   });
 
   group('spending limit', () {
-    test('a bid that would pass the limit is blocked, with the reason', () {
-      final result = check(amount: 1260, committed: 900);
-      expect(result, isA<BidBlocked>());
-      expect(
-        (result as BidBlocked).reason,
-        'Limitine ulaştın. Son 1 günde en fazla ₺2.000.',
-      );
+    test('a bid that would pass the limit says by how much', () {
+      final result = check(amount: 1260, committed: 900) as BidOverLimit;
+      expect(result.overage, tl(160));
+      expect(result.committedAfter, tl(2160));
     });
 
-    test('the reason names the chosen period', () {
-      final result = check(
-        amount: 1260,
-        committed: 900,
+    test('the note names the overage, the period and the limit', () {
+      final limit = SpendingLimit(
+        amount: tl(2000),
         period: const Duration(hours: 6),
+        enabled: true,
       );
       expect(
-        (result as BidBlocked).reason,
-        'Limitine ulaştın. Son 6 saatte en fazla ₺2.000.',
+        overLimitNote(limit, tl(160)),
+        'Bu teklif limitini ₺160 aşıyor (son 6 saatte en fazla ₺2.000).',
       );
     });
 

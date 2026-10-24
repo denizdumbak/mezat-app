@@ -42,7 +42,14 @@ AuctionFailure toAuctionFailure(Object error) => switch (error) {
     // Raised by place_bid (M3).
     'BID_TOO_LOW' => AuctionFailure.bidTooLow,
     'AUCTION_NOT_LIVE' => AuctionFailure.auctionNotLive,
+    'AUCTION_ENDED' => AuctionFailure.auctionEnded,
     'SELLER_CANNOT_BID' => AuctionFailure.sellerCannotBid,
+    'ALREADY_WINNING' => AuctionFailure.alreadyWinning,
+    'SPENDING_LIMIT_EXCEEDED' => AuctionFailure.spendingLimitExceeded,
+    'USERNAME_REQUIRED' => AuctionFailure.usernameRequired,
+    // The app checks these first; reaching the server means a stale screen.
+    'INVALID_AMOUNT' => AuctionFailure.invalidInput,
+    'NOT_AUTHENTICATED' => AuctionFailure.notAllowed,
     _ => AuctionFailure.unknown,
   },
   PostgrestException(code: '23514') => AuctionFailure.invalidInput,

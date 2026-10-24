@@ -5,20 +5,27 @@ import 'package:mezat_app/core/auction_failure.dart';
 import 'package:mezat_app/core/auction_rules.dart';
 import 'package:mezat_app/core/money.dart';
 import 'package:mezat_app/data/mock_auction_feed_repository.dart';
+import 'package:mezat_app/data/spending_limit_repository.dart';
 
 /// The mock follows the server rules, so the screens built on it behave
 /// like the real thing will.
 void main() {
   late DateTime now;
   late MockAuctionFeedRepository repository;
+  late SpendingLimit limit;
   const user = (id: 'user-1', username: 'deniz');
 
   setUp(() {
     now = DateTime(2026, 10, 24, 20);
+    // The demo prices are above the default ₺2.000; the limit test lowers it.
+    limit = SpendingLimit.defaults.copyWith(
+      amount: const Money.kurus(10000000),
+    );
     repository = MockAuctionFeedRepository(
       currentUser: () => user,
       simulate: false,
       clock: () => now,
+      spendingLimit: () => limit,
     );
   });
   tearDown(() => repository.dispose());
@@ -90,6 +97,26 @@ void main() {
 
     final after = await repository.watchRoom('canon').first;
     expect(after.endsAt, room.endsAt.add(antiSnipingExtension));
+  });
+
+  test('the leader cannot bid again, as on the server', () async {
+    final room = await repository.watchRoom('canon').first;
+    await repository.placeBid('canon', room.currentPrice + room.minIncrement);
+    final after = await repository.watchRoom('canon').first;
+
+    await expectLater(
+      repository.placeBid('canon', after.currentPrice + after.minIncrement),
+      throwsA(AuctionFailure.alreadyWinning),
+    );
+  });
+
+  test('a bid over the spending limit is refused, as on the server', () async {
+    limit = SpendingLimit.defaults;
+    final room = await repository.watchRoom('canon').first;
+    await expectLater(
+      repository.placeBid('canon', room.currentPrice + room.minIncrement),
+      throwsA(AuctionFailure.spendingLimitExceeded),
+    );
   });
 
   test('an upcoming auction is not open for bids', () async {

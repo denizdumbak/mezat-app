@@ -17,7 +17,12 @@ enum AuctionFailure implements AppFailure {
   bidTooLow('Teklifin geçildi. Güncel fiyata göre tekrar dene.'),
   auctionNotLive('Bu mezat şu an teklif almıyor.'),
   sellerCannotBid('Kendi mezatına teklif veremezsin.'),
-  biddingNotOpen('Teklif verme henüz açık değil.'),
+  alreadyWinning(
+    'En yüksek teklif zaten sende. Biri geçerse yeniden teklif verebilirsin.',
+  ),
+  auctionEnded('Süre doldu, bu mezat artık teklif almıyor.'),
+  spendingLimitExceeded('Bu teklif harcama limitini aşıyor.'),
+  usernameRequired('Teklif vermek için önce bir kullanıcı adı seç.'),
   imageTooLarge('Fotoğraf en fazla 5 MB olabilir.'),
   unsupportedImage('Yalnızca JPEG, PNG veya WebP fotoğraf yükleyebilirsin.'),
   network('Sunucuya ulaşılamadı. İnternet bağlantını kontrol et.'),

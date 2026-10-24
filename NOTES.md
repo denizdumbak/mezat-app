@@ -390,3 +390,26 @@ Decisions and technical debt. Newest on top within each section.
 - **Platforms: android + ios folders.** iOS publishing is out of MVP scope, but the folder costs
   nothing and keeps the option open.
 - **Flutter 3.41.4 (stable) pinned in CI** to match the dev machine.
+- **Bidding from the app (M3 step 7, 2026-10-25).**
+  - Over the limit the bid button stays on (developer's request): a note says by how much,
+    and tapping it opens "Limit aşıldı" → "Limiti artır" → "Emin misin?". Evet raises the
+    limit by exactly the overage, then bids; that last sheet names the amount, so the
+    high-bid confirmation is skipped. In "Limit aşıldı" the filled button is **Kapat**: the
+    safe choice is the easy one, raising the limit takes a deliberate tap. Reset stays in
+    Profil.
+  - A server refusal (`SPENDING_LIMIT_EXCEEDED`) reloads the total and opens the same sheet
+    with the server's numbers: the screen's total can be stale (a win on another device).
+  - The leader's button is off with "Biri geçerse yeniden teklif verebilirsin.", since
+    `place_bid` refuses it (`ALREADY_WINNING`). The mock follows the same rules, and
+    enforces the limit too.
+  - `committed_in_window()` returns a scalar, which PostgREST sends as a JSON number. The
+    app parses it from its shortest text form ("1250.5"), which is exactly the decimal the
+    database sent, so it is never used as a double in arithmetic.
+  - Until Realtime (step 8) the repository has one change signal, fired after the user's
+    own bid; the room and the total reload on it. Streams subscribe to it **before**
+    loading, otherwise a bid sent during the load is missed (a real-database test caught
+    this).
+  - Amount endings ("₺2.000'den ₺3.210'a") follow the number read aloud
+    (`lib/core/amount_suffix.dart`): the last word decides vowel harmony and d/t.
+  - `LiveRoom.biddingOpen` and `AuctionFailure.biddingNotOpen` (M2's read-only room) are
+    gone.

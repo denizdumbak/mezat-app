@@ -55,11 +55,22 @@ class BidAllowed extends BidCheck {
   final Money committedAfter;
 }
 
-class BidBlocked extends BidCheck {
-  const BidBlocked(this.reason);
+/// The bid would take the total past the spending limit. The button stays on:
+/// tapping it offers to raise the limit by [overage] (PRODUCT.md).
+class BidOverLimit extends BidCheck {
+  const BidOverLimit({required this.overage, required this.committedAfter});
 
-  final String reason;
+  /// How far past the limit the total would go.
+  final Money overage;
+
+  /// The total counted against the limit if this bid wins.
+  final Money committedAfter;
 }
+
+/// The note under the bid button for a [BidOverLimit] bid.
+String overLimitNote(SpendingLimit limit, Money overage) =>
+    'Bu teklif limitini ${overage.format()} aşıyor (son '
+    '${formatPeriodIn(limit.period)} en fazla ${limit.amount.format()}).';
 
 /// Decides whether a bid of [amount] may go out, and whether it needs a
 /// second confirmation.
@@ -78,10 +89,7 @@ BidCheck checkBid({
   final before = committed;
   final after = committed - myLeadingHere + amount;
   if (limit.enabled && after > limit.amount) {
-    return BidBlocked(
-      'Limitine ulaştın. Son ${formatPeriodIn(limit.period)} en fazla '
-      '${limit.amount.format()}.',
-    );
+    return BidOverLimit(overage: after - limit.amount, committedAfter: after);
   }
   final crossesThreshold =
       !(before >= confirmThreshold) && after >= confirmThreshold;

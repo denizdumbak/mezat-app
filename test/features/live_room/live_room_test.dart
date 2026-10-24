@@ -8,6 +8,7 @@ import 'package:mezat_app/core/money.dart';
 import 'package:mezat_app/core/widgets/price_display.dart';
 import 'package:mezat_app/core/widgets/states.dart';
 import 'package:mezat_app/data/auction_feed_repository.dart';
+import 'package:mezat_app/data/spending_limit_repository.dart';
 
 import '../../helpers/fakes.dart';
 import '../../helpers/sample_data.dart';
@@ -116,23 +117,109 @@ void main() {
     });
   });
 
-  testWidgets('over the daily limit the button is off and says why', (
-    tester,
-  ) async {
-    useSmallPhone(tester);
-    final feed = await openRoom(
+  group('over the spending limit', () {
+    // ₺1.950 counted + ₺1.260 bid = ₺3.210: ₺1.210 past the ₺2.000 limit.
+    Future<FakeAuctionFeedRepository> openOverLimit(
+      WidgetTester tester,
+      InMemorySpendingLimitRepository limits,
+    ) async {
+      useSmallPhone(tester);
+      return openRoom(
+        tester,
+        liveRoom(),
+        committed: const Money.kurus(195000),
+        spendingLimit: limits,
+      );
+    }
+
+    testWidgets('the button stays on, a note says by how much; Kapat sends '
+        'nothing', (tester) async {
+      final feed = await openOverLimit(
+        tester,
+        InMemorySpendingLimitRepository(),
+      );
+
+      expect(_button(tester).onPressed, isNotNull);
+      expect(
+        find.text(
+          'Bu teklif limitini ₺1.210 aşıyor (son 1 günde en fazla ₺2.000).',
+        ),
+        findsOneWidget,
+      );
+      await tapVisible(tester, _bidButton);
+      expect(find.text('Limit aşıldı'), findsOneWidget);
+      await tapVisible(tester, find.text('Kapat'));
+      expect(feed.placed, isEmpty);
+    });
+
+    testWidgets('Limiti artır asks first; Hayır changes nothing', (
       tester,
-      liveRoom(),
-      committed: const Money.kurus(195000),
+    ) async {
+      final limits = InMemorySpendingLimitRepository();
+      final feed = await openOverLimit(tester, limits);
+
+      await tapVisible(tester, _bidButton);
+      await tapVisible(tester, find.text('Limiti artır'));
+      expect(
+        find.text(
+          "Limitin ₺2.000'den ₺3.210'a çıkacak ve ₺1.260 pey verilecek. "
+          'Emin misin?',
+        ),
+        findsOneWidget,
+      );
+      await tapVisible(tester, find.text('Hayır'));
+
+      expect(feed.placed, isEmpty);
+      expect(await limits.load(), isNull);
+    });
+
+    testWidgets('Evet raises the limit by the overage and sends the bid', (
+      tester,
+    ) async {
+      final limits = InMemorySpendingLimitRepository();
+      final feed = await openOverLimit(tester, limits);
+
+      await tapVisible(tester, _bidButton);
+      await tapVisible(tester, find.text('Limiti artır'));
+      await tapVisible(tester, find.text('Evet'));
+
+      expect((await limits.load())!.amount, const Money.kurus(321000));
+      // No separate high-bid confirmation: the last sheet named the amount.
+      expect(find.text('Yüksek tutarlı teklif'), findsNothing);
+      expect(feed.placed.single.amount, const Money.kurus(126000));
+    });
+
+    testWidgets('a server refusal over the limit opens the same sheet', (
+      tester,
+    ) async {
+      useSmallPhone(tester);
+      final feed = await openRoom(tester, _cheapRoom())
+        ..nextBidError = AuctionFailure.spendingLimitExceeded;
+      // The server knows of more than this screen (won on another device).
+      feed.committed = const Money.kurus(195000);
+
+      await tapVisible(tester, _bidButton);
+
+      expect(find.text('Limit aşıldı'), findsOneWidget);
+      expect(
+        find.text('Bu teklif harcama limitini ₺460 aşıyor.'),
+        findsOneWidget,
+      );
+    });
+  });
+
+  testWidgets('the leader cannot bid again and is told why', (tester) async {
+    useSmallPhone(tester);
+    await openRoom(
+      tester,
+      _cheapRoom(bids: [bid('b1', 'deniz', 500, bidderId: me)]),
     );
 
     expect(_button(tester).onPressed, isNull);
     expect(
-      find.text('Limitine ulaştın. Son 1 günde en fazla ₺2.000.'),
+      find.text('Biri geçerse yeniden teklif verebilirsin.'),
       findsOneWidget,
     );
-    await tester.tap(_bidButton, warnIfMissed: false);
-    expect(feed.placed, isEmpty);
   });
 
   testWidgets('a seller cannot bid on their own auction', (tester) async {

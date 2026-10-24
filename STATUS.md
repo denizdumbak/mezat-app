@@ -14,7 +14,7 @@ _Last updated: 2026-10-25_
 | M1 Auth + profile | Done (manual run from VS Code on 2026-10-23: sign-up → username → home) |
 | M2 Create/list auctions | Done 2026-10-24: end-to-end test (create → Yayın aç → go live → Keşfet) and the developer's hand check (room shows "Teklif verme henüz açık değil.", as intended until M3) |
 | Design foundation | Done 2026-10-24: tokens, dark theme, fonts, shared widgets, 4-tab shell, live room on mock data |
-| M3 Live bidding | In progress: steps 1–3, 5 and 6 of 9 done (bids, place_bid, concurrency tests, spending limit on the server: sliding window the user picks, reset, switch-off; seller-set increment chips); step 4 (maximum bids) dropped (NOTES.md) |
+| M3 Live bidding | In progress: steps 1–3 and 5–7 of 9 done (bids, place_bid, concurrency tests, spending limit on the server: sliding window the user picks, reset, switch-off; seller-set increment chips; real bidding from the app with the raise-the-limit flow); step 4 (maximum bids) dropped (NOTES.md) |
 | M4–M6 | Not started |
 
 ## What exists
@@ -31,8 +31,8 @@ _Last updated: 2026-10-25_
   `bids` table (everyone reads, no client writes) and `place_bid(auction_id, amount)`:
   row lock, bidder from the JWT, anti-sniping (last 30 s → +30 s), codes `INVALID_AMOUNT`,
   `USERNAME_REQUIRED`, `AUCTION_NOT_LIVE`, `AUCTION_ENDED`, `SELLER_CANNOT_BID`,
-  `ALREADY_WINNING`, `BID_TOO_LOW`, `SPENDING_LIMIT_EXCEEDED`. Not called by the app yet
-  (step 7). Spending limit in `spending_limits` (own row only; amount, period, on/off,
+  `ALREADY_WINNING`, `BID_TOO_LOW`, `SPENDING_LIMIT_EXCEEDED`, called by the live room.
+  Spending limit in `spending_limits` (own row only; amount, period, on/off,
   reset; default on, ₺2.000 in 1 day), `committed_in_window()` and
   `reset_spending_window()`; the Profil screen edits all of it.
 - **App** (`lib/`): email/password sign-up and sign-in, choose-username, sign-out.
@@ -47,22 +47,24 @@ _Last updated: 2026-10-25_
   two themes (light browse, dark live room; amber accent, red for live), Manrope bundled, shared widgets in
   `lib/core/widgets` (primary button, increment chip, rolling price, countdown with
   extension chip, bid feed row, sold stamp, loader, empty/error/connection states, app
-  message). Tabs: Keşfet, Sat, Tekliflerim (empty state until step 7), Profil
+  message). Tabs: Keşfet, Sat, Tekliflerim (still an empty state; not in the M3 plan), Profil
   (`lib/app/app_shell.dart`); live auctions are on Keşfet, with local search and category
   chips. Live room
   (`/auctions/:id/live`) with bid panel, high-bid confirmation, spending limit
-  (Profil). Bid safety rules in `lib/features/live_room/bid_safety.dart`.
+  (Profil); a bid over the limit opens "Limit aşıldı" → "Limiti artır" → "Emin misin?",
+  which raises the limit by the overage and bids. The leader cannot bid again. Bid safety rules in `lib/features/live_room/bid_safety.dart`.
 - **Feed** (`AuctionFeedRepository`): `SupabaseAuctionFeedRepository` (default) serves the
-  real lists (Keşfet: live + others' upcoming; Sat: your planned), `start_auction`, and a
-  read-only room ("Teklif verme henüz açık değil."). No realtime: pull down to refresh; lists
-  reload after create/start. `--dart-define=MOCK_FEED=true` switches to the demo mock with
+  real lists (Keşfet: live + others' upcoming; Sat: your planned), `start_auction`, the room
+  (last 20 bids with usernames, winner once the time is up), `place_bid` and the total from
+  `committed_in_window()`. No realtime yet: lists reload by pulling down or after
+  create/start; the room and the total reload after your own bid and at the end. `--dart-define=MOCK_FEED=true` switches to the demo mock with
   simulated bidders.
-- **Tests**: 261 unit/widget tests (`test/`, screens also at 360×640), 188 pgTAP tests
-  (`supabase/tests/`, incl. dblink tests of bids racing for the locks), 36 tests of the
+- **Tests**: 275 unit/widget tests (`test/`, screens also at 360×640), 188 pgTAP tests
+  (`supabase/tests/`, incl. dblink tests of bids racing for the locks), 38 tests of the
   real repositories and concurrent bids against local Supabase
   (`test_supabase/`), 2 end-to-end UI tests on the Windows desktop (`integration_test/`, run
   one file at a time),
-  17 screenshots for design review (`flutter test test_screenshots --update-goldens`, PNGs in
+  19 screenshots for design review (`flutter test test_screenshots --update-goldens`, PNGs in
   `test_screenshots/goldens/`, git-ignored). Only `test/` runs in CI.
 
 ## Environment
@@ -82,17 +84,8 @@ _Last updated: 2026-10-25_
 
 ## Next steps
 
-1. M3, approved plan (2026-10-24), steps left: 7 `SupabaseAuctionFeedRepository.placeBid` + bid feed,
-   error codes mapped to Turkish in `AuctionFailure` (incl. `ALREADY_WINNING`,
-   `AUCTION_ENDED`, `SPENDING_LIMIT_EXCEEDED`), the total from `committed_in_window()`, the
-   mock refusing the leader's second bid like the server; "raise the limit" from the room
-   (developer's request, 2026-10-24): a bid over the limit no longer disables the button
-   (a note says by how much it passes); tapping it opens "Limit aşıldı" with Kapat /
-   Limiti artır; "Limiti artır" asks "Limitin ₺X'den ₺Y'ye çıkacak ve ₺Z pey verilecek.
-   Emin misin?" (Evet / Hayır); Evet raises the limit by exactly the overage and sends the
-   bid (no separate high-bid confirmation; the amount is in that sheet). The same sheet
-   opens when the server refuses with SPENDING_LIMIT_EXCEEDED. Reset stays in Profil only;
-   8 Realtime for the room and lists;
+1. M3, approved plan (2026-10-24), steps left: 8 Realtime for the room and lists (feed the
+   repository's change signal from Realtime instead of only the user's own bids);
    9 end-to-end test with two bidders, the developer's hand check, docs. Step 4 (maximum
    bids) was dropped by the developer: no automatic bidding.
 

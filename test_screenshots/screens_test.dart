@@ -244,6 +244,26 @@ void main() {
     await _snap(tester, '09_live_room_limit');
   });
 
+  testWidgets('09b limit exceeded sheet', (tester) async {
+    await _phone(tester);
+    final feed = _feed()..committed = const Money.kurus(195000);
+    await _signedIn(tester, feed: feed);
+    await _openRoom(tester);
+    await tester.tap(find.text('+₺10 teklif ver'));
+    await _snap(tester, '09b_limit_exceeded');
+  });
+
+  testWidgets('09c raise the limit, are you sure', (tester) async {
+    await _phone(tester);
+    final feed = _feed()..committed = const Money.kurus(195000);
+    await _signedIn(tester, feed: feed);
+    await _openRoom(tester);
+    await tester.tap(find.text('+₺10 teklif ver'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Limiti artır'));
+    await _snap(tester, '09c_limit_raise_confirm');
+  });
+
   testWidgets('10 high bid confirmation', (tester) async {
     await _phone(tester);
     final feed = _feed()..committed = const Money.kurus(0);
