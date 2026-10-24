@@ -141,6 +141,11 @@ akışı satırı, ekran geçişleri. Dekoratif, sürekli dönen animasyon yok.
   yüklenmezse ikincil yüzey üstünde ürün adının baş harfi; büyük gri resim ikonu yok.
 - **Fiyat etiketi (`PriceLabel`):** listelerdeki her tutar. Türkçe ayraçlar (₺1.250,50), ₺
   işareti rakamlardan biraz küçük (0,8), tabular w800; isteğe bağlı önek ("Açılış", "Satıldı").
+- **Arama alanı (Keşfet):** tek satır, hap, ikincil yüzey, çerçevesiz; büyüteç ve temizle.
+- **Kategori çipi (Keşfet):** hap; seçili olan metin renginde dolu, yazı zemin renginde
+  (amber değil); diğerleri ikincil yüzey.
+- **İskelet (`Shimmer`, `SkeletonBox`):** listelerin yükleniyor hâli; sayfanın şekli panel
+  renginde, üstünden ışık geçer (1200 ms). "Hareketi azalt" açıkken durur. Spinner değil.
 - **Fiyat göstergesi:** değişen rakamlar dikey kayar.
 - **Geri sayım:** son 30 saniyede (anti-sniping penceresi, `antiSnipingWindow` sabitinden)
   canlı kırmızı; süre uzayınca "+30 sn" çipi belirir.

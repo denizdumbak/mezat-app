@@ -1,5 +1,5 @@
 // Drives the real app (real main(), real Supabase) through the M2 flow:
-// create an auction, find it under Yayın aç, go live, see it in Keşfet.
+// create an auction, find it under Sat, go live, see it in Keşfet.
 //
 // Needs `npx supabase start`. Run on the desktop or a device:
 //   flutter test integration_test -d windows --dart-define-from-file=.env
@@ -54,8 +54,8 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Devam et'));
     await pumpUntilFound(tester, find.byType(DiscoverScreen));
 
-    // Yayın aç → create, starting now, with Turkish-style amounts.
-    await tester.tap(find.byKey(const Key('tab.2')));
+    // Sat → create, starting now, with Turkish-style amounts.
+    await tester.tap(find.byKey(const Key('tab.1')));
     await pumpUntilFound(tester, find.text('Henüz planlanmış mezatın yok.'));
     await tester.tap(find.widgetWithText(FilledButton, 'Mezat oluştur'));
     await pumpUntilFound(tester, find.byKey(const Key('createAuction.title')));
@@ -73,7 +73,7 @@ void main() {
       find.widgetWithText(FilledButton, 'Mezatı oluştur'),
     );
 
-    // Back on Yayın aç, the new auction is listed. (Wait for the form to
+    // Back on Sat, the new auction is listed. (Wait for the form to
     // close first: find.text also matches the title typed into its field.)
     await pumpUntilFound(tester, find.text('Planlanmış mezatların'));
     await pumpUntilFound(tester, find.text(title));

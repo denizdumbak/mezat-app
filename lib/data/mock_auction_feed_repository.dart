@@ -235,7 +235,7 @@ class MockAuctionFeedRepository implements AuctionFeedRepository {
 
   /// The demo catalogue: ten collectables, each with a photo in
   /// `assets/mock/`. Four live, three coming up from other sellers, one of
-  /// the signed-in user's own (under Yayın aç) and two already sold.
+  /// the signed-in user's own (under Sat) and two already sold.
   void _seed() {
     final now = _clock();
     final me = currentUser();
@@ -387,7 +387,7 @@ class MockAuctionFeedRepository implements AuctionFeedRepository {
       ),
     );
 
-    // The signed-in user's own, planned: shows under Yayın aç.
+    // The signed-in user's own, planned: shows under Sat.
     add(
       _MockAuction(
         id: 'daktilo',

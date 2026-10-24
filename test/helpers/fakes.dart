@@ -169,6 +169,9 @@ class FakeAuctionFeedRepository implements AuctionFeedRepository {
   /// Makes the discover stream fail while set.
   Object? discoverError;
 
+  /// Keeps the discover list from ever arriving: the loading state.
+  bool discoverPending = false;
+
   /// Thrown (once) by the next bid instead of succeeding.
   Object? nextBidError;
 
@@ -196,6 +199,7 @@ class FakeAuctionFeedRepository implements AuctionFeedRepository {
   @override
   Stream<List<AuctionSummary>> watchDiscover() {
     discoverCalls++;
+    if (discoverPending) return StreamController<List<AuctionSummary>>().stream;
     return _watch(() {
       final error = discoverError;
       if (error != null) throw error;

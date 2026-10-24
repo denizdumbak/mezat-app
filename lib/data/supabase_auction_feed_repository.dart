@@ -45,7 +45,7 @@ class SupabaseAuctionFeedRepository implements AuctionFeedRepository {
         // Live ones whose time is not up yet (M5 finalizes the rest).
         for (final a in auctions)
           if (a.isLive) a.toSummary(_publicUrl),
-        // Upcoming ones of other sellers; your own are under Yayın aç.
+        // Upcoming ones of other sellers; your own are under Sat.
         for (final a in auctions)
           if (a.isScheduled && a.sellerId != me) a.toSummary(_publicUrl),
       ];

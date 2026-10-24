@@ -9,6 +9,16 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Technical debt
 
+- **Categories are guessed from the title** (`lib/features/auctions/auction_categories.dart`):
+  keywords per chip, Turkish-aware lowercase. There is no category column; a seller-picked
+  category (a migration and a form field) can replace it. An item can match two chips.
+- **Keşfet's search filters only what is loaded**, on the phone (title and seller). Server-side
+  search comes when the lists outgrow one page.
+- **Tekliflerim is an empty state.** No repository reads a user's bids yet; the list with Önde,
+  Geçildin, Kazandın, Kaybettin comes with step 7's bid feed work.
+- **The Windows end-to-end tests were not rerun** after the tab change (Sat moved from tab 2
+  to tab 1; the files are updated). Run them one at a time before M3 is closed.
+
 - **"Hatırlat" only says reminders are coming.** The button is on upcoming cards (design
   revision, step 2) but reminders need notifications, which are out of the MVP. It shows
   "Hatırlatmalar bildirimlerle birlikte gelecek."
@@ -57,6 +67,15 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Decisions
 
+- **Design revision, step 3: tabs and Keşfet (2026-10-24).** Tabs are Keşfet, Sat,
+  Tekliflerim, Profil; the Canlı tab and `/live` are gone, live auctions lead Keşfet. Keşfet
+  has a small logo and the avatar (no big title), a pill search field and category chips
+  (both local filters), "Şimdi canlı" as a two-column grid sorted by viewers with "Tümü" past
+  six, and "Yaklaşan" as a row of smaller cards; loading is a hand-written shimmer skeleton (no
+  package). Found on the way: when filtering reordered the grid, a card's countdown took
+  another auction's end and showed a "+0 sn" extension chip. Cards are now keyed by auction
+  id, and the countdown only shows the chip for an extension of at least a second. The
+  avatar's semantics label carries the username ("Profil, @deniz").
 - **Design revision, step 2: realistic data and one card (2026-10-24).** The mock catalogue
   is ten collectables matching the developer's photos in `assets/mock/` (four live, three
   upcoming from others, one of the signed-in user's own, two sold), with realistic Turkish

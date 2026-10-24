@@ -14,7 +14,7 @@ import 'feed_providers.dart';
 import 'widgets/auction_card.dart';
 import 'widgets/screen_header.dart';
 
-/// Yayın aç: create an auction, and go live with one already planned.
+/// Sat: create an auction, and go live with one already planned.
 class SellScreen extends ConsumerWidget {
   const SellScreen({super.key});
 
@@ -32,7 +32,7 @@ class SellScreen extends ConsumerWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: AppSpace.xl),
           children: [
-            const ScreenHeader(title: 'Yayın aç'),
+            const ScreenHeader(title: 'Sat'),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpace.edge),
               child: Column(

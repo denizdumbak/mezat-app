@@ -6,10 +6,10 @@ abstract final class AppRoutes {
   static const signUp = '/sign-up';
   static const chooseUsername = '/choose-username';
 
-  // The four tabs. Keşfet is home.
+  // The four tabs. Keşfet is home; live auctions are on it.
   static const home = '/';
-  static const live = '/live';
   static const sell = '/sell';
+  static const bids = '/bids';
   static const profile = '/profile';
 
   static const createAuction = '/auctions/new';

@@ -145,6 +145,12 @@ abstract final class AppSize {
   /// the price (before text scaling).
   static const liveCardInfo = 112.0;
 
+  /// Width of an upcoming card in Keşfet's row: smaller than a live card.
+  static const upcomingCardWidth = 240.0;
+
+  /// Room under an upcoming card's photo (before text scaling).
+  static const upcomingCardInfo = 112.0;
+
   /// Height of an item in the tab bar.
   static const tabBar = 64.0;
 
@@ -165,6 +171,9 @@ abstract final class AppDurations {
   static const price = Duration(milliseconds: 220);
   static const extend = Duration(milliseconds: 240);
   static const sold = Duration(milliseconds: 700);
+
+  /// One sweep of the loading skeleton's light.
+  static const shimmer = Duration(milliseconds: 1200);
 }
 
 abstract final class AppCurves {

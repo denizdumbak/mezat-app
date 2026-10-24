@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mezat_app/core/auction_failure.dart';
 import 'package:mezat_app/core/money.dart';
+import 'package:mezat_app/core/widgets/app_loader.dart';
+import 'package:mezat_app/core/widgets/skeleton.dart';
+import 'package:mezat_app/data/auction_feed_repository.dart';
 import 'package:mezat_app/data/spending_limit_repository.dart';
 import 'package:mezat_app/features/auctions/discover_screen.dart';
 import 'package:mezat_app/features/live_room/live_room_screen.dart';
@@ -28,6 +31,16 @@ String _limitText(WidgetTester tester) {
   return text.data ?? text.textSpan!.toPlainText();
 }
 
+/// Scrolls the page (not a sideways row) until [finder] is built.
+Future<void> _scrollTo(WidgetTester tester, Finder finder) =>
+    tester.scrollUntilVisible(
+      finder,
+      200,
+      scrollable: find.byWidgetPredicate(
+        (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+      ),
+    );
+
 Future<void> _openTab(WidgetTester tester, int index) async {
   await tester.tap(find.byKey(Key('tab.$index')));
   await tester.pumpAndSettle();
@@ -48,6 +61,33 @@ FakeAuctionFeedRepository _edgeCaseFeed() => FakeAuctionFeedRepository()
   ];
 
 void main() {
+  group('tabs', () {
+    testWidgets('Keşfet, Sat, Tekliflerim, Profil; no Canlı tab', (
+      tester,
+    ) async {
+      useSmallPhone(tester);
+      await pumpSignedIn(tester, feed: FakeAuctionFeedRepository());
+
+      for (final (i, label) in [
+        'Keşfet',
+        'Sat',
+        'Tekliflerim',
+        'Profil',
+      ].indexed) {
+        expect(
+          find.descendant(
+            of: find.byKey(Key('tab.$i')),
+            matching: find.text(label),
+          ),
+          findsOneWidget,
+        );
+      }
+      expect(find.byKey(const Key('tab.4')), findsNothing);
+      expect(find.text('Canlı'), findsNothing);
+      expect(find.text('Yayın aç'), findsNothing);
+    });
+  });
+
   group('Keşfet', () {
     testWidgets('long names, long titles and 6-digit prices fit', (
       tester,
@@ -62,6 +102,17 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    testWidgets('logo and avatar on top; no big title', (tester) async {
+      useSmallPhone(tester);
+      await pumpSignedIn(tester, feed: FakeAuctionFeedRepository());
+
+      expect(find.text('mezat'), findsOneWidget);
+      expect(find.text('Keşfet'), findsOneWidget); // the tab label only
+      await tester.tap(find.byKey(const Key('discover.avatar')));
+      await tester.pumpAndSettle();
+      expect(find.text('Harcama limiti'), findsOneWidget);
+    });
+
     testWidgets('live and upcoming are separate sections', (tester) async {
       useSmallPhone(tester);
       await pumpSignedIn(
@@ -71,8 +122,114 @@ void main() {
       );
 
       expect(find.text('Şimdi canlı'), findsOneWidget);
+      await _scrollTo(tester, find.text('Yaklaşan'));
       expect(find.text('Yaklaşan'), findsOneWidget);
       expect(find.textContaining('Bugün'), findsOneWidget);
+    });
+
+    testWidgets('live cards: two per row, busiest first', (tester) async {
+      useSmallPhone(tester);
+      await pumpSignedIn(
+        tester,
+        feed: FakeAuctionFeedRepository()
+          ..discover = [
+            liveAuction(id: 'quiet', title: 'Az izlenen', viewers: 10),
+            liveAuction(id: 'busy', title: 'Çok izlenen', viewers: 500),
+          ],
+      );
+
+      final busy = tester.getTopLeft(find.text('Çok izlenen'));
+      final quiet = tester.getTopLeft(find.text('Az izlenen'));
+      expect(busy.dy, quiet.dy);
+      expect(busy.dx, lessThan(quiet.dx));
+    });
+
+    testWidgets('"Tümü" only with more than six live auctions', (tester) async {
+      // Tall enough that every card is built.
+      tester.view.physicalSize = const Size(1080, 9000);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+      List<AuctionSummary> live(int n) => [
+        for (var i = 0; i < n; i++)
+          liveAuction(id: 'a$i', title: 'Ürün $i', viewers: 100 - i),
+      ];
+
+      final feed = FakeAuctionFeedRepository()..discover = live(6);
+      await pumpSignedIn(tester, feed: feed);
+      expect(find.text('Tümü'), findsOneWidget); // the category chip
+      expect(find.widgetWithText(TextButton, 'Tümü'), findsNothing);
+
+      feed
+        ..discover = live(7)
+        ..emit();
+      await tester.pumpAndSettle();
+      expect(find.text('Ürün 5'), findsOneWidget);
+      expect(find.text('Ürün 6'), findsNothing);
+
+      await tester.tap(find.widgetWithText(TextButton, 'Tümü'));
+      await tester.pumpAndSettle();
+      expect(find.text('Ürün 6'), findsOneWidget);
+    });
+
+    testWidgets('search filters by title and seller, here on the phone', (
+      tester,
+    ) async {
+      useSmallPhone(tester);
+      await pumpSignedIn(
+        tester,
+        feed: FakeAuctionFeedRepository()
+          ..discover = [
+            liveAuction(),
+            liveAuction(
+              id: 'seiko',
+              title: 'Seiko 5 otomatik saat',
+              seller: 'saatciusta',
+            ),
+            upcomingAuction(),
+          ],
+      );
+      final search = find.byKey(const Key('discover.search'));
+
+      await tester.enterText(search, 'SEİKO');
+      await tester.pumpAndSettle();
+      expect(find.text('Seiko 5 otomatik saat'), findsOneWidget);
+      expect(find.text('Canon AE-1 Program, 50mm f/1.8 lens'), findsNothing);
+      expect(find.text('Yaklaşan'), findsNothing);
+
+      await tester.enterText(search, 'kasetcafe');
+      await tester.pumpAndSettle();
+      expect(
+        find.text('Sony Walkman WM-F10, kasetli, çalışır'),
+        findsOneWidget,
+      );
+
+      await tester.enterText(search, 'gramofon');
+      await tester.pumpAndSettle();
+      expect(find.text('Sonuç yok'), findsOneWidget);
+      await tester.tap(find.text('Filtreyi temizle'));
+      await tester.pumpAndSettle();
+      expect(find.text('Canon AE-1 Program, 50mm f/1.8 lens'), findsOneWidget);
+    });
+
+    testWidgets('category chips filter; Tümü shows everything', (tester) async {
+      useSmallPhone(tester);
+      await pumpSignedIn(
+        tester,
+        feed: FakeAuctionFeedRepository()
+          ..discover = [
+            liveAuction(),
+            liveAuction(id: 'seiko', title: 'Seiko 5 otomatik saat'),
+          ],
+      );
+
+      await tester.tap(find.byKey(const Key('category.saat')));
+      await tester.pumpAndSettle();
+      expect(find.text('Seiko 5 otomatik saat'), findsOneWidget);
+      expect(find.text('Canon AE-1 Program, 50mm f/1.8 lens'), findsNothing);
+
+      await tester.tap(find.byKey(const Key('category.all')));
+      await tester.pumpAndSettle();
+      expect(find.text('Canon AE-1 Program, 50mm f/1.8 lens'), findsOneWidget);
     });
 
     testWidgets('a live card opens the live room', (tester) async {
@@ -88,17 +245,52 @@ void main() {
       expect(find.byType(LiveRoomScreen), findsOneWidget);
     });
 
-    testWidgets('empty: says so and offers to start one', (tester) async {
+    testWidgets('nothing live: says so and points to what is coming', (
+      tester,
+    ) async {
+      useSmallPhone(tester);
+      await pumpSignedIn(
+        tester,
+        feed: FakeAuctionFeedRepository()..discover = [upcomingAuction()],
+      );
+
+      expect(find.text('Şu an canlı mezat yok'), findsOneWidget);
+      await tester.tap(find.text('Yaklaşanlara bak'));
+      await tester.pumpAndSettle();
+      expect(find.text('Yaklaşan'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('empty: says so and offers to sell', (tester) async {
       useSmallPhone(tester);
       await pumpSignedIn(tester, feed: FakeAuctionFeedRepository());
 
       expect(find.text('Şu an mezat yok'), findsOneWidget);
-      await tester.tap(find.widgetWithText(OutlinedButton, 'Yayın aç'));
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Sat'));
       await tester.pumpAndSettle();
       expect(
         find.widgetWithText(FilledButton, 'Mezat oluştur'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('loading: card skeletons, not a spinner', (tester) async {
+      useSmallPhone(tester);
+      // The shimmer stands still with reduced motion, so the test can settle.
+      tester.platformDispatcher.accessibilityFeaturesTestValue =
+          const FakeAccessibilityFeatures(disableAnimations: true);
+      addTearDown(
+        tester.platformDispatcher.clearAccessibilityFeaturesTestValue,
+      );
+      await pumpSignedIn(
+        tester,
+        feed: FakeAuctionFeedRepository()..discoverPending = true,
+      );
+
+      expect(find.byType(Shimmer), findsOneWidget);
+      expect(find.byType(SkeletonBox), findsWidgets);
+      expect(find.byType(AppLoader), findsNothing);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('connection lost: the reason and a working retry', (
@@ -119,49 +311,15 @@ void main() {
     });
   });
 
-  group('Canlı', () {
-    testWidgets('lists live auctions only; edge cases fit', (tester) async {
+  group('Sat', () {
+    testWidgets('titled Sat; one primary action; planned auctions listed', (
+      tester,
+    ) async {
       useSmallPhone(tester);
       await pumpSignedIn(tester, feed: _edgeCaseFeed());
       await _openTab(tester, 1);
 
-      // One live auction; the upcoming one is not listed here.
-      expect(find.text(_longTitle), findsOneWidget);
-      expect(find.text('₺999.999'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('empty', (tester) async {
-      useSmallPhone(tester);
-      await pumpSignedIn(
-        tester,
-        feed: FakeAuctionFeedRepository()..discover = [upcomingAuction()],
-      );
-      await _openTab(tester, 1);
-
-      expect(find.text('Şu an canlı yayın yok'), findsOneWidget);
-    });
-
-    testWidgets('connection lost', (tester) async {
-      useSmallPhone(tester);
-      await pumpSignedIn(
-        tester,
-        feed: FakeAuctionFeedRepository()
-          ..discoverError = AuctionFailure.network,
-      );
-      await _openTab(tester, 1);
-
-      expect(find.text(AuctionFailure.network.message), findsOneWidget);
-      expect(find.text('Tekrar dene'), findsOneWidget);
-    });
-  });
-
-  group('Yayın aç', () {
-    testWidgets('one primary action; planned auctions listed', (tester) async {
-      useSmallPhone(tester);
-      await pumpSignedIn(tester, feed: _edgeCaseFeed());
-      await _openTab(tester, 2);
-
+      expect(find.text('Sat'), findsWidgets);
       expect(find.byType(FilledButton), findsOneWidget);
       expect(find.text(_longTitle), findsOneWidget);
       expect(find.textContaining('₺999.999'), findsOneWidget);
@@ -174,7 +332,7 @@ void main() {
       useSmallPhone(tester);
       final feed = _edgeCaseFeed()..rooms['mine'] = liveRoom(id: 'mine');
       await pumpSignedIn(tester, feed: feed);
-      await _openTab(tester, 2);
+      await _openTab(tester, 1);
 
       await tester.tap(find.text('Yayını başlat'));
       await tester.pumpAndSettle();
@@ -186,9 +344,28 @@ void main() {
     testWidgets('empty', (tester) async {
       useSmallPhone(tester);
       await pumpSignedIn(tester, feed: FakeAuctionFeedRepository());
-      await _openTab(tester, 2);
+      await _openTab(tester, 1);
 
       expect(find.text('Henüz planlanmış mezatın yok.'), findsOneWidget);
+    });
+  });
+
+  group('Tekliflerim', () {
+    testWidgets('empty for now: says so and leads to the live auctions', (
+      tester,
+    ) async {
+      useSmallPhone(tester);
+      await pumpSignedIn(
+        tester,
+        feed: FakeAuctionFeedRepository()..discover = [liveAuction()],
+      );
+      await _openTab(tester, 2);
+
+      expect(find.text('Henüz teklif vermedin'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.text('Canlı mezatlara göz at'));
+      await tester.pumpAndSettle();
+      expect(find.text('Şimdi canlı'), findsOneWidget);
     });
   });
 

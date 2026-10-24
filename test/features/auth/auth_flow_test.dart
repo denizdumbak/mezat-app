@@ -121,7 +121,7 @@ void main() {
       await _signIn(tester);
 
       expect(find.byType(DiscoverScreen), findsOneWidget);
-      expect(find.text('@deniz'), findsOneWidget);
+      expect(find.bySemanticsLabel('Profil, @deniz'), findsOneWidget);
     });
   });
 
@@ -243,7 +243,7 @@ void main() {
       expect(find.text(AuthFailure.usernameTaken.message), findsOneWidget);
 
       await submitUsername(tester, ' Deniz_01 ');
-      expect(find.text('@deniz_01'), findsOneWidget);
+      expect(find.bySemanticsLabel('Profil, @deniz_01'), findsOneWidget);
       expect(profiles.profiles[_userId]?.username, 'deniz_01');
     });
 
@@ -285,7 +285,7 @@ void main() {
         profiles: profiles,
       );
 
-      expect(find.text('@deniz'), findsOneWidget);
+      expect(find.bySemanticsLabel('Profil, @deniz'), findsOneWidget);
     });
 
     testWidgets('sign out from the profile tab returns to sign-in', (
@@ -316,6 +316,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(AuthFailure.network.message), findsOneWidget);
+      // Still on Profil, signed in.
       expect(find.text('@deniz'), findsOneWidget);
     });
 
@@ -335,7 +336,7 @@ void main() {
       await tester.tap(find.text('Tekrar dene'));
       await tester.pumpAndSettle();
 
-      expect(find.text('@deniz'), findsOneWidget);
+      expect(find.bySemanticsLabel('Profil, @deniz'), findsOneWidget);
     });
   });
 }

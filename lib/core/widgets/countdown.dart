@@ -52,7 +52,9 @@ class _CountdownState extends State<Countdown> {
   @override
   void didUpdateWidget(Countdown old) {
     super.didUpdateWidget(old);
-    if (widget.endsAt.isAfter(old.endsAt)) {
+    // A real extension is whole seconds; a new snapshot of the same end a
+    // few milliseconds later is not one.
+    if (widget.endsAt.difference(old.endsAt) >= const Duration(seconds: 1)) {
       _extendedBy = widget.endsAt.difference(old.endsAt);
       _chipTimer?.cancel();
       _chipTimer = Timer(extensionChipVisible, () {

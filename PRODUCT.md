@@ -14,10 +14,13 @@ Alt menüde 4 sekme. Varsayılan Material FAB iskeleti yok.
 
 | Sekme | İçerik |
 | --- | --- |
-| Keşfet | Canlı mezatlar (ayrı şerit) ve yaklaşanlar: büyük fotoğraf, fiyat, başlama zamanı |
-| Canlı | Şu an yayında olan mezatların listesi; dokununca canlı oda |
-| Yayın aç | Satıcı alanı: mezat oluştur, planlanmış mezatlarım |
-| Profil | Kullanıcı adı, günlük harcama limiti, çıkış |
+| Keşfet `/` | Üstte küçük logo ve avatar; ürün adı ve satıcıda arayan arama alanı; kategori çipleri (Tümü, Kamera, Saat, Koleksiyon, Forma, Antika, Müzik); "Şimdi canlı" 2 sütunlu ızgara, izleyici sayısına göre (6'dan fazlaysa "Tümü"); "Yaklaşan" yatay sıra, daha küçük kartlar |
+| Sat `/sell` | Satıcı alanı: mezat oluştur, planlanmış mezatlarım |
+| Tekliflerim `/bids` | Teklif verdiğin mezatlar ve durumları (Önde, Geçildin, Kazandın, Kaybettin; ikon + yazı). Şimdilik boş durum: veri M3 7. adımda |
+| Profil `/profile` | Kullanıcı adı, harcama limiti, çıkış |
+
+Ayrı bir "Canlı" sekmesi yok: canlı mezatlar Keşfet'in ilk bölümü. Canlı oda
+`/auctions/:id/live`.
 
 ## Canlı oda
 

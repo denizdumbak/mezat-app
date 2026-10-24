@@ -4,13 +4,13 @@ import 'package:go_router/go_router.dart';
 
 import '../features/auctions/create_auction_screen.dart';
 import '../features/auctions/discover_screen.dart';
-import '../features/auctions/live_list_screen.dart';
 import '../features/auctions/sell_screen.dart';
 import '../features/auth/choose_username_screen.dart';
 import '../features/auth/session.dart';
 import '../features/auth/sign_in_screen.dart';
 import '../features/auth/sign_up_screen.dart';
 import '../features/auth/splash_screen.dart';
+import '../features/bids/my_bids_screen.dart';
 import '../features/live_room/live_room_screen.dart';
 import '../features/profile/profile_screen.dart';
 import 'app_shell.dart';
@@ -40,8 +40,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state, shell) => AppShell(shell: shell),
         branches: [
           _tab(AppRoutes.home, const DiscoverScreen()),
-          _tab(AppRoutes.live, const LiveListScreen()),
           _tab(AppRoutes.sell, const SellScreen()),
+          _tab(AppRoutes.bids, const MyBidsScreen()),
           _tab(AppRoutes.profile, const ProfileScreen()),
         ],
       ),

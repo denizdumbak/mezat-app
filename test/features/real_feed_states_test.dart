@@ -79,11 +79,11 @@ void main() {
     expect(find.text('Yaklaşan'), findsOneWidget);
   });
 
-  testWidgets('after creating an auction, Yayın aç lists it', (tester) async {
+  testWidgets('after creating an auction, Sat lists it', (tester) async {
     useSmallPhone(tester);
     final feed = FakeAuctionFeedRepository();
     await pumpSignedIn(tester, feed: feed);
-    await tester.tap(find.byKey(const Key('tab.2')));
+    await tester.tap(find.byKey(const Key('tab.1')));
     await tester.pumpAndSettle();
     expect(find.text('Henüz planlanmış mezatın yok.'), findsOneWidget);
 

@@ -19,8 +19,8 @@ enum AuctionCardVariant { live, upcoming, ended, row }
 ///   "Hatırlat" button on it; below, seller, title and opening price.
 /// - [AuctionCard.ended]: faded, "Satıldı ₺X".
 /// - [AuctionCard.row]: horizontal, a square thumbnail and the details,
-///   with an optional [trailing] action (Canlı list, the planned auctions
-///   under Yayın aç).
+///   with an optional [trailing] action (the planned auctions under Sat,
+///   Tekliflerim).
 class AuctionCard extends StatelessWidget {
   const AuctionCard.live({super.key, required this.auction, this.onTap})
     : variant = AuctionCardVariant.live,
@@ -295,12 +295,20 @@ class _TimeLeft extends StatelessWidget {
               color: palette.onOverlay,
             ),
             const SizedBox(width: AppSpace.xs),
-            Countdown(
-              endsAt: endsAt,
-              style: AppTypeScale.label.copyWith(
-                color: palette.onOverlay,
-                fontWeight: FontWeight.w800,
-                fontFeatures: AppFonts.tabular,
+            // With the "+30 sn" chip on a narrow card it shrinks, not
+            // overflows.
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Countdown(
+                  endsAt: endsAt,
+                  style: AppTypeScale.label.copyWith(
+                    color: palette.onOverlay,
+                    fontWeight: FontWeight.w800,
+                    fontFeatures: AppFonts.tabular,
+                  ),
+                ),
               ),
             ),
           ],

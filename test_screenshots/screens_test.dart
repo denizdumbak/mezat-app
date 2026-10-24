@@ -79,7 +79,7 @@ Future<FakeAuctionFeedRepository> _catalogue(WidgetTester tester) async {
   return feed;
 }
 
-Future<void> _snap(WidgetTester tester, String name) async {
+Future<void> _snap(WidgetTester tester, String name, {Finder? of}) async {
   await tester.pumpAndSettle();
   // Photos decode off the fake clock; wait for every one on screen.
   await tester.runAsync(() async {
@@ -89,7 +89,7 @@ Future<void> _snap(WidgetTester tester, String name) async {
   });
   await tester.pumpAndSettle();
   await expectLater(
-    find.byType(MaterialApp),
+    of ?? find.byType(MaterialApp),
     matchesGoldenFile('goldens/$name.png'),
   );
 }
@@ -147,17 +147,40 @@ void main() {
     await _snap(tester, '03_discover_empty');
   });
 
-  testWidgets('04 live list', (tester) async {
+  testWidgets('03b discover, loading', (tester) async {
+    await _phone(tester);
+    // Reduced motion holds the shimmer still, so the picture is stable.
+    tester.platformDispatcher.accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    await _signedIn(
+      tester,
+      feed: FakeAuctionFeedRepository()..discoverPending = true,
+    );
+    await _snap(tester, '03b_discover_loading');
+  });
+
+  testWidgets('04 Tekliflerim, empty', (tester) async {
     await _phone(tester);
     await _signedIn(tester);
-    await tester.tap(find.byKey(const Key('tab.1')));
-    await _snap(tester, '04_live_list');
+    await tester.tap(find.byKey(const Key('tab.2')));
+    await _snap(tester, '04_bids_empty');
+  });
+
+  testWidgets('04b tab bar', (tester) async {
+    await _phone(tester);
+    await _signedIn(tester);
+    await _snap(
+      tester,
+      '04b_tab_bar',
+      of: find.byKey(const Key('appShell.tabBar')),
+    );
   });
 
   testWidgets('05 sell', (tester) async {
     await _phone(tester);
     await _signedIn(tester);
-    await tester.tap(find.byKey(const Key('tab.2')));
+    await tester.tap(find.byKey(const Key('tab.1')));
     await _snap(tester, '05_sell');
   });
 
@@ -260,7 +283,7 @@ void main() {
   testWidgets('14 create auction', (tester) async {
     await _phone(tester);
     await _signedIn(tester);
-    await tester.tap(find.byKey(const Key('tab.2')));
+    await tester.tap(find.byKey(const Key('tab.1')));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Mezat oluştur'));
     await _snap(tester, '14_create');

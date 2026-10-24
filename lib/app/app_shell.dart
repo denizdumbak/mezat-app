@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'design_tokens.dart';
 
-/// The four tabs around the signed-in app: Keşfet, Canlı, Yayın aç, Profil.
+/// The four tabs around the signed-in app: Keşfet, Sat, Tekliflerim, Profil.
 /// Each tab keeps its own navigation stack (go_router's indexed stack).
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.shell});
@@ -12,8 +12,8 @@ class AppShell extends StatelessWidget {
 
   static const tabs = [
     (label: 'Keşfet', icon: Icons.explore_outlined, active: Icons.explore),
-    (label: 'Canlı', icon: Icons.sensors_outlined, active: Icons.sensors),
-    (label: 'Yayın aç', icon: Icons.videocam_outlined, active: Icons.videocam),
+    (label: 'Sat', icon: Icons.sell_outlined, active: Icons.sell),
+    (label: 'Tekliflerim', icon: Icons.gavel, active: Icons.gavel),
     (label: 'Profil', icon: Icons.person_outline, active: Icons.person),
   ];
 
@@ -22,34 +22,43 @@ class AppShell extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       body: shell,
-      bottomNavigationBar: DecoratedBox(
-        decoration: BoxDecoration(
-          color: scheme.surface,
-          border: Border(
-            top: BorderSide(color: scheme.outlineVariant, width: AppSize.line),
+      // Its own layer: scrolling a tab does not repaint the bar.
+      bottomNavigationBar: RepaintBoundary(
+        key: const Key('appShell.tabBar'),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            border: Border(
+              top: BorderSide(
+                color: scheme.outlineVariant,
+                width: AppSize.line,
+              ),
+            ),
           ),
-        ),
-        child: SafeArea(
-          top: false,
-          child: SizedBox(
-            height: AppSize.tabBar,
-            child: Row(
-              children: [
-                for (final (index, tab) in tabs.indexed)
-                  Expanded(
-                    child: _TabItem(
-                      key: Key('tab.$index'),
-                      label: tab.label,
-                      icon: index == shell.currentIndex ? tab.active : tab.icon,
-                      selected: index == shell.currentIndex,
-                      // Tapping the open tab again returns to its first page.
-                      onTap: () => shell.goBranch(
-                        index,
-                        initialLocation: index == shell.currentIndex,
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              height: AppSize.tabBar,
+              child: Row(
+                children: [
+                  for (final (index, tab) in tabs.indexed)
+                    Expanded(
+                      child: _TabItem(
+                        key: Key('tab.$index'),
+                        label: tab.label,
+                        icon: index == shell.currentIndex
+                            ? tab.active
+                            : tab.icon,
+                        selected: index == shell.currentIndex,
+                        // Tapping the open tab again returns to its first page.
+                        onTap: () => shell.goBranch(
+                          index,
+                          initialLocation: index == shell.currentIndex,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

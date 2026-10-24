@@ -37,7 +37,7 @@ _Last updated: 2026-10-24_
 - **App** (`lib/`): email/password sign-up and sign-in, choose-username, sign-out.
   `AuthFailure` maps every Supabase error to a Turkish message. Navigation is one pure
   function, `redirectFor` in `lib/app/routes.dart`, driven by `sessionStatusProvider`.
-  Create auction (`/auctions/new`, from the Yayın aç tab): photo via `image_picker`, title,
+  Create auction (`/auctions/new`, from the Sat tab): photo via `image_picker`, title,
   description, start price, min increment, duration, start now / later. `Money` (int kuruş,
   Turkish input, "₺1.250"), `AuctionRepository` (create, upload/delete photo), `AuctionFailure`.
   Locale fixed to Turkish (`flutter_localizations`).
@@ -45,20 +45,22 @@ _Last updated: 2026-10-24_
   two themes (light browse, dark live room; amber accent, red for live), Manrope bundled, shared widgets in
   `lib/core/widgets` (primary button, increment chip, rolling price, countdown with
   extension chip, bid feed row, sold stamp, loader, empty/error/connection states, app
-  message). Tabs: Keşfet, Canlı, Yayın aç, Profil (`lib/app/app_shell.dart`). Live room
+  message). Tabs: Keşfet, Sat, Tekliflerim (empty state until step 7), Profil
+  (`lib/app/app_shell.dart`); live auctions are on Keşfet, with local search and category
+  chips. Live room
   (`/auctions/:id/live`) with bid panel, high-bid confirmation, spending limit
   (Profil). Bid safety rules in `lib/features/live_room/bid_safety.dart`.
 - **Feed** (`AuctionFeedRepository`): `SupabaseAuctionFeedRepository` (default) serves the
-  real lists (Keşfet: live + others' upcoming; Yayın aç: your planned), `start_auction`, and a
+  real lists (Keşfet: live + others' upcoming; Sat: your planned), `start_auction`, and a
   read-only room ("Teklif verme henüz açık değil."). No realtime: pull down to refresh; lists
   reload after create/start. `--dart-define=MOCK_FEED=true` switches to the demo mock with
   simulated bidders.
-- **Tests**: 242 unit/widget tests (`test/`, screens also at 360×640), 175 pgTAP tests
+- **Tests**: 252 unit/widget tests (`test/`, screens also at 360×640), 175 pgTAP tests
   (`supabase/tests/`, incl. dblink tests of bids racing for the locks), 34 tests of the
   real repositories and concurrent bids against local Supabase
   (`test_supabase/`), 2 end-to-end UI tests on the Windows desktop (`integration_test/`, run
   one file at a time),
-  14 screenshots for design review (`flutter test test_screenshots --update-goldens`, PNGs in
+  16 screenshots for design review (`flutter test test_screenshots --update-goldens`, PNGs in
   `test_screenshots/goldens/`, git-ignored). Only `test/` runs in CI.
 
 ## Environment
