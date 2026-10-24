@@ -110,7 +110,7 @@ void main() {
 
       await tapVisible(tester, _bidButton);
       expect(
-        find.text('Kazanırsan bugünkü toplamın ₺1.460 olur.'),
+        find.text('Kazanırsan limitine sayılan toplam ₺1.460 olur.'),
         findsOneWidget,
       );
     });
@@ -128,7 +128,7 @@ void main() {
 
     expect(_button(tester).onPressed, isNull);
     expect(
-      find.text('Limitine ulaştın. Günlük limitin ₺2.000.'),
+      find.text('Limitine ulaştın. Son 1 günde en fazla ₺2.000.'),
       findsOneWidget,
     );
     await tester.tap(_bidButton, warnIfMissed: false);

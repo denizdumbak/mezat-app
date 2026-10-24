@@ -15,6 +15,7 @@ import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/sold_stamp.dart';
 import '../../core/widgets/states.dart';
 import '../../data/auction_feed_repository.dart';
+import '../../data/spending_limit_repository.dart';
 import '../auctions/feed_providers.dart';
 import '../auctions/widgets/auction_visuals.dart';
 import '../auth/session.dart';
@@ -79,10 +80,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
   Widget _buildRoom(LiveRoom room) {
     final userId = ref.watch(authUserIdProvider).value;
-    final committed = ref.watch(committedTodayProvider).value ?? Money.zero;
+    final committed = ref.watch(committedProvider).value ?? Money.zero;
     final config = ref.watch(bidSafetyConfigProvider);
     final limit =
-        ref.watch(dailyLimitProvider).value ?? config.defaultDailyLimit;
+        ref.watch(spendingLimitProvider).value ?? SpendingLimit.defaults;
     final sending = ref
         .watch(liveRoomControllerProvider(room.auctionId))
         .isLoading;
@@ -99,9 +100,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
     BidCheck check(Money amount) => checkBid(
       amount: amount,
-      committedToday: committed,
+      committed: committed,
       myLeadingHere: myLeading,
-      dailyLimit: limit,
+      limit: limit,
       confirmThreshold: config.confirmThreshold,
     );
     final bidCheck = check(amount);

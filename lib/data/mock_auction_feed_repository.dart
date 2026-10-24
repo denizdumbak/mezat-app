@@ -5,6 +5,7 @@ import '../core/auction_failure.dart';
 import '../core/auction_rules.dart';
 import '../core/money.dart';
 import 'auction_feed_repository.dart';
+import 'spending_limit_repository.dart';
 
 typedef MockUser = ({String id, String username});
 
@@ -17,10 +18,12 @@ typedef MockUser = ({String id, String username});
 class MockAuctionFeedRepository implements AuctionFeedRepository {
   MockAuctionFeedRepository({
     required this.currentUser,
+    SpendingLimit Function()? spendingLimit,
     this.simulate = true,
     DateTime Function()? clock,
     Random? random,
-  }) : _clock = clock ?? DateTime.now,
+  }) : _spendingLimit = spendingLimit ?? (() => SpendingLimit.defaults),
+       _clock = clock ?? DateTime.now,
        _random = random ?? Random() {
     _seed();
     if (simulate) {
@@ -30,6 +33,9 @@ class MockAuctionFeedRepository implements AuctionFeedRepository {
 
   /// The signed-in user, or null.
   final MockUser? Function() currentUser;
+
+  /// The signed-in user's settings, for the window committed_in_window uses.
+  final SpendingLimit Function() _spendingLimit;
   final bool simulate;
   final DateTime Function() _clock;
   final Random _random;
@@ -82,7 +88,7 @@ class MockAuctionFeedRepository implements AuctionFeedRepository {
   });
 
   @override
-  Stream<Money> watchCommittedToday() => _watch(_committedToday);
+  Stream<Money> watchCommitted() => _watch(_committed);
 
   // Writing ------------------------------------------------------------------
 
@@ -171,22 +177,24 @@ class MockAuctionFeedRepository implements AuctionFeedRepository {
     _changes.add(null);
   }
 
-  Money _committedToday() {
+  /// As committed_in_window: auctions the user leads, plus those they won
+  /// inside the window (the last period, not before their last reset).
+  Money _committed() {
     final me = currentUser()?.id;
     if (me == null) return Money.zero;
-    final today = _clock();
+    final limit = _spendingLimit();
+    var windowStart = _clock().subtract(limit.period);
+    final resetAt = limit.resetAt;
+    if (resetAt != null && resetAt.isAfter(windowStart)) windowStart = resetAt;
     var total = Money.zero;
     for (final auction in _auctions.values) {
       final leader = auction.bids.isEmpty ? null : auction.bids.first;
       if (leader == null || leader.bidderId != me) continue;
-      final endedToday = auction.ended && _sameDay(auction.endsAt!, today);
-      if (auction.isLive || endedToday) total += leader.amount;
+      final wonInWindow = auction.ended && auction.endsAt!.isAfter(windowStart);
+      if (auction.isLive || wonInWindow) total += leader.amount;
     }
     return total;
   }
-
-  static bool _sameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
 
   AuctionSummary _summary(_MockAuction a) => AuctionSummary(
     id: a.id,

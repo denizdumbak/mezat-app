@@ -39,14 +39,19 @@ Canlı sohbet MVP kapsamı dışında (CLAUDE.md); solda sohbet yerine teklif ak
   yüksek teklif kazanır. Her teklif en az güncel fiyat + minimum artış olduğu için eşit teklif
   verilemez (karar ve gerekçe: NOTES.md).
 
-## Güvenlik katmanı (kaldırılmaz, kısaltılmaz)
+## Güvenlik katmanı (uygulamadan kaldırılmaz; harcama limitini kullanıcı kendisi kapatabilir)
 
 - **Yüksek tutar onayı:** tek teklif ya da bugünkü toplam taahhüt eşiği (varsayılan ₺1.000,
   config'den değişir) aşarsa ikinci onay adımı çıkar.
-- **Günlük harcama limiti:** Profil'de; varsayılan ₺2.000, kullanıcı değiştirir. Teklif limiti
-  aşacaksa buton devre dışı kalır ve nedeni yazılır ("Günlük limitine ulaştın").
-- "Bugünkü toplam taahhüt": kullanıcının bugün önde olduğu ya da kazandığı mezatlardaki
-  teklifleri toplamı. Aynı mezatta yeni teklif eskisinin yerine geçer.
+- **Harcama limiti:** Profil'de; "son X süre içinde en fazla ₺Y" (kayan pencere). Süre hazır
+  seçeneklerden (6 saat, 1 gün, 1 hafta, 1 ay) ya da serbest (sayı + saat/gün/hafta, 1 saat ile
+  365 gün arası) seçilir. Varsayılan açık, son 1 günde ₺2.000. Kullanıcı istediği zaman
+  değiştirir, "Sayacı sıfırla" ile pencereyi şimdiden başlatır ya da limiti kapatır: bir kural
+  değil, kendi harcamasını kontrol etmek için kullandığı bir araç. Teklif limiti aşacaksa buton
+  devre dışı kalır ve nedeni yazılır ("Limitine ulaştın. Son 1 günde en fazla ₺2.000.").
+- Limite sayılan toplam: kullanıcının şu an önde olduğu mezatlar ve seçtiği sürede (son
+  sıfırlamadan önce olmamak üzere) kazandığı mezatlar. Aynı mezatta yeni teklif eskisinin
+  yerine geçer. Sıfırlama önde olunan mezatları silmez; onlar sürüyor.
 
 ## "Satıldı" anı
 

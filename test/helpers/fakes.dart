@@ -211,7 +211,7 @@ class FakeAuctionFeedRepository implements AuctionFeedRepository {
       _watch(() => rooms[auctionId] ?? (throw AuctionFailure.notFound));
 
   @override
-  Stream<Money> watchCommittedToday() => _watch(() => committed);
+  Stream<Money> watchCommitted() => _watch(() => committed);
 
   @override
   Future<void> startAuction(String auctionId) async => started.add(auctionId);

@@ -58,7 +58,10 @@ Decisions and technical debt. Newest on top within each section.
   A reset never removes auctions they still lead: those are live commitments, otherwise
   reset, bid, reset would empty the limit. Default stays on, ₺2.000 in 1 day.
   `committed_in_window()` replaces `committed_today()`; the code is
-  `SPENDING_LIMIT_EXCEEDED`. `reset_at` is written only by the function.
+  `SPENDING_LIMIT_EXCEEDED`. `reset_at` is written only by the function. In the app the
+  period is a `Duration`, written as whole hours ("168 hours") and read back from
+  Postgres' interval text (`parsePgInterval`); periods are shown in their largest whole
+  unit ("36 saat", "3 gün", "1 hafta", exactly 30 days as "1 ay"). The reset asks first.
 - **Spending limit on the server (M3 step 5, 2026-10-24; window: see above).** Its own
   table `spending_limits`,
   not a `profiles` column: profiles are readable by everyone, and someone's limit is

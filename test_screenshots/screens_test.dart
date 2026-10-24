@@ -150,7 +150,25 @@ void main() {
     await _snap(tester, '08_live_room_long');
   });
 
-  testWidgets('09 live room, daily limit reached', (tester) async {
+  testWidgets('11 spending limit sheet, custom period', (tester) async {
+    await _phone(tester);
+    await _signedIn(tester);
+    await tester.tap(find.byKey(const Key('tab.3')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Limiti değiştir'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Özel'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('profile.customPeriodCount')),
+      '36',
+    );
+    // Hide the keyboard focus so the whole sheet shows.
+    FocusManager.instance.primaryFocus?.unfocus();
+    await _snap(tester, '11_limit_sheet');
+  });
+
+  testWidgets('09 live room, spending limit reached', (tester) async {
     await _phone(tester);
     final feed = _feed()..committed = const Money.kurus(195000);
     await _signedIn(tester, feed: feed);

@@ -52,24 +52,63 @@ void main() {
     await other.dispose();
   });
 
-  test('no limit until one is saved; then it reads back exactly', () async {
+  test('no settings until saved; then they read back exactly', () async {
     final repository = SupabaseSpendingLimitRepository(bidder);
     expect(await repository.load(), isNull);
 
-    await repository.save(const Money.kurus(150050));
-    expect(await repository.load(), const Money.kurus(150050));
+    for (final period in [
+      ...SpendingLimit.presetPeriods,
+      const Duration(hours: 36),
+      const Duration(days: 365),
+    ]) {
+      final limit = SpendingLimit(
+        amount: const Money.kurus(150050),
+        period: period,
+        enabled: false,
+      );
+      await repository.save(limit);
+      expect(await repository.load(), limit, reason: '$period');
+    }
 
-    await repository.save(const Money.kurus(30000));
-    expect(await repository.load(), const Money.kurus(30000));
+    // Left on for the place_bid test below: ₺300 in 1 day.
+    await repository.save(
+      SpendingLimit(
+        amount: const Money.kurus(30000),
+        period: const Duration(days: 1),
+        enabled: true,
+      ),
+    );
   });
 
-  test('another user cannot see the limit', () async {
-    expect(await SupabaseSpendingLimitRepository(other).load(), isNull);
+  test('a reset is stored and kept when the settings change', () async {
+    final repository = SupabaseSpendingLimitRepository(other);
+    await repository.resetWindow();
+    final reset = (await repository.load())!;
+    expect(reset.resetAt, isNotNull);
+    expect(reset.amount, SpendingLimit.defaults.amount);
+
+    await repository.save(reset.copyWith(period: const Duration(hours: 6)));
+    expect((await repository.load())!.resetAt, reset.resetAt);
   });
 
-  test('a zero limit is refused', () async {
+  test('another user cannot see the settings', () async {
+    expect(
+      (await SupabaseSpendingLimitRepository(other).load())!.amount,
+      isNot(const Money.kurus(30000)),
+    );
+    expect(await SupabaseSpendingLimitRepository(seller).load(), isNull);
+  });
+
+  test('a zero amount or a period over a year is refused', () async {
+    final repository = SupabaseSpendingLimitRepository(seller);
     await expectLater(
-      SupabaseSpendingLimitRepository(other).save(Money.zero),
+      repository.save(SpendingLimit.defaults.copyWith(amount: Money.zero)),
+      throwsA(AuctionFailure.invalidInput),
+    );
+    await expectLater(
+      repository.save(
+        SpendingLimit.defaults.copyWith(period: const Duration(days: 366)),
+      ),
       throwsA(AuctionFailure.invalidInput),
     );
   });

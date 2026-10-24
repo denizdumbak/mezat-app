@@ -105,7 +105,7 @@ class SupabaseAuctionFeedRepository implements AuctionFeedRepository {
   }
 
   @override
-  Stream<Money> watchCommittedToday() => Stream.value(Money.zero);
+  Stream<Money> watchCommitted() => Stream.value(Money.zero);
 
   @override
   Future<void> startAuction(String auctionId) => guardAuctions(

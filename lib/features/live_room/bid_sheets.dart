@@ -38,7 +38,8 @@ Future<bool> confirmHighBid(
               ),
               const SizedBox(height: AppSpace.xs),
               Text(
-                'Kazanırsan bugünkü toplamın ${committedAfter.format()} olur.',
+                'Kazanırsan limitine sayılan toplam '
+                '${committedAfter.format()} olur.',
                 style: text.bodySmall!.copyWith(fontFeatures: AppFonts.tabular),
               ),
               const SizedBox(height: AppSpace.xl),

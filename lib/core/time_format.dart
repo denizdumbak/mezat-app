@@ -29,6 +29,33 @@ String formatStartsAt(DateTime startsAt, {required DateTime now}) {
   };
 }
 
+/// A spending-limit window in its largest whole unit: "6 saat", "1 gün",
+/// "2 hafta", "1 ay" (exactly 30 days).
+String formatPeriod(Duration period) {
+  final (count, unit) = _periodParts(period);
+  return '$count $unit';
+}
+
+/// The same with the locative ending, as in "Son 6 saatte", "Son 1 günde".
+String formatPeriodIn(Duration period) {
+  final (count, unit) = _periodParts(period);
+  final ending = switch (unit) {
+    'saat' => 'saatte',
+    'gün' => 'günde',
+    'hafta' => 'haftada',
+    _ => 'ayda',
+  };
+  return '$count $ending';
+}
+
+(int, String) _periodParts(Duration period) {
+  final hours = period.inHours;
+  if (period == const Duration(days: 30)) return (1, 'ay');
+  if (hours % (24 * 7) == 0) return (hours ~/ (24 * 7), 'hafta');
+  if (hours % 24 == 0) return (hours ~/ 24, 'gün');
+  return (hours, 'saat');
+}
+
 /// "128", "1,2 B" (bin), "12 B": viewer counts stay short.
 String formatCount(int count) {
   if (count < 1000) return '$count';

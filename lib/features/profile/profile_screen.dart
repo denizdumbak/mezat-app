@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/design_tokens.dart';
 import '../../core/app_failure.dart';
 import '../../core/money.dart';
+import '../../core/time_format.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/states.dart';
+import '../../data/spending_limit_repository.dart';
 import '../auctions/auction_validators.dart';
 import '../auctions/feed_providers.dart';
 import '../auctions/widgets/auction_visuals.dart';
@@ -14,15 +16,15 @@ import '../auth/auth_controller.dart';
 import '../auth/session.dart';
 import '../live_room/bid_safety.dart';
 
-/// Profil: who you are, your daily spending limit, sign out.
+/// Profil: who you are, your spending limit, sign out.
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final username = ref.watch(currentProfileProvider).value?.username ?? '';
-    final limit = ref.watch(dailyLimitProvider).value;
-    final committed = ref.watch(committedTodayProvider).value ?? Money.zero;
+    final limit = ref.watch(spendingLimitProvider).value;
+    final committed = ref.watch(committedProvider).value ?? Money.zero;
     final signOut = ref.watch(authControllerProvider(AuthForm.signOut));
     final text = Theme.of(context).textTheme;
 
@@ -68,24 +70,33 @@ class ProfileScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Günlük harcama limiti', style: text.bodySmall),
+                  Text('Harcama limiti', style: text.bodySmall),
                   const SizedBox(height: AppSpace.xs),
                   Text(
-                    limit?.format() ?? '—',
-                    key: const Key('profile.dailyLimit'),
+                    switch (limit) {
+                      null => '—',
+                      SpendingLimit(enabled: false) => 'Kapalı',
+                      _ => limit.amount.format(),
+                    },
+                    key: const Key('profile.limit'),
                     style: AppTextStyles.price,
                   ),
                   const SizedBox(height: AppSpace.xs),
                   Text(
-                    'Bugün: ${committed.format()}',
+                    limit == null || limit.enabled
+                        ? 'Son ${formatPeriodIn((limit ?? SpendingLimit.defaults).period)}'
+                              ' · şu an ${committed.format()}'
+                        : 'Teklifler sınırlanmıyor.',
+                    key: const Key('profile.limitWindow'),
                     style: text.bodySmall!.copyWith(
                       fontFeatures: AppFonts.tabular,
                     ),
                   ),
                   const SizedBox(height: AppSpace.m),
                   Text(
-                    'Limiti aşacak teklif verilemez. Yüksek tutarlı '
-                    'tekliflerde ayrıca onay istenir.',
+                    'Önde olduğun ve bu sürede kazandığın mezatların toplamı '
+                    'limiti geçemez. Yüksek tutarlı tekliflerde ayrıca onay '
+                    'istenir.',
                     style: text.bodySmall,
                   ),
                   const SizedBox(height: AppSpace.l),
@@ -95,6 +106,13 @@ class ProfileScreen extends ConsumerWidget {
                         : () => _changeLimit(context, ref, limit),
                     child: const Text('Limiti değiştir'),
                   ),
+                  if (limit != null && limit.enabled) ...[
+                    const SizedBox(height: AppSpace.s),
+                    TextButton(
+                      onPressed: () => _resetWindow(context, ref),
+                      child: const Text('Sayacı sıfırla'),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -117,16 +135,46 @@ class ProfileScreen extends ConsumerWidget {
   Future<void> _changeLimit(
     BuildContext context,
     WidgetRef ref,
-    Money current,
+    SpendingLimit current,
   ) async {
-    final limit = await showModalBottomSheet<Money>(
+    final limit = await showModalBottomSheet<SpendingLimit>(
       context: context,
       isScrollControlled: true,
       builder: (context) => _LimitSheet(current: current),
     );
-    if (limit == null) return;
+    if (limit == null || !context.mounted) return;
+    await _run(
+      context,
+      () => ref.read(spendingLimitProvider.notifier).change(limit),
+      success: limit.enabled
+          ? 'Limitin son ${formatPeriodIn(limit.period)} en fazla '
+                '${limit.amount.format()} oldu.'
+          : 'Harcama limitin kapandı.',
+    );
+  }
+
+  Future<void> _resetWindow(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const _ResetSheet(),
+    );
+    if (confirmed != true || !context.mounted) return;
+    await _run(
+      context,
+      () => ref.read(spendingLimitProvider.notifier).resetWindow(),
+      success: 'Sayaç sıfırlandı.',
+    );
+  }
+
+  /// Runs [action] and tells the user how it went.
+  Future<void> _run(
+    BuildContext context,
+    Future<void> Function() action, {
+    required String success,
+  }) async {
     try {
-      await ref.read(dailyLimitProvider.notifier).change(limit);
+      await action();
     } catch (error) {
       if (context.mounted) {
         showAppMessage(
@@ -138,39 +186,89 @@ class ProfileScreen extends ConsumerWidget {
       return;
     }
     if (context.mounted) {
-      showAppMessage(
-        context,
-        'Günlük limitin ${limit.format()} oldu.',
-        tone: AppMessageTone.success,
-      );
+      showAppMessage(context, success, tone: AppMessageTone.success);
     }
   }
+}
+
+/// The units offered for a custom period.
+enum _PeriodUnit {
+  hours('saat', Duration(hours: 1)),
+  days('gün', Duration(days: 1)),
+  weeks('hafta', Duration(days: 7));
+
+  const _PeriodUnit(this.label, this.length);
+
+  final String label;
+  final Duration length;
 }
 
 class _LimitSheet extends StatefulWidget {
   const _LimitSheet({required this.current});
 
-  final Money current;
+  final SpendingLimit current;
 
   @override
   State<_LimitSheet> createState() => _LimitSheetState();
 }
 
 class _LimitSheetState extends State<_LimitSheet> {
+  /// Selected segment: an index into [SpendingLimit.presetPeriods], or
+  /// [_custom].
+  static const _custom = -1;
+
   final _formKey = GlobalKey<FormState>();
   late final _amount = TextEditingController(
-    text: (widget.current.kurus ~/ 100).toString(),
+    text: (widget.current.amount.kurus ~/ 100).toString(),
   );
+  late bool _enabled = widget.current.enabled;
+  late int _segment = SpendingLimit.presetPeriods.indexOf(
+    widget.current.period,
+  );
+  late final _PeriodUnit _initialUnit = _unitFor(widget.current.period);
+  late _PeriodUnit _unit = _initialUnit;
+  late final _customCount = TextEditingController(
+    text: _segment == _custom
+        ? (widget.current.period.inHours ~/ _initialUnit.length.inHours)
+              .toString()
+        : '',
+  );
+
+  static _PeriodUnit _unitFor(Duration period) => switch (period.inHours) {
+    final hours when hours % (24 * 7) == 0 => _PeriodUnit.weeks,
+    final hours when hours % 24 == 0 => _PeriodUnit.days,
+    _ => _PeriodUnit.hours,
+  };
 
   @override
   void dispose() {
     _amount.dispose();
+    _customCount.dispose();
     super.dispose();
+  }
+
+  String? _validateCustom(String? raw) {
+    final count = int.tryParse(raw?.trim() ?? '');
+    if (count == null || count < 1) return 'Bir sayı gir.';
+    final period = _unit.length * count;
+    if (period < SpendingLimit.minPeriod || period > SpendingLimit.maxPeriod) {
+      return 'En az 1 saat, en fazla 365 gün.';
+    }
+    return null;
   }
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    Navigator.of(context).pop(Money.tryParse(_amount.text));
+    final period = _segment == _custom
+        ? _unit.length * int.parse(_customCount.text.trim())
+        : SpendingLimit.presetPeriods[_segment];
+    Navigator.of(context).pop(
+      widget.current.copyWith(
+        enabled: _enabled,
+        amount: _enabled ? Money.tryParse(_amount.text) : null,
+        period: _enabled ? period : null,
+      ),
+    );
   }
 
   @override
@@ -190,32 +288,139 @@ class _LimitSheetState extends State<_LimitSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Günlük harcama limiti', style: text.titleLarge),
+              Text('Harcama limiti', style: text.titleLarge),
               const SizedBox(height: AppSpace.s),
               Text(
-                'Bir günde önde olduğun ve kazandığın tekliflerin toplamı bu '
-                'tutarı geçemez.',
+                'Önde olduğun ve seçtiğin sürede kazandığın mezatların toplamı '
+                'bu tutarı geçemez. İstediğin zaman değiştirebilir ya da '
+                'kapatabilirsin.',
                 style: text.bodySmall,
               ),
-              const SizedBox(height: AppSpace.l),
+              const SizedBox(height: AppSpace.m),
+              Row(
+                children: [
+                  Expanded(child: Text('Limit açık', style: text.bodyLarge)),
+                  Switch(
+                    key: const Key('profile.limitEnabled'),
+                    value: _enabled,
+                    onChanged: (value) => setState(() => _enabled = value),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpace.m),
               TextFormField(
                 key: const Key('profile.limitField'),
                 controller: _amount,
-                autofocus: true,
+                enabled: _enabled,
                 decoration: const InputDecoration(
-                  labelText: 'Limit',
+                  labelText: 'En fazla',
                   prefixText: '₺ ',
                 ),
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                validator: validateAmount,
+                validator: _enabled ? validateAmount : null,
                 onFieldSubmitted: (_) => _save(),
               ),
+              const SizedBox(height: AppSpace.l),
+              Text('Süre', style: text.titleSmall),
+              const SizedBox(height: AppSpace.s),
+              SegmentedButton<int>(
+                key: const Key('profile.limitPeriod'),
+                showSelectedIcon: false,
+                segments: [
+                  for (final (i, period) in SpendingLimit.presetPeriods.indexed)
+                    ButtonSegment(value: i, label: Text(formatPeriod(period))),
+                  const ButtonSegment(value: _custom, label: Text('Özel')),
+                ],
+                selected: {_segment},
+                onSelectionChanged: _enabled
+                    ? (selection) => setState(() => _segment = selection.single)
+                    : null,
+              ),
+              if (_segment == _custom) ...[
+                const SizedBox(height: AppSpace.m),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        key: const Key('profile.customPeriodCount'),
+                        controller: _customCount,
+                        enabled: _enabled,
+                        decoration: const InputDecoration(labelText: 'Son'),
+                        keyboardType: TextInputType.number,
+                        validator: _enabled ? _validateCustom : null,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpace.m),
+                    Expanded(
+                      child: DropdownButtonFormField<_PeriodUnit>(
+                        key: const Key('profile.customPeriodUnit'),
+                        initialValue: _unit,
+                        decoration: const InputDecoration(labelText: 'Birim'),
+                        items: [
+                          for (final unit in _PeriodUnit.values)
+                            DropdownMenuItem(
+                              value: unit,
+                              child: Text(unit.label),
+                            ),
+                        ],
+                        onChanged: _enabled
+                            ? (unit) => setState(() => _unit = unit!)
+                            : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: AppSpace.xl),
               PrimaryButton(label: 'Kaydet', onPressed: _save),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Confirms a reset; resolves to true only when the user confirms.
+class _ResetSheet extends StatelessWidget {
+  const _ResetSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.edge,
+          0,
+          AppSpace.edge,
+          AppSpace.l,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Sayacı sıfırla', style: text.titleLarge),
+            const SizedBox(height: AppSpace.m),
+            Text(
+              'Şimdiye kadar kazandığın mezatlar limitine sayılmaz, sayaç '
+              'şimdiden başlar. Önde olduğun mezatlar sayılmaya devam eder.',
+              style: text.bodyLarge,
+            ),
+            const SizedBox(height: AppSpace.xl),
+            PrimaryButton(
+              label: 'Sıfırla',
+              onPressed: () => Navigator.of(context).pop(true),
+            ),
+            const SizedBox(height: AppSpace.s),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Vazgeç'),
+            ),
+          ],
         ),
       ),
     );

@@ -189,18 +189,18 @@ void main() {
       await _openTab(tester, 3);
 
       expect(find.text('@$longUsername'), findsWidgets);
-      expect(find.text('Bugün: ₺999.999'), findsOneWidget);
+      expect(find.text('Son 1 günde · şu an ₺999.999'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('the daily limit starts at ₺2.000 and can be changed', (
+    testWidgets('the limit starts at ₺2.000 in 1 day and can be changed', (
       tester,
     ) async {
       useSmallPhone(tester);
       await pumpSignedIn(tester, feed: FakeAuctionFeedRepository());
       await _openTab(tester, 3);
 
-      final limit = find.byKey(const Key('profile.dailyLimit'));
+      final limit = find.byKey(const Key('profile.limit'));
       expect(tester.widget<Text>(limit).data, '₺2.000');
 
       await tapVisible(tester, find.text('Limiti değiştir'));
@@ -215,7 +215,120 @@ void main() {
       await tapVisible(tester, find.text('Kaydet'));
 
       expect(tester.widget<Text>(limit).data, '₺5.000');
-      expect(find.text('Günlük limitin ₺5.000 oldu.'), findsOneWidget);
+      expect(
+        find.text('Limitin son 1 günde en fazla ₺5.000 oldu.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a preset period is chosen in the sheet', (tester) async {
+      useSmallPhone(tester);
+      final store = InMemorySpendingLimitRepository();
+      await pumpSignedIn(
+        tester,
+        feed: FakeAuctionFeedRepository(),
+        spendingLimit: store,
+      );
+      await _openTab(tester, 3);
+
+      await tapVisible(tester, find.text('Limiti değiştir'));
+      // All five choices fit a small phone.
+      expect(tester.takeException(), isNull);
+      await tapVisible(tester, find.text('6 saat'));
+      await tapVisible(tester, find.text('Kaydet'));
+
+      expect((await store.load())!.period, const Duration(hours: 6));
+      expect(find.text('Son 6 saatte · şu an ₺0'), findsOneWidget);
+    });
+
+    testWidgets('a custom period: number and unit, within 1 hour to a year', (
+      tester,
+    ) async {
+      useSmallPhone(tester);
+      final store = InMemorySpendingLimitRepository();
+      await pumpSignedIn(
+        tester,
+        feed: FakeAuctionFeedRepository(),
+        spendingLimit: store,
+      );
+      await _openTab(tester, 3);
+
+      await tapVisible(tester, find.text('Limiti değiştir'));
+      await tapVisible(tester, find.text('Özel'));
+      final count = find.byKey(const Key('profile.customPeriodCount'));
+
+      await tester.enterText(count, '0');
+      await tapVisible(tester, find.text('Kaydet'));
+      expect(find.text('Bir sayı gir.'), findsOneWidget);
+
+      await tester.enterText(count, '53');
+      await tapVisible(
+        tester,
+        find.byKey(const Key('profile.customPeriodUnit')),
+      );
+      await tester.tap(find.text('hafta').last);
+      await tester.pumpAndSettle();
+      await tapVisible(tester, find.text('Kaydet'));
+      expect(find.text('En az 1 saat, en fazla 365 gün.'), findsOneWidget);
+
+      await tester.enterText(count, '3');
+      await tapVisible(tester, find.text('Kaydet'));
+
+      expect((await store.load())!.period, const Duration(days: 21));
+      expect(find.text('Son 3 haftada · şu an ₺0'), findsOneWidget);
+    });
+
+    testWidgets('the limit can be switched off and on again', (tester) async {
+      useSmallPhone(tester);
+      final feed = FakeAuctionFeedRepository()
+        ..discover = [liveAuction()]
+        ..rooms['zenit'] = liveRoom()
+        ..committed = const Money.kurus(195000);
+      await pumpSignedIn(tester, feed: feed);
+
+      await _openTab(tester, 3);
+      await tapVisible(tester, find.text('Limiti değiştir'));
+      await tapVisible(tester, find.byKey(const Key('profile.limitEnabled')));
+      await tapVisible(tester, find.text('Kaydet'));
+
+      expect(
+        tester.widget<Text>(find.byKey(const Key('profile.limit'))).data,
+        'Kapalı',
+      );
+      expect(find.text('Harcama limitin kapandı.'), findsOneWidget);
+      expect(find.text('Sayacı sıfırla'), findsNothing);
+
+      // ₺1.950 counted would block a ₺1.270 bid with the limit on.
+      await _openTab(tester, 0);
+      await tester.tap(find.text('Zenit-E analog fotoğraf makinesi (1978)'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Limitine ulaştın'), findsNothing);
+    });
+
+    testWidgets('resetting the window asks first, then resets', (
+      tester,
+    ) async {
+      useSmallPhone(tester);
+      final store = InMemorySpendingLimitRepository();
+      await pumpSignedIn(
+        tester,
+        feed: FakeAuctionFeedRepository(),
+        spendingLimit: store,
+      );
+      await _openTab(tester, 3);
+
+      await tapVisible(tester, find.text('Sayacı sıfırla'));
+      expect(
+        find.textContaining('Önde olduğun mezatlar sayılmaya devam eder.'),
+        findsOneWidget,
+      );
+      await tapVisible(tester, find.text('Vazgeç'));
+      expect(await store.load(), isNull);
+
+      await tapVisible(tester, find.text('Sayacı sıfırla'));
+      await tapVisible(tester, find.text('Sıfırla'));
+      expect((await store.load())!.resetAt, isNotNull);
+      expect(find.text('Sayaç sıfırlandı.'), findsOneWidget);
     });
 
     testWidgets('a limit that cannot be saved keeps the old one and says why', (
@@ -237,11 +350,14 @@ void main() {
       await tapVisible(tester, find.text('Kaydet'));
 
       expect(
-        tester.widget<Text>(find.byKey(const Key('profile.dailyLimit'))).data,
+        tester.widget<Text>(find.byKey(const Key('profile.limit'))).data,
         '₺2.000',
       );
       expect(find.text(AuctionFailure.network.message), findsOneWidget);
-      expect(find.text('Günlük limitin ₺5.000 oldu.'), findsNothing);
+      expect(
+        find.text('Limitin son 1 günde en fazla ₺5.000 oldu.'),
+        findsNothing,
+      );
     });
 
     testWidgets('a higher limit unblocks a bid in the live room', (
@@ -268,13 +384,13 @@ void main() {
       expect(find.textContaining('Limitine ulaştın'), findsNothing);
     });
 
-    testWidgets('connection lost while loading today\'s total', (tester) async {
+    testWidgets('connection lost while loading the total', (tester) async {
       useSmallPhone(tester);
       // The total cannot load; the screen still works and shows ₺0.
       await pumpSignedIn(tester, feed: _BrokenTotalFeed());
       await _openTab(tester, 3);
 
-      expect(find.text('Bugün: ₺0'), findsOneWidget);
+      expect(find.text('Son 1 günde · şu an ₺0'), findsOneWidget);
       expect(find.text('Limiti değiştir'), findsOneWidget);
     });
   });
@@ -282,10 +398,11 @@ void main() {
 
 class _OfflineLimitRepository extends InMemorySpendingLimitRepository {
   @override
-  Future<void> save(Money limit) => Future.error(AuctionFailure.network);
+  Future<void> save(SpendingLimit limit) =>
+      Future.error(AuctionFailure.network);
 }
 
 class _BrokenTotalFeed extends FakeAuctionFeedRepository {
   @override
-  Stream<Money> watchCommittedToday() => Stream.error(AuctionFailure.network);
+  Stream<Money> watchCommitted() => Stream.error(AuctionFailure.network);
 }

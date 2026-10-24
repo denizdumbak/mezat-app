@@ -42,7 +42,7 @@ void main() {
     final after = await repository.watchRoom('zenit').first;
     expect(after.currentPrice, before.currentPrice + before.minIncrement);
     expect(after.leadingBid!.bidderId, user.id);
-    expect(await repository.watchCommittedToday().first, after.currentPrice);
+    expect(await repository.watchCommitted().first, after.currentPrice);
   });
 
   test('a bid below current price + minimum step is BID_TOO_LOW', () async {

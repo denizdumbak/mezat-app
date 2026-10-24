@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mezat_app/core/money.dart';
+import 'package:mezat_app/core/time_format.dart';
 import 'package:mezat_app/data/auth_repository.dart';
 import 'package:mezat_app/data/spending_limit_repository.dart';
 import 'package:mezat_app/features/live_room/bid_safety.dart';
@@ -14,22 +15,25 @@ BidCheck check({
   int committed = 0,
   int myLeadingHere = 0,
   int limit = 2000,
+  Duration period = const Duration(days: 1),
+  bool enabled = true,
   int threshold = 1000,
 }) => checkBid(
   amount: tl(amount),
-  committedToday: tl(committed),
+  committed: tl(committed),
   myLeadingHere: tl(myLeadingHere),
-  dailyLimit: tl(limit),
+  limit: SpendingLimit(amount: tl(limit), period: period, enabled: enabled),
   confirmThreshold: tl(threshold),
 );
 
 void main() {
-  test('defaults: ₺1.000 confirmation, ₺2.000 daily limit', () {
-    const config = BidSafetyConfig();
-    expect(config.confirmThreshold, tl(1000));
-    expect(config.defaultDailyLimit, tl(2000));
+  test('defaults: ₺1.000 confirmation; limit on, ₺2.000 in 1 day', () {
+    expect(const BidSafetyConfig().confirmThreshold, tl(1000));
     // Without --dart-define the build uses the same threshold.
     expect(BidSafetyConfig.fromDefines().confirmThreshold, tl(1000));
+    expect(SpendingLimit.defaults.amount, tl(2000));
+    expect(SpendingLimit.defaults.period, const Duration(days: 1));
+    expect(SpendingLimit.defaults.enabled, isTrue);
   });
 
   group('confirmation', () {
@@ -54,15 +58,32 @@ void main() {
       final result = check(amount: 60, committed: 1200) as BidAllowed;
       expect(result.needsConfirmation, isFalse);
     });
+
+    test('a switched-off limit still asks for high bids', () {
+      final result = check(amount: 5000, enabled: false) as BidAllowed;
+      expect(result.needsConfirmation, isTrue);
+    });
   });
 
-  group('daily limit', () {
+  group('spending limit', () {
     test('a bid that would pass the limit is blocked, with the reason', () {
       final result = check(amount: 1260, committed: 900);
       expect(result, isA<BidBlocked>());
       expect(
         (result as BidBlocked).reason,
-        'Limitine ulaştın. Günlük limitin ₺2.000.',
+        'Limitine ulaştın. Son 1 günde en fazla ₺2.000.',
+      );
+    });
+
+    test('the reason names the chosen period', () {
+      final result = check(
+        amount: 1260,
+        committed: 900,
+        period: const Duration(hours: 6),
+      );
+      expect(
+        (result as BidBlocked).reason,
+        'Limitine ulaştın. Son 6 saatte en fazla ₺2.000.',
       );
     });
 
@@ -85,50 +106,121 @@ void main() {
         isA<BidAllowed>(),
       );
     });
+
+    test('a switched-off limit blocks nothing', () {
+      expect(
+        check(amount: 99999, committed: 900, enabled: false),
+        isA<BidAllowed>(),
+      );
+    });
   });
 
-  test('the daily limit can be changed and is kept', () async {
-    final repository = InMemorySpendingLimitRepository();
-    expect(await repository.load(), isNull);
-    await repository.save(tl(5000));
-    expect(await repository.load(), tl(5000));
+  group('periods', () {
+    test('are named in their largest whole unit', () {
+      expect(formatPeriod(const Duration(hours: 6)), '6 saat');
+      expect(formatPeriod(const Duration(hours: 36)), '36 saat');
+      expect(formatPeriod(const Duration(days: 1)), '1 gün');
+      expect(formatPeriod(const Duration(days: 3)), '3 gün');
+      expect(formatPeriod(const Duration(days: 7)), '1 hafta');
+      expect(formatPeriod(const Duration(days: 14)), '2 hafta');
+      expect(formatPeriod(const Duration(days: 30)), '1 ay');
+      expect(formatPeriod(const Duration(days: 365)), '365 gün');
+    });
+
+    test('take the locative ending after "Son"', () {
+      expect(formatPeriodIn(const Duration(hours: 6)), '6 saatte');
+      expect(formatPeriodIn(const Duration(days: 1)), '1 günde');
+      expect(formatPeriodIn(const Duration(days: 7)), '1 haftada');
+      expect(formatPeriodIn(const Duration(days: 30)), '1 ayda');
+    });
+
+    test('are read from Postgres interval text', () {
+      expect(parsePgInterval('1 day'), const Duration(days: 1));
+      expect(parsePgInterval('7 days'), const Duration(days: 7));
+      expect(parsePgInterval('06:00:00'), const Duration(hours: 6));
+      expect(parsePgInterval('36:00:00'), const Duration(hours: 36));
+      expect(parsePgInterval('168:00:00'), const Duration(days: 7));
+      expect(
+        parsePgInterval('2 days 03:00:00'),
+        const Duration(days: 2, hours: 3),
+      );
+      expect(() => parsePgInterval('1 mon'), throwsFormatException);
+    });
+  });
+
+  group('the in-memory store', () {
+    test('keeps the settings and a reset time', () async {
+      final now = DateTime(2026, 10, 24, 15);
+      final repository = InMemorySpendingLimitRepository(clock: () => now);
+      expect(await repository.load(), isNull);
+
+      final mine = SpendingLimit(
+        amount: tl(5000),
+        period: const Duration(hours: 6),
+        enabled: true,
+      );
+      await repository.save(mine);
+      expect(await repository.load(), mine);
+
+      await repository.resetWindow();
+      final reset = (await repository.load())!;
+      expect(reset.resetAt, now);
+      expect(reset.amount, tl(5000));
+
+      // Saving new settings keeps the reset.
+      await repository.save(mine.copyWith(enabled: false));
+      expect((await repository.load())!.resetAt, now);
+    });
   });
 
   test('each account sees its own limit, not the previous one\'s', () async {
     final auth = FakeAuthRepository(signedInAs: 'user-0');
+    final mine = SpendingLimit(
+      amount: tl(7000),
+      period: const Duration(days: 7),
+      enabled: true,
+    );
     final container = ProviderContainer(
       overrides: [
         authRepositoryProvider.overrideWithValue(auth),
         spendingLimitRepositoryProvider.overrideWithValue(
-          _PerUserLimits(auth, {'user-0': tl(7000)}),
+          _PerUserLimits(auth, {'user-0': mine}),
         ),
       ],
     );
     addTearDown(container.dispose);
-    final sub = container.listen(dailyLimitProvider, (_, _) {});
+    final sub = container.listen(spendingLimitProvider, (_, _) {});
     addTearDown(sub.close);
 
-    expect(await container.read(dailyLimitProvider.future), tl(7000));
+    expect(await container.read(spendingLimitProvider.future), mine);
 
     await auth.signOut();
     await auth.signIn(email: 'other@example.com', password: 'x');
     await Future<void>.delayed(Duration.zero);
 
-    // user-1 never set one: the default, not user-0's ₺7.000.
-    expect(await container.read(dailyLimitProvider.future), tl(2000));
+    // user-1 never changed theirs: the defaults, not user-0's settings.
+    expect(
+      await container.read(spendingLimitProvider.future),
+      SpendingLimit.defaults,
+    );
   });
 }
 
-/// Answers with the limit of whoever is signed in, like the RLS-filtered table.
+/// Answers with the settings of whoever is signed in, like the RLS-filtered
+/// table.
 class _PerUserLimits implements SpendingLimitRepository {
   _PerUserLimits(this.auth, this.limits);
 
   final FakeAuthRepository auth;
-  final Map<String, Money> limits;
+  final Map<String, SpendingLimit> limits;
 
   @override
-  Future<Money?> load() async => limits[auth.currentUserId];
+  Future<SpendingLimit?> load() async => limits[auth.currentUserId];
 
   @override
-  Future<void> save(Money limit) async => limits[auth.currentUserId!] = limit;
+  Future<void> save(SpendingLimit limit) async =>
+      limits[auth.currentUserId!] = limit;
+
+  @override
+  Future<void> resetWindow() async {}
 }

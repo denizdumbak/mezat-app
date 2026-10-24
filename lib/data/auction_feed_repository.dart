@@ -147,9 +147,10 @@ abstract interface class AuctionFeedRepository {
 
   Stream<LiveRoom> watchRoom(String auctionId);
 
-  /// What the signed-in user has committed today: the sum of the auctions
-  /// they lead or won today. Feeds the daily spending limit.
-  Stream<Money> watchCommittedToday();
+  /// What counts against the signed-in user's spending limit: the auctions
+  /// they lead, plus those they won inside their window
+  /// (committed_in_window).
+  Stream<Money> watchCommitted();
 
   /// The seller goes live (start_auction).
   Future<void> startAuction(String auctionId);
