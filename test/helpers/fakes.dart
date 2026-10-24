@@ -12,6 +12,7 @@ import 'package:mezat_app/data/auction_repository.dart';
 import 'package:mezat_app/data/auth_repository.dart';
 import 'package:mezat_app/data/profile_repository.dart';
 import 'package:mezat_app/features/auctions/feed_providers.dart';
+import 'package:mezat_app/data/spending_limit_repository.dart';
 import 'package:mezat_app/features/live_room/bid_safety.dart';
 
 /// In-memory stand-in for Supabase Auth.

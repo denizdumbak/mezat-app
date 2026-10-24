@@ -176,8 +176,10 @@ select is(
   3000.00::numeric, 'bob''s limit is unchanged after the attempts'
 );
 select is(
-  (select count(*) from public.spending_limits), 1::bigint,
-  'no limit was created for anyone else'
+  (select count(*) from public.spending_limits
+   where user_id in ('11111111-1111-1111-1111-111111111111',
+                     '44444444-4444-4444-4444-444444444444')),
+  0::bigint, 'no limit was created for alice or dave'
 );
 
 select * from finish();

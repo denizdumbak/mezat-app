@@ -20,9 +20,6 @@ Decisions and technical debt. Newest on top within each section.
   with pg_cron). The client hides them by `ends_at`; the server rule comes with M5.
 - **Pull to refresh uses Material's `RefreshIndicator` spinner** (gold on stageRaised), the one
   place the stock progress indicator remains; a custom one is not worth it before M6.
-- **The app still keeps the daily limit in memory.** The server enforces it from
-  `spending_limits` since M3 step 5; the app's `InMemorySpendingLimitRepository` is replaced
-  in the same step's second commit.
 - **Seller-set increment chips have no column yet.** The room shows `defaultIncrements`
   (+₺10/+₺50/+₺100); the create form does not ask for them. M3: `bid_increments numeric[]`
   on `auctions` (each >= `min_increment`) and a field in the form.
@@ -63,7 +60,9 @@ Decisions and technical debt. Newest on top within each section.
   lock in `06_place_bid_concurrency_test.sql`). Always profile first, then auction, so no
   two bids wait for each other. `for no key update` so the lock does not block the
   key-share locks foreign keys take. A raised limit applies at once (PRODUCT.md: the user
-  changes it); a cooling-off delay can come later if needed.
+  changes it); a cooling-off delay can come later if needed. The app stores it through
+  `SupabaseSpendingLimitRepository` (`lib/data`); demo mode keeps it in memory, since its
+  users do not exist on the server. The limit is reloaded for each signed-in user.
 - **No maximum (proxy) bids and no automatic bidding (2026-10-24).** Every bid is tapped by
   a person; when time is up the highest bid wins. The developer's reasons: a maximum only
   saves the bidder from tapping and has nothing to do with winning, and deciding whose

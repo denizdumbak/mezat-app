@@ -14,7 +14,7 @@ _Last updated: 2026-10-24_
 | M1 Auth + profile | Done (manual run from VS Code on 2026-10-23: sign-up → username → home) |
 | M2 Create/list auctions | Done 2026-10-24: end-to-end test (create → Yayın aç → go live → Keşfet) and the developer's hand check (room shows "Teklif verme henüz açık değil.", as intended until M3) |
 | Design foundation | Done 2026-10-24: tokens, dark theme, fonts, shared widgets, 4-tab shell, live room on mock data |
-| M3 Live bidding | In progress: steps 1–3 of 9 done (bids, place_bid, concurrency tests); maximum bids built and removed (NOTES.md) |
+| M3 Live bidding | In progress: steps 1–3 and 5 of 9 done (bids, place_bid, concurrency tests, daily limit on the server); step 4 (maximum bids) dropped (NOTES.md) |
 | M4–M6 | Not started |
 
 ## What exists
@@ -30,7 +30,9 @@ _Last updated: 2026-10-24_
   `bids` table (everyone reads, no client writes) and `place_bid(auction_id, amount)`:
   row lock, bidder from the JWT, anti-sniping (last 30 s → +30 s), codes `INVALID_AMOUNT`,
   `USERNAME_REQUIRED`, `AUCTION_NOT_LIVE`, `AUCTION_ENDED`, `SELLER_CANNOT_BID`,
-  `ALREADY_WINNING`, `BID_TOO_LOW`. Not called by the app yet (step 7).
+  `ALREADY_WINNING`, `BID_TOO_LOW`, `DAILY_LIMIT_EXCEEDED`. Not called by the app yet
+  (step 7). Daily limit in `spending_limits` (own row only, default ₺2.000) and
+  `committed_today()`; the Profil screen saves the limit there.
 - **App** (`lib/`): email/password sign-up and sign-in, choose-username, sign-out.
   `AuthFailure` maps every Supabase error to a Turkish message. Navigation is one pure
   function, `redirectFor` in `lib/app/routes.dart`, driven by `sessionStatusProvider`.
@@ -50,8 +52,8 @@ _Last updated: 2026-10-24_
   read-only room ("Teklif verme henüz açık değil."). No realtime: pull down to refresh; lists
   reload after create/start. `--dart-define=MOCK_FEED=true` switches to the demo mock with
   simulated bidders.
-- **Tests**: 212 unit/widget tests (`test/`, screens also at 360×640), 128 pgTAP tests
-  (`supabase/tests/`, incl. a dblink test of two bids racing for the lock), 29 tests of the
+- **Tests**: 214 unit/widget tests (`test/`, screens also at 360×640), 158 pgTAP tests
+  (`supabase/tests/`, incl. dblink tests of bids racing for the locks), 33 tests of the
   real repositories and concurrent bids against local Supabase
   (`test_supabase/`), 2 end-to-end UI tests on the Windows desktop (`integration_test/`, run
   one file at a time),
@@ -75,10 +77,11 @@ _Last updated: 2026-10-24_
 
 ## Next steps
 
-1. M3, approved plan (2026-10-24), steps left: 5 daily limit in `profiles`, enforced in
-   `place_bid` (`DAILY_LIMIT_EXCEEDED`, `committed_today()`); 6 seller-set increments
+1. M3, approved plan (2026-10-24), steps left: 6 seller-set increments
    (`bid_increments`, form field); 7 `SupabaseAuctionFeedRepository.placeBid` + bid feed,
-   error codes mapped to Turkish in `AuctionFailure`; 8 Realtime for the room and lists;
+   error codes mapped to Turkish in `AuctionFailure` (incl. `ALREADY_WINNING`,
+   `AUCTION_ENDED`, `DAILY_LIMIT_EXCEEDED`), today's total from `committed_today()`, the
+   mock refusing the leader's second bid like the server; 8 Realtime for the room and lists;
    9 end-to-end test with two bidders, the developer's hand check, docs. Step 4 (maximum
    bids) was dropped by the developer: no automatic bidding.
 

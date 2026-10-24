@@ -3,10 +3,15 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/money.dart';
+import '../../core/supabase_client.dart';
+import '../../data/spending_limit_repository.dart';
+import '../auctions/feed_providers.dart';
+import '../auth/session.dart';
 
 /// Limits that protect the user from overspending (PRODUCT.md, "Güvenlik
-/// katmanı"). Client side for now; M3 enforces the daily limit in place_bid
-/// too, since a client check alone can be bypassed.
+/// katmanı"). Checked here so the button can say why it is off; place_bid
+/// enforces the daily limit on the server too, since a client check alone
+/// can be bypassed.
 class BidSafetyConfig {
   const BidSafetyConfig({
     this.confirmThreshold = defaultConfirmThreshold,
@@ -26,6 +31,8 @@ class BidSafetyConfig {
   );
 
   static const defaultConfirmThreshold = Money.kurus(100000);
+
+  /// Same as place_bid's default for users without a spending_limits row.
   static const defaultDailyLimitAmount = Money.kurus(200000);
 
   /// A bid of this size, or one that takes today's total to it, needs a
@@ -88,25 +95,12 @@ BidCheck checkBid({
   );
 }
 
-/// Where the user's daily spending limit is kept. In memory for now; moves
-/// to the profiles table with M3 so the server can enforce it.
-abstract interface class SpendingLimitRepository {
-  Future<Money?> load();
-  Future<void> save(Money limit);
-}
-
-class InMemorySpendingLimitRepository implements SpendingLimitRepository {
-  Money? _limit;
-
-  @override
-  Future<Money?> load() async => _limit;
-
-  @override
-  Future<void> save(Money limit) async => _limit = limit;
-}
-
+/// The real table, or memory in demo mode (`MOCK_FEED`), whose users do not
+/// exist on the server.
 final spendingLimitRepositoryProvider = Provider<SpendingLimitRepository>(
-  (ref) => InMemorySpendingLimitRepository(),
+  (ref) => useMockFeed
+      ? InMemorySpendingLimitRepository()
+      : SupabaseSpendingLimitRepository(ref.watch(supabaseClientProvider)),
 );
 
 final dailyLimitProvider = AsyncNotifierProvider<DailyLimitNotifier, Money>(
@@ -114,11 +108,17 @@ final dailyLimitProvider = AsyncNotifierProvider<DailyLimitNotifier, Money>(
 );
 
 class DailyLimitNotifier extends AsyncNotifier<Money> {
+  /// Loaded again for each signed-in user, so switching accounts never shows
+  /// the previous one's limit.
   @override
-  Future<Money> build() async =>
-      await ref.watch(spendingLimitRepositoryProvider).load() ??
-      ref.watch(bidSafetyConfigProvider).defaultDailyLimit;
+  Future<Money> build() async {
+    final defaultLimit = ref.watch(bidSafetyConfigProvider).defaultDailyLimit;
+    if (ref.watch(authUserIdProvider).value == null) return defaultLimit;
+    return await ref.watch(spendingLimitRepositoryProvider).load() ??
+        defaultLimit;
+  }
 
+  /// Throws [AuctionFailure] if it could not be saved; the old limit stays.
   Future<void> change(Money limit) async {
     await ref.read(spendingLimitRepositoryProvider).save(limit);
     state = AsyncData(limit);

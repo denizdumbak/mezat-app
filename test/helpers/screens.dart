@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mezat_app/core/money.dart';
 import 'package:mezat_app/data/auction_feed_repository.dart';
 import 'package:mezat_app/data/profile_repository.dart';
-import 'package:mezat_app/features/live_room/bid_safety.dart';
+import 'package:mezat_app/data/spending_limit_repository.dart';
 
 import 'fakes.dart';
 import 'sample_data.dart';

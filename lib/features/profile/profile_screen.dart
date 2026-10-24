@@ -125,7 +125,18 @@ class ProfileScreen extends ConsumerWidget {
       builder: (context) => _LimitSheet(current: current),
     );
     if (limit == null) return;
-    await ref.read(dailyLimitProvider.notifier).change(limit);
+    try {
+      await ref.read(dailyLimitProvider.notifier).change(limit);
+    } catch (error) {
+      if (context.mounted) {
+        showAppMessage(
+          context,
+          failureMessage(error),
+          tone: AppMessageTone.error,
+        );
+      }
+      return;
+    }
     if (context.mounted) {
       showAppMessage(
         context,

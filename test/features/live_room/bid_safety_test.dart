@@ -1,6 +1,11 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mezat_app/core/money.dart';
+import 'package:mezat_app/data/auth_repository.dart';
+import 'package:mezat_app/data/spending_limit_repository.dart';
 import 'package:mezat_app/features/live_room/bid_safety.dart';
+
+import '../../helpers/fakes.dart';
 
 Money tl(int lira) => Money.kurus(lira * 100);
 
@@ -88,4 +93,42 @@ void main() {
     await repository.save(tl(5000));
     expect(await repository.load(), tl(5000));
   });
+
+  test('each account sees its own limit, not the previous one\'s', () async {
+    final auth = FakeAuthRepository(signedInAs: 'user-0');
+    final container = ProviderContainer(
+      overrides: [
+        authRepositoryProvider.overrideWithValue(auth),
+        spendingLimitRepositoryProvider.overrideWithValue(
+          _PerUserLimits(auth, {'user-0': tl(7000)}),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    final sub = container.listen(dailyLimitProvider, (_, _) {});
+    addTearDown(sub.close);
+
+    expect(await container.read(dailyLimitProvider.future), tl(7000));
+
+    await auth.signOut();
+    await auth.signIn(email: 'other@example.com', password: 'x');
+    await Future<void>.delayed(Duration.zero);
+
+    // user-1 never set one: the default, not user-0's ₺7.000.
+    expect(await container.read(dailyLimitProvider.future), tl(2000));
+  });
+}
+
+/// Answers with the limit of whoever is signed in, like the RLS-filtered table.
+class _PerUserLimits implements SpendingLimitRepository {
+  _PerUserLimits(this.auth, this.limits);
+
+  final FakeAuthRepository auth;
+  final Map<String, Money> limits;
+
+  @override
+  Future<Money?> load() async => limits[auth.currentUserId];
+
+  @override
+  Future<void> save(Money limit) async => limits[auth.currentUserId!] = limit;
 }

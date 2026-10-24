@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mezat_app/core/auction_failure.dart';
 import 'package:mezat_app/core/money.dart';
+import 'package:mezat_app/data/spending_limit_repository.dart';
 import 'package:mezat_app/features/auctions/discover_screen.dart';
 import 'package:mezat_app/features/live_room/live_room_screen.dart';
 
@@ -217,6 +218,32 @@ void main() {
       expect(find.text('Günlük limitin ₺5.000 oldu.'), findsOneWidget);
     });
 
+    testWidgets('a limit that cannot be saved keeps the old one and says why', (
+      tester,
+    ) async {
+      useSmallPhone(tester);
+      await pumpSignedIn(
+        tester,
+        feed: FakeAuctionFeedRepository(),
+        spendingLimit: _OfflineLimitRepository(),
+      );
+      await _openTab(tester, 3);
+
+      await tapVisible(tester, find.text('Limiti değiştir'));
+      await tester.enterText(
+        find.byKey(const Key('profile.limitField')),
+        '5.000',
+      );
+      await tapVisible(tester, find.text('Kaydet'));
+
+      expect(
+        tester.widget<Text>(find.byKey(const Key('profile.dailyLimit'))).data,
+        '₺2.000',
+      );
+      expect(find.text(AuctionFailure.network.message), findsOneWidget);
+      expect(find.text('Günlük limitin ₺5.000 oldu.'), findsNothing);
+    });
+
     testWidgets('a higher limit unblocks a bid in the live room', (
       tester,
     ) async {
@@ -251,6 +278,11 @@ void main() {
       expect(find.text('Limiti değiştir'), findsOneWidget);
     });
   });
+}
+
+class _OfflineLimitRepository extends InMemorySpendingLimitRepository {
+  @override
+  Future<void> save(Money limit) => Future.error(AuctionFailure.network);
 }
 
 class _BrokenTotalFeed extends FakeAuctionFeedRepository {
