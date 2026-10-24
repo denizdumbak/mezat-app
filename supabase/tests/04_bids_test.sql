@@ -43,7 +43,7 @@ select ok(
 );
 select col_type_is('public', 'bids', 'amount', 'numeric(12,2)',
   'money is numeric(12,2), not float');
-select col_default_is('public', 'bids', 'is_auto', 'false', 'bids are manual by default');
+select hasnt_column('public', 'bids', 'is_auto', 'every bid is a person''s: no automatic bids');
 select throws_ok(
   $$ insert into public.bids (auction_id, bidder_id, amount)
      values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '22222222-2222-2222-2222-222222222222', 0) $$,

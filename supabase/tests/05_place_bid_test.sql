@@ -2,7 +2,7 @@
 -- Attacker cases: anon calling it, bidding in someone else's name is impossible (the
 -- bidder comes from the JWT), the seller bidding, amounts that break numeric(12,2).
 begin;
-select plan(36);
+select plan(37);
 
 -- alice sells; bob and dave bid; carol has not chosen a username.
 insert into auth.users (id, email)
@@ -77,10 +77,8 @@ select is(
   (select bidder_id from public.bids where auction_id = 'aaaaaaaa-0000-0000-0000-000000000001'),
   '22222222-2222-2222-2222-222222222222'::uuid, 'bidder_id comes from the JWT'
 );
-select is(
-  (select is_auto from public.bids where auction_id = 'aaaaaaaa-0000-0000-0000-000000000001'),
-  false, 'a tapped bid is not automatic'
-);
+select hasnt_table('public', 'max_bids', 'no maximum bids: nothing bids on anyone''s behalf');
+select hasnt_function('public', 'set_max_bid', 'no set_max_bid');
 select ok(
   (select ends_at from public.auctions where id = 'aaaaaaaa-0000-0000-0000-000000000001')
     < now() + interval '30 minutes 1 second',

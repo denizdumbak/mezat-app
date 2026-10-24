@@ -26,9 +26,6 @@ Decisions and technical debt. Newest on top within each section.
 - **Seller-set increment chips have no column yet.** The room shows `defaultIncrements`
   (+₺10/+₺50/+₺100); the create form does not ask for them. M3: `bid_increments numeric[]`
   on `auctions` (each >= `min_increment`) and a field in the form.
-- **Maximum bids are on the server but not in the app yet.** `set_max_bid` and the answers
-  inside `place_bid` exist (M3 step 4); `SupabaseAuctionFeedRepository.setMaxBid` still
-  refuses until step 7 wires it up.
 - **Screenshots are rendered in the test engine, not on a device** (`test_screenshots/`), since
   no Android emulator is set up. Real fonts and layout, but no platform chrome, keyboard or
   real video. Check on a phone before M6.
@@ -54,22 +51,17 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Decisions
 
-- **Maximum bids settle in one step (M3, 2026-10-24).** `apply_max_bids` runs inside
-  `place_bid` and `set_max_bid` with the auction locked. Contenders are every other maximum
-  still at or above the price plus the leader; the highest wins, and of equal ones the one
-  placed first (a maximum counts from when it was set, a tap from when it was made). The
-  price becomes the runner-up's reach plus one step, capped at the winner's maximum. So the
-  winner may pay less than a full step above the runner-up when their maximums are close,
-  as on eBay. Rejected: trading bids one step at a time in a loop (as the mock did), which
-  writes thousands of rows when two maximums are far apart. The feed gets at most two
-  automatic bids per call: the runner-up's last word at their maximum, then the winner's.
-  Automatic bids are timed a microsecond apart after the triggering bid so the feed order
-  is exact.
-- **Maximums are private and only go up.** Only the owner can read their row (not even the
-  seller): a visible maximum tells rivals what to bid. `MAX_CANNOT_DECREASE`: lowering a
-  maximum after it pushed others' bids up would move the price for free. Setting one needs
-  at least price + one step (`MAX_TOO_LOW`). A raise that bids nothing does not trigger
-  anti-sniping; any call that bids extends at most once.
+- **No maximum (proxy) bids and no automatic bidding (2026-10-24).** Every bid is tapped by
+  a person; when time is up the highest bid wins. The developer's reasons: a maximum only
+  saves the bidder from tapping and has nothing to do with winning, and deciding whose
+  automatic bid goes first is a problem of its own; automatic answers go against how a live
+  auction works. Built on the server in M3 step 4 and removed the same day
+  (`20261024210000_remove_max_bids.sql` drops `max_bids`, `set_max_bid`, the helpers and
+  `bids.is_auto`; `place_bid` is back to judging the one bid it receives). Equal bids cannot
+  happen: each bid must be at least price + one step. Settled on the way, in case maximums
+  return: a tie rule is unavoidable for hidden maximums (refusing an equal one would reveal
+  it), and settling them by trading steps lets the outcome depend on whether the number of
+  steps is odd or even.
 - **Concurrent bids are tested twice (M3, 2026-10-24).** pgTAP runs one file in one
   connection and one rolled-back transaction, so it cannot race two bids by itself.
   `supabase/tests/06_place_bid_concurrency_test.sql` opens extra sessions with `dblink`
@@ -92,8 +84,7 @@ Decisions and technical debt. Newest on top within each section.
   than two decimals are refused (`INVALID_AMOUNT`), not rounded, so nobody pays a sum they
   did not type. Anti-sniping extends from `ends_at`, not from the bid time.
 - **Bids are a table only `place_bid` writes (M3, 2026-10-24).** No insert/update/delete
-  privileges at all for clients, not just missing policies; `is_auto` is in the table from the
-  start for the server-side maximum bids.
+  privileges at all for clients, not just missing policies.
 - **Docker-based tests stay out of CI (2026-10-24).** SQL tests (`supabase test db`),
   `test_supabase/` and `integration_test/` need Docker and a running local Supabase; adding
   them to the workflow is slow, and GitHub Actions is blocked anyway. The developer decided
