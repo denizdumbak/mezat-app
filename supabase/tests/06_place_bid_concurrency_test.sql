@@ -5,7 +5,7 @@
 --   2. Near the end, A's bid extends the auction; B, waiting behind it, must see the new
 --      end and not extend a second time. (Checked with the lock removed: case 1 fails,
 --      case 2 still passes, because the UPDATE reads the latest end either way.)
---   3. One bidder, two auctions at once: each bid fits the daily limit, both together do
+--   3. One bidder, two auctions at once: each bid fits the spending limit, both together do
 --      not. The second must wait for the first (bidder's profile row lock) and then be
 --      refused, instead of each checking the old total.
 -- Other sessions only see committed rows, so the data is set up and removed through a
@@ -153,7 +153,7 @@ select is(pg_temp.committed($$ select count(*)::text from public.bids
   where auction_id = 'c0000000-aaaa-0000-0000-000000000002' $$), '2', 'both bids are recorded');
 
 -- 3. One bidder's total, two auctions at once -------------------------------
--- a leads "Race" at 120 and has the default limit of 2000: 120 + 1000 fits, a second
+-- a leads "Race" at 120 and has the default limit of 2000 in a day: 120 + 1000 fits, a second
 -- 1000 does not. Session b now acts as a too.
 select pg_temp.sign_in('b', 'c0000000-0000-0000-0000-000000000002');
 select extensions.dblink_exec('a', 'begin');
@@ -172,7 +172,7 @@ select is(
   0::bigint, 'the second bid gets no result row'
 );
 select matches(
-  extensions.dblink_error_message('b'), 'DAILY_LIMIT_EXCEEDED',
+  extensions.dblink_error_message('b'), 'SPENDING_LIMIT_EXCEEDED',
   'the second bid is judged against the total including the first'
 );
 select count(*) from extensions.dblink_get_result('b', false) as t(r text); -- drain

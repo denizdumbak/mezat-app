@@ -48,7 +48,19 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Decisions
 
-- **Daily limit on the server (M3 step 5, 2026-10-24).** Its own table `spending_limits`,
+- **The spending limit is a sliding window the user controls (2026-10-24).** Replaces the
+  calendar day of M3 step 5 (developer's decision): "at most this much in the last N",
+  N being 6 hours, 1 day, 1 week, 30 days or a custom period (1 hour to 365 days). A
+  calendar day, or fixed slices from the moment the limit was set, let someone spend the
+  limit twice around the edge (23:59 and 00:01); a sliding window has no edge. The user
+  can reset the window (`reset_spending_window()`: auctions won before now stop counting)
+  or switch the limit off (`enabled`): it is their own spending-control tool, not a rule.
+  A reset never removes auctions they still lead: those are live commitments, otherwise
+  reset, bid, reset would empty the limit. Default stays on, ₺2.000 in 1 day.
+  `committed_in_window()` replaces `committed_today()`; the code is
+  `SPENDING_LIMIT_EXCEEDED`. `reset_at` is written only by the function.
+- **Spending limit on the server (M3 step 5, 2026-10-24; window: see above).** Its own
+  table `spending_limits`,
   not a `profiles` column: profiles are readable by everyone, and someone's limit is
   private (it would also tell rivals how far they can go). No row means ₺2.000, the same
   default as the app. `committed_today()` is PRODUCT.md's "bugünkü toplam": auctions the

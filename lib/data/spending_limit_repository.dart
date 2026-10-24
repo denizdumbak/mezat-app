@@ -26,16 +26,16 @@ class SupabaseSpendingLimitRepository implements SpendingLimitRepository {
   Future<Money?> load() => guardAuctions(() async {
     final row = await _client
         .from('spending_limits')
-        .select('daily_limit::text')
+        .select('limit_amount::text')
         .maybeSingle();
-    return row == null ? null : Money.parseDb(row['daily_limit'] as String);
+    return row == null ? null : Money.parseDb(row['limit_amount'] as String);
   });
 
   @override
   Future<void> save(Money limit) => guardAuctions(
     () => _client
         .from('spending_limits')
-        .upsert({'daily_limit': limit.toDb()}, onConflict: 'user_id'),
+        .upsert({'limit_amount': limit.toDb()}, onConflict: 'user_id'),
   );
 }
 

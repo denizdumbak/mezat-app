@@ -97,7 +97,7 @@ void main() {
         isA<PostgrestException>().having(
           (e) => e.message,
           'message',
-          'DAILY_LIMIT_EXCEEDED',
+          'SPENDING_LIMIT_EXCEEDED',
         ),
       ),
     );
@@ -105,6 +105,6 @@ void main() {
       'place_bid',
       params: {'p_auction_id': id, 'p_amount': '300.00'},
     );
-    expect(await bidder.rpc('committed_today'), 300);
+    expect(await bidder.rpc('committed_in_window'), 300);
   });
 }
