@@ -53,6 +53,18 @@ Decisions and technical debt. Newest on top within each section.
 
 ## Decisions
 
+- **`place_bid` rules (M3, 2026-10-24).** The first bid must be `start_price + min_increment`
+  too (current price starts at the start price; one rule for every bid, as in CLAUDE.md).
+  The leader cannot bid again (`ALREADY_WINNING`): raising your own lead only costs you money;
+  the mock allowed it, the server does not. An auction whose time is up is refused with its
+  own code (`AUCTION_ENDED`) because it stays `live` in the table until M5. Time checks use
+  `clock_timestamp()` after the row lock, not `now()`: `now()` is when the transaction began,
+  and a bid that waited for the lock could otherwise slip in after the end. Amounts with more
+  than two decimals are refused (`INVALID_AMOUNT`), not rounded, so nobody pays a sum they
+  did not type. Anti-sniping extends from `ends_at`, not from the bid time.
+- **Bids are a table only `place_bid` writes (M3, 2026-10-24).** No insert/update/delete
+  privileges at all for clients, not just missing policies; `is_auto` is in the table from the
+  start for the server-side maximum bids.
 - **Docker-based tests stay out of CI (2026-10-24).** SQL tests (`supabase test db`),
   `test_supabase/` and `integration_test/` need Docker and a running local Supabase; adding
   them to the workflow is slow, and GitHub Actions is blocked anyway. The developer decided
